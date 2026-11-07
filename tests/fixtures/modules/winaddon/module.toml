@@ -1,0 +1,11 @@
+# Test fixture (not a real module): Windows-only add-on that depends on progress.
+id = "winaddon"
+name = "Windows add-on (fixture)"
+tier = "advanced"
+summary = "Fixture: Windows-only module with a dependency chain."
+requires = ["progress"]
+os = ["windows"]
+runtime = ["laptop"]
+
+[[jobs]]
+id = "win-watch"

@@ -1,0 +1,50 @@
+id = "scheduler-local"
+name = "Laptop scheduler"
+tier = "standard"
+summary = "Runs the vault's jobs on the laptop: as scheduled tasks of the agent's desktop app (created by the setup agent from each job's prompt and slots), or experimentally through an OS scheduler that runs the agent CLI headless; plus the unattended-prompt anatomy, the portable host header, catch-up and failover markers, and log conventions."
+requires = ["core"]
+recommends = ["notifications"]
+obsidian = "irrelevant"
+os = ["any"]          # app tasks: any OS the agent app runs on; the OS-scheduler example is Windows (experimental)
+runtime = ["laptop"]
+
+# Keys this module reads. (required) = no default here; core asks for them in setup.
+#   (required) student.name, term.timezone
+config_keys = [
+  "student.name", "term.timezone",
+  "runtime.laptop_os", "runtime.laptop_scheduler",
+  "agent.primary", "agent.cli", "agent.headless_command", "agent.permission_posture",
+  "vm.remote_control_name",
+  "modules.enabled",
+]
+
+# The scripts live in scripts/ (not rendered). The header keeps its run-time placeholders
+# ({{host.*}}, {{job.*}}) because those roots are not template keys.
+verbatim = []
+
+# ---------------------------------------------------------------------------
+# Defaults (deep-merged UNDER the user's config; the user's values win).
+# ---------------------------------------------------------------------------
+
+[defaults.runtime]
+laptop_os = "windows"
+# How agent jobs run on the laptop:
+#   "agent-app" = scheduled tasks of the agent's desktop app (Claude Code desktop "Scheduled";
+#                 the original's choice until an always-on host took the recurring jobs)
+#   "os"        = an OS scheduler runs scripts/run_job.py, which runs the agent CLI headless
+#                 (experimental; Windows Task Scheduler is the documented example)
+#   "none"      = nothing runs on the laptop (jobs run on the always-on host, or not at all)
+laptop_scheduler = "agent-app"
+
+[defaults.agent]
+primary = "claude-code"
+cli = "claude"                 # the agent CLI used for headless runs (run_job.py)
+# Headless command for agents other than Claude Code (run_job.py). Placeholders:
+# {model} {effort} {permission} {title} {prompt_file}; without {prompt_file} the prompt goes to stdin.
+# Empty = the built-in Claude Code command:
+#   claude -p --permission-mode <mode> --output-format text --name <title> [--model M] [--effort E]
+headless_command = ""
+permission_posture = "accept-edits"   # unattended jobs need "bypass": a run that stops at an approval prompt does nothing
+
+[defaults.vm]
+remote_control_name = "Uni (VM)"

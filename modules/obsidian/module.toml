@@ -1,0 +1,37 @@
+id = "obsidian"
+name = "Obsidian views and styling"
+tier = "standard"
+summary = "Bases views (courses, weeks, study pages, error logs, inbox, recently changed, latest), a CSS snippet with per-course colours and callouts, graph colour groups and bookmarks to merge into your Obsidian settings, and a generated vault-map canvas."
+requires = ["core"]
+recommends = ["courses", "progress", "student-model", "cockpit"]
+obsidian = "required"
+os = ["any"]
+runtime = ["laptop"]
+
+# Keys this module reads. (required) = no default: courses[].colour is asked in setup
+# (the setup suggests clearly different colours, e.g. a dark/light calendar-palette pair per course).
+config_keys = [
+  "obsidian.enabled",
+  "obsidian.area_colours.me", "obsidian.area_colours.progress", "obsidian.area_colours.semester",
+  "obsidian.area_colours.deadline", "obsidian.area_colours.agent", "obsidian.area_colours.course",
+  "student.name", "university.short", "term.label",
+  "courses.short", "courses.name", "courses.folder", "courses.slug", "courses.colour",
+  "modules.enabled",
+]
+
+# Nothing is copied verbatim: the Bases files, the CSS snippet, the canvas and the merge
+# files are all generated from the config.
+verbatim = []
+
+[defaults.obsidian]
+enabled = true
+
+[defaults.obsidian.area_colours]
+# Colours for the non-course areas (callouts, graph groups, canvas groups). The original's values.
+# Keep them clearly different from each other and from every course colour.
+me = "#F6BF26"         # yellow: the student model (me/)
+progress = "#00BCD4"   # cyan: progress/ and week pages
+semester = "#795548"   # brown: semester/ (dates, planning)
+deadline = "#EF6C00"   # orange: deadline callouts
+agent = "#6E7681"      # grey: the agent area (_agent/), muted
+course = "#607D8B"     # blue-grey: the neutral [!course] callout

@@ -1,0 +1,9 @@
+{
+  "id": "uni-os-cockpit",
+  "name": "Uni OS cockpit",
+  "version": "0.1.0",
+  "minAppVersion": "1.13.2",
+  "description": "A calm study dashboard read live from your Uni OS vault (week page, progress page, course cards, daily prep notes) and your calendar feeds, with an optional AI side panel on your own API key.",
+  "author": "Uni OS",
+  "isDesktopOnly": false
+}

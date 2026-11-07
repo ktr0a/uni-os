@@ -1,0 +1,44 @@
+id = "quiz-coaching"
+name = "Quiz coaching"
+tier = "standard"
+summary = "A quiz-coach role for recurring graded quizzes during the term (live LMS quizzes, written in-class quizzes, online quizzes tied to sheets): scope check, prep sheets with code-checked quick checks, mock quizzes on request, and reviews that feed the error log and the progress files; plus an optional job that builds the prep sheet a few days before each quiz. Practice questions come from this term's material or are invented, and say which."
+requires = ["core", "courses", "error-logs", "study-pages"]
+recommends = ["progress", "roles", "daily-prep", "heartbeat"]
+obsidian = "optional"
+os = ["any"]
+runtime = ["laptop", "cloud", "vm"]
+config_keys = [
+  "course.assessments", "study.quiz.auto_mocks", "study.quiz.prep_lead_days",
+  "schedule.quiz_prep", "schedule.quiz_prep_dates",
+  "study.formats", "study.assistance_default",
+  "agent.heavy_model", "paths.agent_dir", "term.week0_monday", "term.timezone",
+]
+verbatim = ["vault/_templates/*.md"]
+
+[[roles]]
+id = "quiz-coach"
+
+[[jobs]]
+id = "quiz-prep"
+
+[defaults]
+
+[defaults.agent]
+heavy_model = ""
+
+[defaults.study]
+formats = ["html", "md"]
+assistance_default = "hints-only"
+
+[defaults.study.quiz]
+auto_mocks = false             # mock quizzes only on request (the original student declined automatic weekly mocks)
+prep_lead_days = 4             # quiz-prep job: build the sheet for quizzes within this many days (the original ran 4 days before)
+
+[defaults.schedule]
+# quiz-prep job (off when installed). The original: 09:00 on three fixed dates, four days before each remaining
+# written quiz of one course. Dates are ";"-separated "YYYY-MM-DD" (a range "A..B" also works); empty = never runs.
+quiz_prep = ["09:00"]
+quiz_prep_dates = ""
+
+[defaults.course]
+assessments = []               # [[courses.assessments]] name, kind = "quiz" | "sheet" | ..., schedule, counts_for, assistance, points_max

@@ -1,0 +1,851 @@
+# =====================================================================================
+#  Uni OS configuration: the single source of truth for your study system
+# =====================================================================================
+#
+#  This example is filled in for a fictional student, Alex Example, at the fictional
+#  Example Institute of Technology (EIT). Copy it, replace the values, then run
+#
+#      python tools/uni_os.py init --config my-uni-os.toml --vault "G:/My Drive/Uni"
+#
+#  (or simply tell your agent "set me up": it interviews you and writes this file).
+#  After setup the live copy is <vault>/_agent/uni-os.toml. Edit that one, then run
+#  `uni-os render` (or ask your agent) to apply changes. `uni-os doctor` checks it.
+#
+#  Rules of this file
+#  - TOML. Text in quotes. Dates as 2026-09-14 (bare) or "2026-09-14".
+#  - Times are QUOTED 24-hour strings: "07:30" (bare 07:30 is not valid TOML).
+#  - Days are "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun".
+#  - SECRETS NEVER GO IN HERE (API keys, calendar feed addresses, the ntfy topic,
+#    tokens). The vault syncs everywhere and every agent can read it. This file may
+#    only hold *paths* to secret files outside the vault (see notify.ntfy_topic_file).
+#  - Every key has a default. Keys you leave out take the default shown in
+#    config/schema.md (or from the modules you enable). Only [student] name,
+#    [university] name and [term] label/timezone/week0_monday are required.
+#  - Nothing here is anchored on the author's own days and times: every schedule is
+#    your choice. The values below are only an example.
+#  - This file shows EVERY key, also those of optional modules. Lines under
+#    "# -- <id> module --" belong to that module (its defaults, the original system's
+#    values); keys of modules you do not enable are simply unused. Your own config
+#    needs only the keys whose values differ from the defaults. Not shown: four old
+#    stuck-note aliases kept for old configs (config/schema.md; leave them out and set
+#    notify.inbox_stale_hours / notify.inbox_stale_hours_taps instead).
+# =====================================================================================
+
+
+[uni_os]
+# Framework version this config was written for.
+version = "0.1.0"
+# Module preset you started from: "minimal" | "standard" | "full" | "custom".
+# Used only when [modules] enabled is empty. See setup/presets.md.
+preset = "standard"
+
+
+[student]
+name = "Alex Example"           # how agents address you and name the vault
+handle = "alex"                  # optional short id, shown next to the name (start page, handbook, profile)
+language = "English"             # the language agents write notes and replies in
+# true if you often dictate messages (speech to text): agents then work out mangled
+# words from context and ask only when a wrong guess would change something.
+dictates = false
+pronouns = ""                    # optional, e.g. "she/her"
+
+
+[university]
+name = "Example Institute of Technology"
+short = "EIT"
+programme = "BSc Computer Science"
+lms = "Moodle"                           # your learning platform (Moodle, Canvas, ...)
+lms_url = "https://lms.example.edu"       # public start page only; never a private link
+website = "https://www.example.edu"
+
+# -- courses module --
+# course catalogue URL (official list of courses, rooms, exam modes)
+catalogue = ""
+recordings = ""                              # lecture recording portal URL, if any
+
+
+[term]
+label = "Autumn 2026"                    # shown in titles ("EIT Autumn 2026")
+timezone = "Europe/Zurich"               # IANA zone; "today" is computed here, also on a UTC server
+# Week 0 is the Monday of the first lecture week; week n starts week0 + 7n days.
+week0_monday = 2026-09-14
+last_lecture_day = 2026-12-18
+lecture_free_from = 2026-12-19
+exam_session_start = 2027-01-25          # exam-session dates, used for exam-phase scheduling
+exam_session_end = 2027-02-19
+# Holidays and breaks inside the term (planning skips them, week pages mention them).
+holidays = [
+  { name = "Reading day", from = 2026-11-20, to = 2026-11-20 },
+]
+
+
+[paths]
+# Where the vault lives on the laptop, e.g. "G:/My Drive/Uni" with Google Drive for
+# desktop. Informational for agents and laptop scripts; the CLI always takes the
+# vault from --vault or from the folder you run it in.
+vault = "G:/My Drive/Uni-EIT"
+agent_dir = "_agent"                     # the agent area; changing it is not recommended
+inbox = "inbox"                          # drop folder for unsorted files and update notes
+# Vault-relative globs that tools never open (doctor's secrets scan skips them; agents
+# are told never to read them). Default: any folder named "private".
+never_open = ["**/private/**"]
+
+# -- handwritten-notes module --
+# the note app's own sync/data folder if it lives inside the vault: never touched, never
+# read, never listed
+handwriting_app_data = ""
+# the note app's own export folder inside the vault (notebooks not mapped to a course,
+# fallback exports)
+handwriting_app_exports = ""
+
+
+[storage]
+# Where the vault syncs: "google-drive" (documented default) | "onedrive" | "dropbox"
+# | "icloud" | "syncthing" | "git" | "local". See docs/storage.md.
+provider = "google-drive"
+
+
+[obsidian]
+# Obsidian is recommended, not required: everything is plain Markdown. Without it the
+# dashboards (Bases views, Home, the cockpit plugin) are hard to get.
+enabled = true
+
+[obsidian.area_colours]
+# Colours of the non-course areas (callouts, graph and canvas groups); keep them distinct.
+# colour of the student-model area (me/): callout, graph group, canvas group
+me = "#F6BF26"
+progress = "#00BCD4"                         # colour of progress/ and the week pages
+semester = "#795548"                         # colour of semester/ (dates, planning)
+deadline = "#EF6C00"                         # colour of deadline callouts
+agent = "#6E7681"                            # colour of the agent area (_agent/), muted
+# colour of the neutral [!course] callout and the canvas Courses group
+course = "#607D8B"
+
+
+[agent]
+# The agent you use: "claude-code" (the only one tested) | "codex" | "gemini-cli"
+# | "cursor" | "other". See docs/agents.md.
+primary = "claude-code"
+# How much the agent may do without asking, for unattended jobs and role sessions:
+# "bypass" (everything; only on a machine you trust, e.g. the VM) | "accept-edits" | "ask".
+permission_posture = "bypass"
+default_model = ""                       # empty = your agent's default
+heavy_model = ""                         # for long or hard jobs; empty = default
+# Personal reply rules every agent follows (written into _agent/rules.md).
+reply_rules = [
+  "Keep replies short; use a table when comparing options.",
+  "Write dates as Ddd D Mon YYYY, e.g. Mon 26 Oct 2026.",
+]
+# Where your agent reads skills. Setup COPIES _agent/skills/* there (a copy, not a link:
+# Google Drive has no symbolic links); copy them again after every `uni-os render`.
+# In Claude Code: ".claude/skills" (project, inside the vault) or "~/.claude/skills" (user).
+skills_dir = ".claude/skills"
+
+# -- roles module --
+coordinator_title = "Uni coordinator"        # session title of the coordinator, your single entry point
+context_refresh_tokens = 300000              # recycle a long-lived session past about this many tokens
+# unattended side sessions finish the current file, write their handover and stop at
+# this percentage of the weekly usage limit
+usage_stop_weekly_pct = 90
+# unattended side sessions pause at this percentage of the plan's 5-hour usage limit
+# until it resets
+usage_pause_5h_pct = 90
+max_helpers = 2                              # helper agents (subagents) a session may run at the same time
+# -- scheduler-local module --
+# agent command line used for headless job runs on the laptop (run_job.py)
+cli = "claude"
+# other agents: headless command template; "" = built-in Claude Code command
+headless_command = ""
+
+
+[study]
+# Output formats for study pages: subset of "html" (interactive, KaTeX, quizzes),
+# "md" (reads in Obsidian), "pdf" (print/tablet). The original used ["html", "md"]:
+# an HTML page plus a Markdown twin. Markdown only if you mostly read in Obsidian.
+formats = ["html", "md"]
+math = "katex"                           # "katex" | "mathjax" | "none"
+chunk_words = 750                        # words per study-page section (700-800 worked well)
+# Default assistance level for graded work: "solo" (no help at all) | "hints-only" (smallest
+# hint first, never a solution) | "coach" (explain, check your reasoning) | "full".
+assistance_default = "hints-only"
+# Your own rule that is stricter than official deadlines (planning and week pages use it).
+personal_deadline_rule = "Sheets released in a week are done by that Sunday."
+
+# -- experiments module --
+experiment_weeks = 2                         # default length of a study or habit experiment (weeks)
+# -- handwritten-notes module --
+# name of your handwriting app, shown in the rules (e.g. "GoodNotes", "Notability")
+handwriting_app = "GoodNotes"
+# -- progress module --
+# header of the personal-target column of every "Due this week" table (readers find it
+# by the word "target"; the original: "Sunday target")
+target_column = "Personal target"
+# -- study-pages module --
+# study pages and rundowns lead with intuition and pictures, then the precise
+# definitions
+intuition_first = true
+pdf_browser = "auto"                         # "auto" | "chrome" | "edge" | "chromium" | a path
+
+[study.error_logs]
+# Error logs (module error-logs): optional cold-redo retest bank.
+# turn on the optional cold-redo retest bank (the original student dropped it)
+retests = false
+retest_items = 3                             # items per course per weekly retest slot
+retest_minutes = 20                          # length of the weekly retest slot (minutes)
+
+[study.exercise_help]
+# Exercise help (module exercise-help): hints-only pacing.
+cold_minutes = 25                            # cold attempt before the first hint (minutes)
+# cap per task part; then the missing idea in one line and move on (minutes)
+part_cap_minutes = 45
+# programming: stuck longer than this on one bug = ask for the next hint (minutes)
+stuck_bug_minutes = 25
+# ungraded tasks only: point to the official solution on explicit request after your own
+# attempt (false = never)
+official_solutions_after_attempt = true
+
+[study.rundowns]
+# Lecture rundowns (module lecture-rundowns).
+# a skim is ready at least this many hours before the lecture starts
+skim_lead_hours = 1
+# offer post-lecture recall-key pages (the original student dropped recall tests)
+recall_keys = false
+# course ids the lecture-skim job writes skims for, e.g. ["dm"] (the original: only its
+# hardest course)
+skim_courses = ["dm"]
+
+[study.quiz]
+# Quiz coaching (module quiz-coaching).
+# build a mock quiz with every prep sheet (false = mocks on request only)
+auto_mocks = false
+# the quiz-prep job builds sheets for quizzes within this many days
+prep_lead_days = 4
+
+
+# -------------------------------------------------------------------------------------
+#  Courses: one [[courses]] block each. Folder names may contain spaces and "&".
+#  Assessments describe graded work (for the progress tracker and integrity rules);
+#  bonus describes how extra credit works (agents read the free-text rule).
+# -------------------------------------------------------------------------------------
+
+[[courses]]
+id = "algo"                              # stable id (lowercase); used in tags, lookups and lists of course ids
+name = "Algorithms and Data Structures"
+short = "AD"                             # short label in tables and calendar titles
+folder = "AD"                            # vault folder (e.g. "A&D" works too)
+slug = "ad"                              # file prefix: ad.md, ad-error-log.md, ...
+colour = "#1e66f5"                       # lecture colour (hex); Obsidian CSS, cockpit, canvas
+colour_light = "#7aa2f7"                 # exercise colour; optional (computed if empty)
+language = "English"                     # language of the course material
+lecturers = []                           # optional; never put real names in shared examples
+lecture_slots = ["Tue 10:15-12:00", "Thu 10:15-12:00"]   # "Ddd HH:MM-HH:MM"
+exercise_slots = ["Wed 14:15-16:00"]
+sheet_release = "Thu 12:00"              # when exercise sheets come out ("Ddd HH:MM")
+sheet_due = "Thu 23:59, one week later"  # when they are due
+# folders for official files (never renamed); `uni-os init` creates them empty inside the course folder
+official_subfolders = ["AD assignments", "AD slides & script"]
+error_log_streams = ["main"]             # one error log per stream
+assistance = "hints-only"
+notes = ["Written answers use the pseudocode conventions of the script."]
+
+# Course facts (courses module): the course-facts skill and the course card read them. All optional.
+ects = "8"
+exercise_group = "group 3"                # your own exercise group / tutorial
+lms_url = "https://lms.example.edu/course/algo"   # the course's public LMS page
+website = "https://algo.example.edu"      # course website outside the LMS, if any
+platforms = ["online judge with hidden tests (programming tasks)"]
+recordings = "recorded, usually online the next day"
+hand_in = "LMS upload, one PDF per person"
+# THE key fact for planning: what the exercise session of term week n covers.
+session_rule = "The exercise session of week n discusses sheet n-1 and introduces sheet n."
+week_numbering = "Sheet k is released in term week k."   # course numbering vs term weeks
+real_source = "the lecture script and the slides on the LMS"   # ground truth for "what was lectured"
+page_offsets = [{ source = "Script 2026 (PDF)", rule = "PDF page = printed page + 2" }]
+exam_format = "written, 120 min, English, one handwritten A4 sheet allowed"   # logistics, for exam-phase scheduling
+integrity = "Sheets are individual work; AI may explain concepts, never produce solutions."
+handwritten_folder = ""                   # "" = "AD handwritten" (handwritten-notes module; init creates it)
+# Cockpit: extra names and an optional regular expression that identify this course.
+aliases = ["Algo"]
+detect = ""
+# course-files-fetch: extra official pages (their hosts become allowed); vault-watch: extra note subfolders.
+fetch_sources = []
+watch_note_subfolders = []
+
+  [[courses.assessments]]
+  name = "Weekly exercise sheets"
+  kind = "sheet"                         # sheet | quiz | oral | project | midterm | other
+  schedule = "out Thu, due the next Thu 23:59"
+  counts_for = "bonus"                   # bonus | grade | admission | none
+  assistance = "hints-only"
+  points_max = 0                         # 0 = unknown / varies
+
+  [[courses.assessments]]
+  name = "In-class quizzes"
+  kind = "quiz"
+  schedule = "weeks 4, 8 and 12, in the exercise session"
+  counts_for = "bonus"
+  # The attempt is always the student's own; hints-only allows prep sheets and a review
+  # afterwards. "solo" would mean the coach prepares nothing aimed at the quiz.
+  assistance = "hints-only"
+  points_max = 10
+  # dated sittings (cockpit: "N quizzes left"): "YYYY-MM-DD" or "YYYY-MM-DD HH:MM"
+  dates = ["2026-10-14 14:15", "2026-11-11 14:15", "2026-12-09 14:15"]
+
+  [courses.bonus]
+  scheme = "threshold"                   # none | threshold | points | best-n | custom
+  description = "+0.25 grade bonus at 80 % of all sheet points"
+  max_bonus = 0.25
+  rule = "Sum of sheet points over the term; quizzes count double."
+  target = "80 % of all sheet points"     # short text for the course card
+  # bonus rule engine (cockpit, progress):
+  threshold = 0.8                        # threshold: share of all points for the full bonus
+  total = 0                              # total points if published (0 = unknown)
+  total_estimated = false                # true if total is your own estimate
+  proportional = true                    # proportional share below the mark
+  full_at = 0                            # points scheme only
+  required = 0                           # best-n scheme only
+  unit = "points"
+  counts = []                            # assessments whose dates count as sittings ([] = all bonus ones)
+
+[[courses]]
+id = "dm"
+name = "Discrete Mathematics"
+short = "DM"
+folder = "DM"
+slug = "dm"
+colour = "#40a02b"
+colour_light = "#7ccf6b"
+language = "English"
+lecturers = []
+lecture_slots = ["Mon 08:15-10:00", "Wed 08:15-10:00"]
+exercise_slots = ["Tue 16:15-18:00"]
+sheet_release = "Mon 12:00"
+sheet_due = "Mon 12:00, one week later"
+official_subfolders = ["DM assignments", "DM script"]
+error_log_streams = ["main"]
+assistance = "hints-only"
+notes = []
+
+  [[courses.assessments]]
+  name = "Graded sheets"
+  kind = "sheet"
+  schedule = "every second week"
+  counts_for = "bonus"
+  assistance = "solo"
+  points_max = 2
+
+  [[courses.assessments]]
+  name = "Practice sheets"
+  kind = "sheet"
+  schedule = "weekly"
+  counts_for = "none"
+  assistance = "hints-only"
+
+  [courses.bonus]
+  scheme = "points"
+  description = "Up to 2 points per graded sheet; 8 points give +0.25"
+  max_bonus = 0.25
+  rule = "Bonus = 0.25 * min(points, 8) / 8."
+  target = "8 points"
+  full_at = 8                            # points scheme: points for the full bonus
+  unit = "points"
+
+[[courses]]
+id = "la"
+name = "Linear Algebra"
+short = "LA"
+folder = "LA"
+slug = "la"
+colour = "#8839ef"
+colour_light = "#b58af5"
+language = "English"
+lecturers = []
+lecture_slots = ["Mon 13:15-15:00", "Fri 10:15-12:00"]
+exercise_slots = ["Thu 16:15-18:00"]
+sheet_release = "Fri 18:00"
+sheet_due = "Mon 09:00"
+official_subfolders = ["LA assignments", "LA plan & notes"]
+error_log_streams = ["main"]
+assistance = "hints-only"
+notes = []
+
+  [[courses.assessments]]
+  name = "Online quizzes"
+  kind = "quiz"
+  schedule = "weekly on the LMS, open Fri 18:00 to Mon 09:00"
+  counts_for = "bonus"
+  assistance = "solo"
+  points_max = 4
+
+  [[courses.assessments]]
+  name = "Exercise sheets"
+  kind = "sheet"
+  schedule = "weekly, discussed in the exercise session"
+  counts_for = "none"
+  assistance = "hints-only"
+
+  [courses.bonus]
+  scheme = "best-n"
+  description = "Pass 10 of the 12 online quizzes (70 % each) for +0.25"
+  max_bonus = 0.25
+  rule = "At least 10 of the 12 weekly quizzes passed with >= 70 %; fewer passes give a proportional share."
+  target = "10 / 12"
+  required = 10                          # best-n scheme: how many must be passed
+  total = 12
+  proportional = true
+  unit = "quizzes"
+
+[[courses]]
+id = "prog"
+name = "Introduction to Programming"
+short = "PROG"
+folder = "PROG"
+slug = "prog"
+colour = "#d20f39"
+colour_light = "#f2788f"
+language = "English"
+lecturers = []
+lecture_slots = ["Tue 13:15-15:00", "Fri 13:15-15:00"]
+exercise_slots = ["Wed 10:15-12:00"]
+sheet_release = "Tue 18:00"
+sheet_due = "Tue 18:00, one week later"
+official_subfolders = ["PROG assignments", "PROG slides"]
+error_log_streams = ["theory", "programming"]   # two error logs: prog-error-log-theory.md, -programming.md
+assistance = "coach"
+notes = ["Never store finished solutions or code for graded tasks."]
+
+  [[courses.assessments]]
+  name = "Programming exercises"
+  kind = "sheet"
+  schedule = "weekly, autograded"
+  counts_for = "admission"
+  assistance = "hints-only"
+
+  [[courses.assessments]]
+  name = "Team project"
+  kind = "project"
+  schedule = "weeks 10 to 13, in pairs"
+  counts_for = "grade"
+  assistance = "hints-only"
+
+  [courses.bonus]
+  scheme = "none"
+  description = ""
+  max_bonus = 0
+  rule = ""
+
+
+[schedule]
+# Local times ("HH:MM") and days for the automated jobs. Pick your own; these are
+# only examples. A job runs at every listed time.
+daily_prep = ["17:30", "19:30"]          # build tomorrow's prep note; second run = change check
+prep_check = "07:30"                     # morning check of today's prep note against the calendar
+week_page = { day = "Sun", time = "10:00" }                  # create next week's page
+check_in = { day = "Sat", time = "19:45", every = "week" }   # end-of-week check-in with you
+heartbeat = ["07:50", "13:05", "18:05"]  # proactive watcher (silent unless something matters)
+heartbeat_days = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+inbox_sync = ["07:15", "13:15", "18:15"] # apply update notes left in the inbox
+study_cutoff = "19:00"                   # no study blocks planned after this time
+
+# -- heartbeat module --
+heartbeat_weekend = ["09:00", "17:40"]       # heartbeat runs at the weekend ([] = none)
+# weekend days of those runs (the original skipped Saturday because the check-in covered
+# it)
+heartbeat_weekend_days = ["Sun"]
+# -- inbox-sync module --
+# the poll starts syncs only inside this window ("always" = all day)
+inbox_poll_window = "07:00-22:00"
+# how often the inbox poll looks for waiting update notes (minutes)
+inbox_poll_every_min = 10
+# at most one inbox sync per this many minutes, fixed runs included
+inbox_poll_min_gap_min = 60
+# -- lecture-rundowns module --
+# run times of the lecture-skim job (off when installed); pick a time that ends
+# study.rundowns.skim_lead_hours before the earliest skimmed lecture. For morning lectures
+# an evening run covers the next day (for Mon and Wed 08:15 lectures: ["19:00"] on Sun, Tue)
+lecture_skim = ["19:00"]
+# run days of the lecture-skim job (the days of the lectures you skim, or the day before
+# for morning lectures)
+lecture_skim_days = ["Sun", "Tue"]
+# -- planning module --
+day_start = "08:00"                          # earliest start of a study block
+# weekday study ends by this time (the original: a hard stop at 18:15)
+weekday_stop = "18:15"
+focus_minutes = 70                           # focus span before a break when planning blocks
+break_minutes = 10                           # fixed break inside long blocks
+# -- quiz-coaching module --
+quiz_prep = ["09:00"]                        # run time of the quiz-prep job (off when installed)
+# run dates of the quiz-prep job, e.g. "2026-11-15; 2026-11-29"; "" = never runs
+quiz_prep_dates = ""
+# -- roles module --
+# when the optional job waiting-on-you writes the "what's waiting on you" page (off when installed)
+waiting_on_you = ["19:00"]
+waiting_on_you_days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+# -- vault-watch module --
+# daily run times of the vault watcher (Windows); it also runs at logon
+vault_watch = ["08:17", "13:17", "18:17", "22:17"]
+# -- vm module --
+vm_verdict = { day = "Sun", time = "19:30" } # weekly host performance verdict (vm)
+
+
+[notify]
+provider = "ntfy"                        # "ntfy" (phone pushes) | "none"
+ntfy_server = "https://ntfy.sh"
+# File OUTSIDE the vault that contains only your secret topic name.
+ntfy_topic_file = "~/.config/uni-os/ntfy-topic"
+max_per_day = 3                          # push budget per day
+min_gap_hours = 2                        # minimum hours between two pushes
+quiet_hours = "21:00-07:30"              # no pushes in this window ("" = none)
+dedupe_hours = 24                        # the same message is not repeated within this time
+never_all_good = true                    # never push "all good" messages; silence is the norm
+# Extra quiet periods. Dated: { from, to, reason } with dates or "YYYY-MM-DD HH:MM"; weekly:
+# { day = "Mon", from = "08:00", to = "10:00", until = 2026-12-21, reason }. A window holds
+# EVERY push, urgent ones too, and the heartbeat skips its runs: right for a timed quiz, e.g.
+#   { from = "2026-11-19 07:30", to = "2026-11-19 10:00", reason = "LA quiz" },
+# urgent_ok = true makes a window soft: ordinary pushes stay held, urgent and direct pushes
+# pass and the heartbeat keeps running and logging: right for a long period such as the exam
+# session (doctor warns about a hard window longer than a day).
+quiet_windows = [
+  { from = "2027-01-25", to = "2027-02-19", reason = "exam session", urgent_ok = true },
+]
+
+# -- inbox-sync module --
+# an update note waiting at least this long counts as stuck: the one threshold every sender uses
+# (inbox poll, heartbeat rules, outcome checks, the vm host's check)
+inbox_stale_hours = 4
+# the same for cockpit Done taps (they wait for fixed runs by design)
+inbox_stale_hours_taps = 14
+# -- notifications module --
+title = "Uni OS"                             # title of every push
+# link opened when a push is tapped; "" = none (Claude Code users:
+# https://claude.ai/code)
+default_click = ""
+require_id = true                            # every push must name the problem it is about (--id); keep it on
+# refuse pushes with mail addresses, links or long numbers in the text; keep it on
+block_personal = true
+# more regular expressions for "all good" messages in your language (refused by the
+# gate)
+extra_all_good_patterns = []
+max_length = 300                             # longer push texts are cut
+# direct host alerts queued during a quiet window and older than this are dropped at
+# release
+hold_max_hours = 24
+direct_priority = 4                          # ntfy priority of direct host alerts
+
+
+[calendar]
+provider = "google"                      # "google" | "other" | "none"
+courses = "Courses"                      # lectures, exercise sessions, graded fixtures
+study_blocks = "Study blocks"            # self-study blocks the planner writes
+events = "Events"                        # non-study events
+busy = "Busy"                            # busy time only (no details are read)
+notation = "default"                     # block-title notation (X_, (X), [X], OP ...); see modules/planning
+
+# -- planning module --
+# title prefix of lectures in the Courses calendar (the original used German V:)
+lecture_prefix = "L:"
+# title prefix of exercise classes in the Courses calendar (the original used German U:)
+exercise_prefix = "E:"
+# true: the planner changes study blocks without asking first and lists every change in
+# the plan's ledger
+standing_approval = false
+# location written into every study block until you name real places (e.g. "Library")
+default_location = "Library"
+
+
+[runtime]
+laptop_os = "windows"                    # "windows" | "macos" | "linux" (laptop scripts are Windows-only, experimental)
+use_vm = false                           # optional always-on host (module vm)
+use_cloud_sessions = false               # hosted agent sessions that cannot reach laptop files
+
+# -- scheduler-local module --
+# "agent-app" (desktop app tasks) | "os" (OS scheduler, experimental) | "none"
+laptop_scheduler = "agent-app"
+
+
+[vm]
+# Only used with the vm module (runtime.use_vm = true).
+provider = "gcp"                         # "gcp" | "home-server" | "other"
+host_alias = "uni-vm"                    # ssh alias of the host
+project = ""                             # cloud project id (stays empty in shared examples)
+zone = "us-central1-a"                   # cloud zone (install commands only)
+machine_type = "e2-custom-small-4096"
+linux_user = ""
+remote_control_name = "Uni (VM)"         # name shown for the host's remote sessions
+budget_month = 13                        # budget alert threshold per month
+budget_currency = "EUR"
+
+# -- vm module --
+disk_gb = 30                                 # boot disk size (used in the install commands)
+mount_path = "~/Uni"                         # where the vault appears on the host
+drive_remote = "uni-drive"                   # rclone remote whose root is the vault folder
+repo_url = ""                                # public git URL of the framework; "" = deploy from the laptop
+rc_prefix = "uni-vm"                         # automatic names of the remote sessions the server spawns
+# remote sessions the server accepts; finished ones count until archived in the app
+rc_capacity = 10
+# browser bridge for app-started and role sessions (In Claude Code: Claude in Chrome)
+rc_chrome = true
+rc_update_hour = 4                           # quiet hour in which a self-updated agent binary is picked up
+default_model = "sonnet"                     # host default model for jobs and roles without their own MODEL
+default_effort = "high"                      # host default effort for jobs and roles without their own EFFORT
+# a monthly cloud credit some subscriptions include (counted in the budget view)
+monthly_credit = 0
+snapshot_retention_days = 21                 # days weekly disk snapshots are kept (install commands)
+health_every_min = 15                        # period of the host self-check (minutes)
+history_minute = 40                          # minute of the hourly notes-history snapshot
+# more paths the notes history skips (private paths from paths.never_open are always
+# skipped)
+history_exclude = [".obsidian/plugins/**", "**/node_modules/**", "_agent/vm/snapshot.json"]
+mem_alert_mb = 500                           # push when available memory is below this on two checks in a row
+mem_close_jobs_mb = 700                      # below this, idle job sessions close after 20 minutes
+# swap-in pages per second between two checks that count as thrashing
+swapin_alert_rate = 250
+disk_alert_pct = 90                          # disk usage that counts as a problem (percent)
+alert_repeat_h = 3                           # one alert (and one "recovered") per problem per this many hours
+# doctor flags role sessions above this many thousand tokens of context
+big_context_k = 300
+# tomorrow's prep note is due this many minutes after the first prep slot
+outcome_prep_grace_min = 60
+
+
+[cockpit]
+# The Obsidian cockpit plugin (module cockpit). Display keys are first-run defaults; afterwards the
+# plugin's own settings win. Secrets (assistant API key, iCal addresses) stay in Obsidian's secret storage.
+enabled = true
+
+# -- cockpit module --
+layout = "focus"                             # first-run layout: "focus" | "dashboard" | "agenda"
+default_tab = "home"                         # first-run start page: "home" | "week" | "courses"
+open_on_startup = false                      # open the cockpit when Obsidian starts (first-run setting)
+color_mode = "accent"                        # "accent" | "mono" | "vivid"
+# before this hour the prep card shows today's prep note, from it tomorrow's
+prep_switch_hour = 18
+# tomorrow's prep note still missing after this time: orange alert
+prep_warn_after = "19:30"
+feed_minutes = 10                            # live iCal feeds are fetched this often while Obsidian is open
+# rewrite the vault's calendar snapshot from the live feeds when they change (one device
+# should do this)
+write_snapshot = true
+stale_days = 2                               # warn when the calendar snapshot is older than this many days
+urgent_hours = 24                            # a deadline closer than this many hours is urgent
+day_start = 7                                # start of the timeline and week grid (hour)
+day_end = 21                                 # end of the timeline and week grid (hour)
+status_path = "progress/current-status.md"   # progress dashboard the cockpit reads
+weeks_folder = "progress/weeks"              # folder of the week pages
+prep_folder = "semester/prep"                # folder of the daily prep notes
+plans_folder = "semester/plans"              # folder of the week plans
+overview_path = "courses-overview.md"        # courses overview page
+study_folders = ["notes", "quiz-prep"]       # per course, the newest notes from these subfolders are listed
+# calendar snapshot file; "" = <agent_dir>/cockpit/calendar-snapshot.json
+snapshot_path = ""
+# rules the assistant panel reads first; "" = <agent_dir>/rules.md
+rules_path = ""
+# prompt template of the assistant panel; "" = <agent_dir>/cockpit/assistant-prompt.md
+prompt_note = ""
+# courses-calendar titles that are lectures ("/pattern/flags" works; "" switches it off)
+lecture_pattern = "^(?:V|L):"
+exercise_pattern = "^(?:U|Ü|E):"             # courses-calendar titles that are exercise classes
+# study blocks that are optional ((X) or OP ... in the default block notation)
+optional_pattern = '^\(|^OP\b'
+# a title matching this marks a deep-work block (case-insensitive)
+deep_pattern = '\bdeep\b'
+# in an event description, the lines after this marker are the block's focus
+focus_marker = "FOCUS:"
+# in a block title like LA_ mock A, the segment with this marker is the block's main
+# subject
+main_marker = "_"
+# due-table Status cells starting with one of these are done (a score x / y always
+# counts as done)
+done_words = ["✓", "done", "submitted", "closed", "handed in", "uploaded", "dropped", "skipped"]
+# status cells containing one of these wait for a result: never overdue
+pending_words = ["not reported", "pending", "not recorded"]
+# bonus cells starting with one of these (or empty) mean no bonus: the row drops off
+# once its date is over
+no_bonus_words = ["none", "no", "feedback only"]
+# deadline cells starting with one of these are soft dates (never overdue or urgent)
+soft_prefixes = ["tutorial"]
+soft_markers = ["(tentative)"]               # deadline cells containing one of these are soft dates too
+not_released_words = ["not released"]        # rows whose status contains one of these get no Done button
+# first-run model of the assistant panel for quick questions (your own API key, stored
+# in Obsidian's secret storage, never in the vault)
+fast_model = "claude-haiku-5-5"
+strong_model = "claude-sonnet-5-5"           # first-run model of the assistant panel for harder questions
+
+[cockpit.headings]
+# Headings the cockpit parses (matched by prefix); keep them in step with your templates.
+due = "Due this week"                        # week-page heading of the due table (headings match by prefix)
+results = "Results this week"                # week-page heading of the results table
+notes = "Notes"                              # week-page notes heading
+# week-page check-in heading ("End-of-week check-in (Sat)" matches too)
+check_in = "End-of-week check-in"
+# progress-page heading of the upcoming items (any "Next <n> days" matches)
+next = "Next 10 days"
+# progress-page heading "Exercises: done vs. to do" (one ### per course)
+exercises = "Exercises"
+self_rating = "Self-rated"                   # progress-page heading "Self-rated understanding"
+snapshot = "Snapshot:"                       # the bold **Snapshot: ...** line of the progress page
+
+
+[heartbeat]
+# Tuning of the proactive watcher (module heartbeat); run times are schedule.heartbeat*.
+# The original's values. Silence is the norm: at most one push or one question per run.
+# "safe" (asks the owning role) | "full" (acts itself); start with safe
+act_mode = "safe"
+safe_windows = []                            # periods that force safe mode (e.g. a plan freeze)
+event_hours = "07:30-20:45"                  # when event wake-ups may start an extra heartbeat run
+event_cap = 2                                # extra event runs per day
+event_near_slot_min = 45                     # no event run when the next regular slot is this close (minutes)
+event_min_gap_min = 30                       # no event run this soon after the last run (minutes)
+min_memory_mb = 600                          # skip the run when the host has less free memory (Linux)
+# grace after a job's slot before its missing result counts (minutes)
+grace_min = 20
+# hours after the check-in slot before an empty check-in is flagged
+checkin_grace_hours = 16
+gap_open_hours = 24                          # a prep gap older than this becomes an outcome push
+# how long after a graded fixture a missing result stays a question candidate
+result_window_days = 7
+snapshot_file = "_agent/vm/snapshot.json"    # the always-on host's machine-readable status (vm module)
+# the host snapshot is written every 15 min; older than this = red
+snapshot_stale_min = 40
+jobs_log = "{state}/jobs.log"                # the job runners' run log
+flags_dir = "_agent/logs/flags"              # where jobs write failure flags
+# optional study-block log tables (e.g. from an experiment), to annotate ended blocks
+block_log_glob = ""
+# block titles that are not study blocks (lectures, exercise classes, optional blocks)
+non_study_block_prefixes = ["L:", "E:", "V:", "U:", "OP", "("]
+# status words that close a due row (a score x/y always does); the same list as cockpit.done_words
+done_words = ["✓", "done", "submitted", "closed", "handed in", "uploaded", "dropped", "skipped"]
+# due rows that are events: past their time they are "result not recorded", never
+# "overdue"
+event_words = ["quiz", "timed", "oral", "exam", "midterm", "tutorial", "rehearsal", "test"]
+on_demand_roles = ["course-files-fetch"]     # role sessions that are normally off (not flagged as down)
+ask_mode = "auto"                            # "auto" | "session" | "inline" (the question is the push)
+start_job_command = ""                       # how this host starts a job ({job}); "" = runner default
+rerun_allowed = ["study-prep-morning-check"] # jobs the heartbeat may re-run itself
+outcome_prefix = "Outcome check: "           # text in front of outcome-check pushes
+
+
+[course_fetch]
+# Course-file pick-up from your logged-in browser (module course-files-fetch; Windows,
+# experimental). Official files only; the password step always stays with you.
+task_name = "Uni OS course pick-up"          # Task Scheduler task name of the pick-up bridge
+# scripts, policy and log, outside the vault
+install_dir = '%USERPROFILE%\Documents\uni-os\course-pickup'
+downloads_dir = ""                           # the browser's download folder; "" = your Downloads known folder
+# how often the pick-up task looks into the request queue (it exits at once when the
+# queue is empty)
+interval_minutes = 1
+# allowed download hosts besides the LMS and the course URLs, e.g. the LMS's file host
+extra_hosts = []
+# also accept a download whose referrer host is allowed (weaker than the download host)
+check_referrer = false
+# file extensions the pick-up accepts; executables are always refused
+allowed_types = [
+  "pdf", "zip", "txt", "md", "java", "html", "htm", "tex", "csv", "py", "ipynb", "c", "cpp",
+  "h", "hpp", "pptx", "docx", "xlsx",
+]
+max_mb = 50                                  # larger files need your OK (--approved-large)
+# a file in Downloads older than this is refused (it may be an old version)
+max_age_hours = 12
+# a request waits this long for its download (or for a half-synced request)
+wait_minutes = 30
+# integrity gates: files matching pattern stay out before not_before
+date_guards = []
+request_timeout_min = 15                     # request_pickup.py: how long to wait for the laptop's answer
+# request_pickup.py: how long to wait for the filed copy to sync to this machine
+verify_timeout_min = 5
+preferred_language = "English"               # when a file exists in several languages, take this one
+# which connected browser the agent drives (e.g. a device id) when several are connected
+browser_hint = ""
+
+
+[vault_watch]
+# Windows watcher for notes drift and new official files (module vault-watch; experimental).
+# Re-run register-task.ps1 after changing task_name, install_dir, at_logon or logon_delay_min.
+task_name = "Uni OS vault watch"             # Task Scheduler task name
+# scripts and state of the watcher, outside the vault
+install_dir = '%USERPROFILE%\Documents\uni-os\vault-watch'
+at_logon = true                              # also run at logon
+logon_delay_min = 5                          # delay of the logon run (minutes)
+# which scopes run: notes (drift in your notes) and sources (new or changed official
+# files)
+scopes = ["notes", "sources"]
+toast_title = "Uni OS vault watch"           # title of the Windows toasts
+toast_summary_over = 3                       # more alerts than this in one run = one summary toast
+# one generic phone push per run with new alerts (needs notifications; no file names in
+# pushes)
+push = false
+# custom push command with {message}; [] = uni-os push through the push gate
+push_command = []
+# root files that belong to the notes scope
+note_root_files = ["*.md", "*.canvas", "*.base"]
+# note folders (recursive) of the notes scope
+note_folders = ["me", "progress", "semester", "resources", "views", "inbox", "_agent", "_templates"]
+# note subfolders inside every course folder
+course_note_subfolders = ["notes", "reference", "quiz-prep"]
+# paths that change all the time and are ignored by the notes scope (logs, applied inbox
+# notes, state files)
+churn = [
+  "_agent/logs/**", "_agent/inbox-applied/**", "_agent/vault-sync-log.md",
+  "_agent/vault-watch/log.md", "_agent/vault-watch/alerts.md",
+  "_agent/vault-watch/sources-inventory.tsv", "_agent/course-fetch/pending/**",
+  "_agent/course-fetch/done/**", "_agent/heartbeat/state.json", "_agent/heartbeat/flags.json",
+  "_agent/vm/status.md", "_agent/vm/performance.md", "_agent/vm/snapshot.json", "_agent/vm/ran/**",
+  "_agent/uni-os.json", "_agent/.uni-os-manifest.json",
+]
+never_list = ["private", "*/private"]        # never enumerated, not even file names (privacy)
+source_top_dirs = []                         # extra top-level folders with official material
+quiet_dirs = []                              # app-output areas: changes are logged only, never alerted
+# first-level course subfolders that are app-output areas (also
+# course.handwritten_folder)
+quiet_patterns = ["*handwritten*"]
+# archives (vault-relative, e.g. "AD/z_archive"): any change alerts; z_archive/ holds outdated official files
+frozen_dirs = ["z_archive", "archive"]
+ignore_top_dirs = []                         # top-level folders that may exist without a "not watched" alert
+# file names of sync conflict copies
+conflict_patterns = ["* (1)*", "*conflicted copy*", "*.sync-conflict-*", "Copy of *"]
+half_mount_ratio = 0.2                       # half-mount guard: share of the last snapshot's file count
+# the half-mount guard applies only when the last snapshot had at least this many files
+half_mount_min_files = 50
+alert_prune_days = 120                       # forget once-only alert keys after this many days
+group_new_over = 3                           # more new files than this in one folder become one alert
+log_max_paths = 20                           # at most this many paths per log line
+write_inventory = true                       # write _agent/vault-watch/sources-inventory.tsv
+# an update note left in the inbox longer than this alerts (with inbox-sync)
+stale_update_hours = 24
+update_note_patterns = ["*-update.md"]       # names of update notes in the inbox
+# alert when today's or tomorrow's prep note is missing (with daily-prep)
+prep_watchdog = true
+prep_folder = "semester/prep"                # folder of the prep notes
+prep_pattern = "prep-{date}*.md"             # prep note names ({date} = the day)
+prep_morning = "08:00-12:00"                 # window in which a missing prep note for today alerts
+prep_evening_from = "21:00"                  # from this time a missing prep note for tomorrow alerts
+
+
+[modules]
+# Module ids to install (dependencies are added automatically). Leave the list empty
+# to use the preset named in [uni_os] preset. Change later with `uni-os enable <id>` /
+# `uni-os disable <id>` or by asking your agent. Catalogue: modules/README.md.
+# This is the Standard preset with Obsidian:
+enabled = [
+  "core",
+  "student-model",
+  "courses",
+  "error-logs",
+  "study-pages",
+  "exercise-help",
+  "obsidian",
+  "progress",
+  "planning",
+  "check-in",
+  "daily-prep",
+  "lecture-rundowns",
+  "quiz-coaching",
+  "roles",
+  "scheduler-local",
+  "heartbeat",
+  "notifications",
+  "resources",
+  "handwritten-notes",
+  "cockpit",
+]

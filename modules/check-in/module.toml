@@ -1,0 +1,31 @@
+id = "check-in"
+name = "Check-in and week pages"
+tier = "standard"
+summary = "Two scheduled jobs that run the weekly lifecycle: `week-page` creates the coming week's page with its real due items and asks for the week plan; `check-in` asks you once (in a session you can open from your phone) for the period's results and closes the week, weekly or every two weeks, on the day and time you choose."
+requires = ["core", "progress"]
+recommends = ["planning", "notifications", "scheduler-local", "inbox-sync", "experiments"]
+obsidian = "optional"
+os = ["any"]
+runtime = ["laptop", "vm"]
+
+config_keys = [
+  "schedule.check_in", "schedule.week_page",
+  "term.week0_monday", "term.timezone", "term.last_lecture_day",
+  "student.name", "study.personal_deadline_rule",
+  "calendar.standing_approval",
+  "courses.short", "courses.folder", "courses.slug",
+  "modules.enabled",
+]
+verbatim = []
+
+[[jobs]]
+id = "check-in"
+
+[[jobs]]
+id = "week-page"
+
+[defaults.schedule]
+# The original ran the check-in on Saturday 19:45 ("so Sunday stays free for catch-up") and the
+# week page on Sunday ~10:00. Pick your own; any day works (see the README).
+check_in = { day = "Sat", time = "19:45", every = "week" }   # every: "week" | "2 weeks" (odd term weeks)
+week_page = { day = "Sun", time = "10:00" }                    # Fri, Sat or Sun create next week's page

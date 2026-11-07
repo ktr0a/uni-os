@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# uni-browse: render a PUBLIC web page with headless Chrome (JavaScript runs), for pages that the
+# agent's own web fetch or curl can't read (course pages built with JavaScript, for example).
+# Starts Chrome only for this one call, so sessions don't each keep a browser in memory
+# (a per-session browser tool server cost ~260 MB per session on a 4 GB host).
+#   uni-browse text <url>          readable text of the rendered page (stdout)
+#   uni-browse html <url>          rendered DOM (stdout)
+#   uni-browse shot <url> [file]   PNG screenshot (default ~/scratch/shot-<time>.png)
+#   uni-browse pdf  <url> [file]   print to PDF   (default ~/scratch/page-<time>.pdf)
+#   uni-browse links <url>         every link on the rendered page: text <TAB> url
+# No logins, no cookies: pages behind a university sign-in won't work here (they need the
+# student's own browser). Chrome comes from bootstrap-root.sh (google-chrome-stable).
+set -euo pipefail
+mode="${1:?usage: uni-browse text|html|shot|pdf|links <url> [file]}"; url="${2:?url}"
+case "$url" in http://*|https://*) ;; *) echo "uni-browse: http(s) URLs only" >&2; exit 2 ;; esac
+mkdir -p "$HOME/scratch"
+ts=$(date +%Y%m%d-%H%M%S)
+profile=$(mktemp -d)
+trap 'rm -rf "$profile"' EXIT
+chrome=(google-chrome --headless=new --no-sandbox --disable-gpu --hide-scrollbars
+        --user-data-dir="$profile" --virtual-time-budget=8000 --timeout=30000
+        --window-size=1280,2000)
+dom() { timeout 60 "${chrome[@]}" --dump-dom "$url" 2>/dev/null; }
+case "$mode" in
+  html) dom ;;
+  text) dom | python3 -c '
+import sys, re
+from html.parser import HTMLParser
+class P(HTMLParser):
+    skip = 0; out = []
+    def handle_starttag(self, t, a):
+        if t in ("script", "style", "noscript", "svg"): self.skip += 1
+        if t in ("p", "br", "div", "li", "tr", "h1", "h2", "h3", "h4", "section", "article"): self.out.append("\n")
+        if t == "li": self.out.append("- ")
+    def handle_endtag(self, t):
+        if t in ("script", "style", "noscript", "svg") and self.skip: self.skip -= 1
+    def handle_data(self, d):
+        if not self.skip: self.out.append(d)
+p = P(); p.feed(sys.stdin.read())
+text = re.sub(r"[ \t]+", " ", "".join(p.out))
+print(re.sub(r"\n\s*\n+", "\n\n", text).strip())' ;;
+  links) dom | python3 -c '
+import sys
+from html.parser import HTMLParser
+from urllib.parse import urljoin
+base = sys.argv[1]
+class P(HTMLParser):
+    href = None; txt = []
+    def handle_starttag(self, t, a):
+        if t == "a": self.href = dict(a).get("href"); self.txt = []
+    def handle_data(self, d):
+        if self.href is not None: self.txt.append(d)
+    def handle_endtag(self, t):
+        if t == "a" and self.href:
+            print(" ".join("".join(self.txt).split()) + "\t" + urljoin(base, self.href))
+        if t == "a": self.href = None
+P().feed(sys.stdin.read())' "$url" ;;
+  shot) out="${3:-$HOME/scratch/shot-$ts.png}"; timeout 60 "${chrome[@]}" --screenshot="$out" "$url" >/dev/null 2>&1; echo "$out" ;;
+  pdf) out="${3:-$HOME/scratch/page-$ts.pdf}"; timeout 60 "${chrome[@]}" --print-to-pdf="$out" --no-pdf-header-footer "$url" >/dev/null 2>&1; echo "$out" ;;
+  *) echo "unknown mode $mode" >&2; exit 2 ;;
+esac

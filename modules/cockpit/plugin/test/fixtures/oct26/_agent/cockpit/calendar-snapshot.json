@@ -1,0 +1,32 @@
+{
+ "generated": "2026-10-26T06:40:00+01:00",
+ "source": "Synthetic fixture (Courses, Study blocks, Events as busy time).",
+ "range": { "start": "2026-10-26", "end": "2026-11-08" },
+ "events": [
+  { "cal": "courses", "title": "V: DM", "start": "2026-10-26T08:15:00+01:00", "end": "2026-10-26T10:00:00+01:00", "location": "Main building 101", "desc": "" },
+  { "cal": "study_blocks", "title": "AD_ maths toolkit recap", "start": "2026-10-26T10:20:00+01:00", "end": "2026-10-26T11:40:00+01:00", "location": "Library", "desc": "FOCUS:\n- sums and logarithms cheat sheet\n- two warm-up recurrences" },
+  { "cal": "courses", "title": "V: LA", "start": "2026-10-26T13:15:00+01:00", "end": "2026-10-26T15:00:00+01:00", "location": "Main building 101", "desc": "" },
+  { "cal": "study_blocks", "title": "DM_ sheet 7 deep, (AD)", "start": "2026-10-26T15:20:00+01:00", "end": "2026-10-26T17:20:00+01:00", "location": "Library", "desc": "FOCUS: sheet 7 tasks 1-3, then AD peer grading if time is left" },
+  { "cal": "study_blocks", "title": "OP Gym", "start": "2026-10-26T17:45:00+01:00", "end": "2026-10-26T18:45:00+01:00", "location": "", "desc": "" },
+  { "cal": "study_blocks", "title": "AD_ sheet 6", "start": "2026-10-27T08:20:00+01:00", "end": "2026-10-27T10:00:00+01:00", "location": "Library", "desc": "FOCUS: task 6.1 only" },
+  { "cal": "courses", "title": "V: AD", "start": "2026-10-27T10:15:00+01:00", "end": "2026-10-27T12:00:00+01:00", "location": "Lecture hall A", "desc": "" },
+  { "cal": "courses", "title": "V: PROG", "start": "2026-10-27T13:15:00+01:00", "end": "2026-10-27T15:00:00+01:00", "location": "Lecture hall B", "desc": "" },
+  { "cal": "study_blocks", "title": "LA_ A5 finish", "start": "2026-10-27T15:10:00+01:00", "end": "2026-10-27T16:05:00+01:00", "location": "Library", "desc": "" },
+  { "cal": "courses", "title": "U: DM", "start": "2026-10-27T16:15:00+01:00", "end": "2026-10-27T18:00:00+01:00", "location": "Room 110", "desc": "Exercise class: sheet 7 discussion." },
+  { "cal": "courses", "title": "V: DM", "start": "2026-10-28T08:15:00+01:00", "end": "2026-10-28T10:00:00+01:00", "location": "Main building 101", "desc": "" },
+  { "cal": "courses", "title": "U: PROG", "start": "2026-10-28T10:15:00+01:00", "end": "2026-10-28T12:00:00+01:00", "location": "Computer lab 2", "desc": "" },
+  { "cal": "study_blocks", "title": "AD_ theory sheet 6 deep, LA", "start": "2026-10-28T12:10:00+01:00", "end": "2026-10-28T14:00:00+01:00", "location": "Library", "desc": "" },
+  { "cal": "courses", "title": "U: AD", "start": "2026-10-28T14:15:00+01:00", "end": "2026-10-28T16:00:00+01:00", "location": "Room 205", "desc": "Exercise class: sheet 5 discussion, sheet 6 introduction." },
+  { "cal": "study_blocks", "title": "DM_ proofs practice", "start": "2026-10-28T16:20:00+01:00", "end": "2026-10-28T17:50:00+01:00", "location": "Library", "desc": "" },
+  { "cal": "events", "title": "Personal", "start": "2026-10-28T18:40:00+01:00", "end": "2026-10-28T19:40:00+01:00" },
+  { "cal": "courses", "title": "V: AD", "start": "2026-10-29T10:15:00+01:00", "end": "2026-10-29T12:00:00+01:00", "location": "Lecture hall A", "desc": "" },
+  { "cal": "study_blocks", "title": "AD_ programming sheet 1", "start": "2026-10-29T13:00:00+01:00", "end": "2026-10-29T15:20:00+01:00", "location": "Computer lab 2", "desc": "" },
+  { "cal": "courses", "title": "U: LA", "start": "2026-10-29T16:15:00+01:00", "end": "2026-10-29T18:00:00+01:00", "location": "Room 205", "desc": "One-off room change (usually room 310)." },
+  { "cal": "courses", "title": "V: LA", "start": "2026-10-30T10:15:00+01:00", "end": "2026-10-30T12:00:00+01:00", "location": "Main building 101", "desc": "" },
+  { "cal": "courses", "title": "V: PROG", "start": "2026-10-30T13:15:00+01:00", "end": "2026-10-30T15:00:00+01:00", "location": "Lecture hall B", "desc": "" },
+  { "cal": "study_blocks", "title": "AD_ theory sheet 6 write-up", "start": "2026-10-30T15:20:00+01:00", "end": "2026-10-30T17:40:00+01:00", "location": "Library", "desc": "" },
+  { "cal": "study_blocks", "title": "(Catch-up)", "start": "2026-10-31T09:30:00+01:00", "end": "2026-10-31T11:30:00+01:00", "location": "Library", "desc": "" },
+  { "cal": "study_blocks", "title": "PROG_ exercise 7", "start": "2026-11-01T15:00:00+01:00", "end": "2026-11-01T17:00:00+01:00", "location": "Library", "desc": "" },
+  { "cal": "courses", "title": "V: DM", "start": "2026-11-02T08:15:00+01:00", "end": "2026-11-02T10:00:00+01:00", "location": "Main building 101", "desc": "" }
+ ]
+}

@@ -1,0 +1,34 @@
+id = "daily-prep"
+name = "Daily study prep"
+tier = "standard"
+summary = "Every evening a job assembles the material for tomorrow's study blocks into one immutable prep note (semester/prep/prep-YYYY-MM-DD[-rN].md) and a MATERIAL block at the end of each calendar block; later evening runs check for changes, and a morning run verifies today's note against the calendar and the disk and repairs it with a new revision."
+requires = ["core", "courses", "planning"]
+recommends = ["progress", "obsidian", "cockpit", "heartbeat", "scheduler-local", "course-files-fetch"]
+obsidian = "recommended"
+os = ["any"]
+runtime = ["laptop", "vm"]
+
+config_keys = [
+  "schedule.daily_prep", "schedule.prep_check",
+  "calendar.provider", "calendar.study_blocks", "calendar.courses", "calendar.events", "calendar.busy",
+  "calendar.lecture_prefix", "calendar.exercise_prefix",
+  "term.timezone", "term.week0_monday", "obsidian.enabled", "student.name",
+  "courses.short", "courses.slug", "courses.assistance", "courses.notes",
+  "courses.assessments", "courses.integrity", "courses.page_offsets",
+  "modules.enabled",
+]
+
+# The prep state file is JSON: copied as is.
+verbatim = ["vault/_agent/daily-prep/state.json"]
+
+[[jobs]]
+id = "daily-study-prep"
+
+[[jobs]]
+id = "study-prep-morning-check"
+
+[defaults.schedule]
+# The original: full prep 17:30 for tomorrow, change check 19:30, morning verification 07:30.
+# The first daily_prep slot is the full prep; every later slot is a change check.
+daily_prep = ["17:30", "19:30"]
+prep_check = "07:30"

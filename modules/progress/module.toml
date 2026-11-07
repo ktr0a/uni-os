@@ -1,0 +1,35 @@
+id = "progress"
+name = "Progress tracking"
+tier = "standard"
+summary = "Where you stand, kept current by your agents: a dashboard (bonus or grade standing per course, done vs. to do, self-ratings, the next 10 days), an append-only tracker log, and one page per term week with a parsed 'Due this week' table and an end-of-week check-in."
+requires = ["core", "courses"]
+recommends = ["planning", "check-in", "obsidian", "cockpit", "heartbeat"]
+obsidian = "recommended"
+os = ["any"]
+runtime = ["laptop", "cloud", "vm"]
+
+# Keys read by this module's templates. schedule.week_page and schedule.check_in are only read
+# inside {{#if modules.check-in}} blocks (their defaults live in the check-in module).
+config_keys = [
+  "study.target_column", "study.personal_deadline_rule",
+  "term.week0_monday", "term.timezone", "student.name",
+  "courses.id", "courses.short", "courses.folder", "courses.slug",
+  "courses.assessments", "courses.bonus",
+  "schedule.week_page", "schedule.check_in",
+  "modules.enabled",
+]
+
+# Every file is a template. The week-page template keeps its runtime placeholders
+# ({{week.*}}, {{date:...}}) for `uni-os new-week`; install renders only its course rows.
+verbatim = []
+
+[defaults.study]
+# Header of the personal-target column of every "Due this week" table. Readers find the column by
+# the word "target" (the original called it "Sunday target", after its rule "every sheet released
+# in a week is done by that Sunday"). Set it to match your own rule, e.g. "Friday target".
+target_column = "Personal target"
+# Your own deadline rule, one sentence; empty = none. Fills the personal-target column.
+personal_deadline_rule = ""
+
+# Per-course keys (assessments, bonus.scheme / description / max_bonus / rule) get their defaults
+# from the `courses` module, a hard dependency, so they are not repeated here.

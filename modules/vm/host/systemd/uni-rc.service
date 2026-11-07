@@ -1,0 +1,22 @@
+# Uni OS host: the agent's Remote Control server, kept alive by bin/rc-loop inside tmux session
+# "rc" on its own socket (`tmux -L uni-rc`), so tools can read its screen with capture-pane.
+# Claude Code only; not enabled for other agents (install-user.sh).
+[Unit]
+Description=Uni OS: Remote Control server in the vault (tmux -L uni-rc, session rc)
+After=uni-drive.service network-online.target
+Wants=uni-drive.service network-online.target
+
+[Service]
+Type=forking
+Environment=PATH=%h/.local/bin:@@HOST_DIR@@/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/tmux -L uni-rc new-session -d -s rc -x 220 -y 50 @@HOST_DIR@@/bin/rc-loop
+ExecStop=/usr/bin/tmux -L uni-rc kill-session -t rc
+RemainAfterExit=no
+# Under memory pressure the kernel kills job sessions (600) first, then sessions this server
+# spawned (500), role sessions last (400), and the vault mount (default) after all of them.
+OOMScoreAdjust=500
+Restart=always
+RestartSec=20
+
+[Install]
+WantedBy=default.target

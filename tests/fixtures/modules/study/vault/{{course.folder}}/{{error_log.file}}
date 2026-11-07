@@ -1,0 +1,9 @@
+---
+type: error-log
+course: {{course.id}}
+stream: {{error_log.stream}}
+---
+# {{course.short}} {{error_log.title}}
+
+| Date | Task | What went wrong | Correct idea | Source |
+|---|---|---|---|---|

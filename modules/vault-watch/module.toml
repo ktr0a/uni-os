@@ -1,0 +1,104 @@
+id = "vault-watch"
+name = "Vault watch"
+tier = "advanced"
+summary = "Experimental, Windows only: a Task Scheduler script that diffs the vault's file metadata a few times a day, logs every change for the agents, and raises a toast only for what someone must act on (stale or unsorted inbox items, sync conflict copies, deleted agent files, missing prep notes, new, deleted or overdue official course files)."
+requires = ["core", "courses"]
+recommends = ["notifications", "daily-prep", "inbox-sync", "course-files-fetch"]
+obsidian = "irrelevant"
+os = ["windows"]
+runtime = ["laptop"]
+
+# Keys this module reads. "course.<key>" means: a key of every [[courses]] entry.
+# Keys of other modules (schedule.daily_prep, paths.inbox, paths.never_open, paths.handwriting_app_data) are read by the script at run time
+# only when that module is enabled; the templates never reference them.
+config_keys = [
+  "schedule.vault_watch",
+  "vault_watch.task_name", "vault_watch.install_dir", "vault_watch.at_logon", "vault_watch.logon_delay_min",
+  "vault_watch.scopes", "vault_watch.toast_title", "vault_watch.toast_summary_over", "vault_watch.push",
+  "vault_watch.push_command",
+  "vault_watch.note_root_files", "vault_watch.note_folders", "vault_watch.course_note_subfolders",
+  "vault_watch.churn", "vault_watch.never_list",
+  "vault_watch.source_top_dirs", "vault_watch.quiet_dirs", "vault_watch.quiet_patterns", "vault_watch.frozen_dirs",
+  "vault_watch.ignore_top_dirs", "vault_watch.conflict_patterns",
+  "vault_watch.half_mount_ratio", "vault_watch.half_mount_min_files", "vault_watch.alert_prune_days",
+  "vault_watch.group_new_over", "vault_watch.log_max_paths", "vault_watch.write_inventory",
+  "vault_watch.stale_update_hours", "vault_watch.update_note_patterns",
+  "vault_watch.prep_watchdog", "vault_watch.prep_folder", "vault_watch.prep_pattern",
+  "vault_watch.prep_morning", "vault_watch.prep_evening_from",
+  "paths.inbox", "paths.never_open", "paths.handwriting_app_data", "schedule.daily_prep", "modules.enabled",
+  "course.folder", "course.short", "course.id", "course.handwritten_folder", "course.watch_note_subfolders",
+]
+
+# Copied without templating (JSON with regex placeholders like {n}).
+verbatim = ["vault/_agent/vault-watch/sources-expected.json"]
+
+# ---------------------------------------------------------------------------
+# Defaults (deep-merged UNDER the user's config; the user's values win).
+# The original's values are the defaults; nothing here is personal.
+# ---------------------------------------------------------------------------
+
+[defaults.schedule]
+# Local times of the daily runs (the original: four runs, 17 minutes past the hour, to stay off the
+# full hour other jobs use). A run also happens at logon (vault_watch.at_logon).
+vault_watch = ["08:17", "13:17", "18:17", "22:17"]
+
+[defaults.paths]
+# Shared key of the handwritten-notes module (same default there): the note app's own data folder inside the
+# vault, never enumerated by the watcher. paths.never_open has a base default (["**/private/**"]).
+handwriting_app_data = ""
+
+[defaults.vault_watch]
+task_name = "Uni OS vault watch"
+# Outside the vault. Documents, not %LOCALAPPDATA%: some app-packaged agents (MSIX) see a redirected
+# AppData, so files they write there are invisible to Task Scheduler and the other way round.
+install_dir = "%USERPROFILE%\\Documents\\uni-os\\vault-watch"
+at_logon = true
+logon_delay_min = 5
+scopes = ["notes", "sources"]
+toast_title = "Uni OS vault watch"
+toast_summary_over = 3          # more alerts than this in one run -> one summary toast
+push = false                    # true: one generic push per run with new alerts, through the push gate (notifications module)
+push_command = []               # optional override: ["exe", "arg", ..., "{message}"]; empty = python tools/uni_os.py push ...
+
+# Notes scope (allowlist)
+note_root_files = ["*.md", "*.canvas", "*.base"]
+note_folders = ["me", "progress", "semester", "resources", "views", "inbox", "_agent", "_templates"]
+course_note_subfolders = ["notes", "reference", "quiz-prep"]   # plus course.watch_note_subfolders
+churn = [
+  "_agent/logs/**", "_agent/inbox-applied/**", "_agent/vault-sync-log.md",
+  "_agent/vault-watch/log.md", "_agent/vault-watch/alerts.md", "_agent/vault-watch/sources-inventory.tsv",
+  "_agent/course-fetch/pending/**", "_agent/course-fetch/done/**",
+  "_agent/heartbeat/state.json", "_agent/heartbeat/flags.json",
+  "_agent/vm/status.md", "_agent/vm/performance.md", "_agent/vm/snapshot.json", "_agent/vm/ran/**",
+  "_agent/uni-os.json", "_agent/.uni-os-manifest.json",
+]
+never_list = ["private", "*/private"]   # never enumerated, not even file names (privacy); paths.never_open and
+                                        # paths.handwriting_app_data (shared keys) are never enumerated either
+
+# Sources scope (course folders minus their note parts, plus these)
+source_top_dirs = []                    # extra top-level folders with official material, e.g. ["roadmap"]
+quiet_dirs = []                         # app-export folders: log only, e.g. ["Tablet exports/PDF"]
+quiet_patterns = ["*handwritten*"]      # course subfolders that are app output (also course.handwritten_folder)
+frozen_dirs = ["z_archive", "archive"]  # archives (vault-relative; a course archive too, e.g. "AD/z_archive"): any change alerts once per subfolder per run
+ignore_top_dirs = []                    # top-level folders that may exist without a "not watched" alert
+conflict_patterns = ["* (1)*", "*conflicted copy*", "*.sync-conflict-*", "Copy of *"]
+
+# Safety and noise limits
+half_mount_ratio = 0.2                  # scope below 20 % of the snapshot (and snapshot >= 50 files) = drive not ready, skip
+half_mount_min_files = 50
+alert_prune_days = 120                  # forget once-only alert keys after this many days (missing/remind/small: never)
+group_new_over = 3                      # more new files than this in one folder in one run -> one alert
+log_max_paths = 20
+write_inventory = true                  # _agent/vault-watch/sources-inventory.tsv for agents (metadata only)
+
+# Inbox (inbox-sync module) and prep watchdog (daily-prep module); inactive while those modules are off
+stale_update_hours = 24
+update_note_patterns = ["*-update.md"]
+prep_watchdog = true
+prep_folder = "semester/prep"
+prep_pattern = "prep-{date}*.md"
+prep_morning = "08:00-12:00"            # today's note missing in this window -> alert
+prep_evening_from = "21:00"             # tomorrow's note missing from this time on -> alert
+
+[defaults.course]
+watch_note_subfolders = []              # extra note subfolders of this course, e.g. ["code"]

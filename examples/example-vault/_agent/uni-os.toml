@@ -1,0 +1,580 @@
+# Example config for the fictional student Alex Example (Example Institute of Technology).
+# examples/example-vault/ is the output of:
+#   python tools/uni_os.py init --config examples/alex.toml --vault examples/example-vault --date 2026-11-07
+# plus an empty .gitkeep in each empty folder (git keeps no empty folders); its
+# _agent/uni-os.toml is a copy of this file.
+# Every key is explained in config/uni-os.example.toml (the same values, with comments) and
+# config/schema.md. This file lists every key, also those of modules Alex does not enable
+# (keys of disabled modules are simply unused), except four old stuck-note aliases that
+# config/schema.md documents for old configs.
+#
+# Modules: the Standard preset plus inbox-sync and experiments, so the example vault
+# shows most of the system. Left out on purpose: vm, vault-watch and course-files-fetch
+# (they need real infrastructure: an always-on host, Windows Task Scheduler, a logged-in
+# browser). Enable them in your own vault with `uni-os enable <id>`.
+
+[uni_os]
+version = "0.1.0"
+preset = "custom"
+
+[student]
+name = "Alex Example"
+handle = "alex"
+language = "English"
+dictates = false
+pronouns = ""
+
+[university]
+name = "Example Institute of Technology"
+short = "EIT"
+programme = "BSc Computer Science"
+lms = "Moodle"
+lms_url = "https://lms.example.edu"
+website = "https://www.example.edu"
+catalogue = ""
+recordings = ""
+
+[term]
+label = "Autumn 2026"
+timezone = "Europe/Zurich"
+week0_monday = 2026-09-14
+last_lecture_day = 2026-12-18
+lecture_free_from = 2026-12-19
+exam_session_start = 2027-01-25
+exam_session_end = 2027-02-19
+holidays = [
+  { name = "Reading day", from = 2026-11-20, to = 2026-11-20 },
+]
+
+[paths]
+vault = "G:/My Drive/Uni-EIT"
+agent_dir = "_agent"
+inbox = "inbox"
+never_open = ["**/private/**"]
+handwriting_app_data = ""
+handwriting_app_exports = ""
+
+[storage]
+provider = "google-drive"
+
+[obsidian]
+enabled = true
+
+[obsidian.area_colours]
+me = "#F6BF26"
+progress = "#00BCD4"
+semester = "#795548"
+deadline = "#EF6C00"
+agent = "#6E7681"
+course = "#607D8B"
+
+[agent]
+primary = "claude-code"
+permission_posture = "bypass"
+default_model = ""
+heavy_model = ""
+reply_rules = [
+  "Keep replies short; use a table when comparing options.",
+  "Write dates as Ddd D Mon YYYY, e.g. Mon 26 Oct 2026.",
+]
+skills_dir = ".claude/skills"
+coordinator_title = "Uni coordinator"
+context_refresh_tokens = 300000
+usage_stop_weekly_pct = 90
+usage_pause_5h_pct = 90
+max_helpers = 2
+cli = "claude"
+headless_command = ""
+
+[study]
+formats = ["html", "md"]
+math = "katex"
+chunk_words = 750
+assistance_default = "hints-only"
+personal_deadline_rule = "Sheets released in a week are done by that Sunday."
+experiment_weeks = 2
+handwriting_app = "GoodNotes"
+target_column = "Personal target"
+intuition_first = true
+pdf_browser = "auto"
+
+[study.error_logs]
+retests = false
+retest_items = 3
+retest_minutes = 20
+
+[study.exercise_help]
+cold_minutes = 25
+part_cap_minutes = 45
+stuck_bug_minutes = 25
+official_solutions_after_attempt = true
+
+[study.rundowns]
+skim_lead_hours = 1
+recall_keys = false
+skim_courses = ["dm"]
+
+[study.quiz]
+auto_mocks = false
+prep_lead_days = 4
+
+[[courses]]
+id = "algo"
+name = "Algorithms and Data Structures"
+short = "AD"
+folder = "AD"
+slug = "ad"
+colour = "#1e66f5"
+colour_light = "#7aa2f7"
+language = "English"
+lecturers = []
+lecture_slots = ["Tue 10:15-12:00", "Thu 10:15-12:00"]
+exercise_slots = ["Wed 14:15-16:00"]
+sheet_release = "Thu 12:00"
+sheet_due = "Thu 23:59, one week later"
+official_subfolders = ["AD assignments", "AD slides & script"]
+error_log_streams = ["main"]
+assistance = "hints-only"
+notes = ["Written answers use the pseudocode conventions of the script."]
+ects = "8"
+exercise_group = "group 3"
+lms_url = "https://lms.example.edu/course/algo"
+website = "https://algo.example.edu"
+platforms = ["online judge with hidden tests (programming tasks)"]
+recordings = "recorded, usually online the next day"
+hand_in = "LMS upload, one PDF per person"
+session_rule = "The exercise session of week n discusses sheet n-1 and introduces sheet n."
+week_numbering = "Sheet k is released in term week k."
+real_source = "the lecture script and the slides on the LMS"
+page_offsets = [{ source = "Script 2026 (PDF)", rule = "PDF page = printed page + 2" }]
+exam_format = "written, 120 min, English, one handwritten A4 sheet allowed"
+integrity = "Sheets are individual work; AI may explain concepts, never produce solutions."
+handwritten_folder = ""
+aliases = ["Algo"]
+detect = ""
+fetch_sources = []
+watch_note_subfolders = []
+
+  [[courses.assessments]]
+  name = "Weekly exercise sheets"
+  kind = "sheet"
+  schedule = "out Thu, due the next Thu 23:59"
+  counts_for = "bonus"
+  assistance = "hints-only"
+  points_max = 0
+
+  [[courses.assessments]]
+  name = "In-class quizzes"
+  kind = "quiz"
+  schedule = "weeks 4, 8 and 12, in the exercise session"
+  counts_for = "bonus"
+  # The attempt is always Alex's own; hints-only allows prep sheets and a review
+  # afterwards. "solo" would mean the coach prepares nothing aimed at the quiz.
+  assistance = "hints-only"
+  points_max = 10
+  dates = ["2026-10-14 14:15", "2026-11-11 14:15", "2026-12-09 14:15"]
+
+  [courses.bonus]
+  scheme = "threshold"
+  description = "+0.25 grade bonus at 80 % of all sheet points"
+  max_bonus = 0.25
+  rule = "Sum of sheet points over the term; quizzes count double."
+  target = "80 % of all sheet points"
+  threshold = 0.8
+  total = 0
+  total_estimated = false
+  proportional = true
+  full_at = 0
+  required = 0
+  unit = "points"
+  counts = []
+
+[[courses]]
+id = "dm"
+name = "Discrete Mathematics"
+short = "DM"
+folder = "DM"
+slug = "dm"
+colour = "#40a02b"
+colour_light = "#7ccf6b"
+language = "English"
+lecturers = []
+lecture_slots = ["Mon 08:15-10:00", "Wed 08:15-10:00"]
+exercise_slots = ["Tue 16:15-18:00"]
+sheet_release = "Mon 12:00"
+sheet_due = "Mon 12:00, one week later"
+official_subfolders = ["DM assignments", "DM script"]
+error_log_streams = ["main"]
+assistance = "hints-only"
+notes = []
+
+  [[courses.assessments]]
+  name = "Graded sheets"
+  kind = "sheet"
+  schedule = "every second week"
+  counts_for = "bonus"
+  assistance = "solo"
+  points_max = 2
+
+  [[courses.assessments]]
+  name = "Practice sheets"
+  kind = "sheet"
+  schedule = "weekly"
+  counts_for = "none"
+  assistance = "hints-only"
+
+  [courses.bonus]
+  scheme = "points"
+  description = "Up to 2 points per graded sheet; 8 points give +0.25"
+  max_bonus = 0.25
+  rule = "Bonus = 0.25 * min(points, 8) / 8."
+  target = "8 points"
+  full_at = 8
+  unit = "points"
+
+[[courses]]
+id = "la"
+name = "Linear Algebra"
+short = "LA"
+folder = "LA"
+slug = "la"
+colour = "#8839ef"
+colour_light = "#b58af5"
+language = "English"
+lecturers = []
+lecture_slots = ["Mon 13:15-15:00", "Fri 10:15-12:00"]
+exercise_slots = ["Thu 16:15-18:00"]
+sheet_release = "Fri 18:00"
+sheet_due = "Mon 09:00"
+official_subfolders = ["LA assignments", "LA plan & notes"]
+error_log_streams = ["main"]
+assistance = "hints-only"
+notes = []
+
+  [[courses.assessments]]
+  name = "Online quizzes"
+  kind = "quiz"
+  schedule = "weekly on the LMS, open Fri 18:00 to Mon 09:00"
+  counts_for = "bonus"
+  assistance = "solo"
+  points_max = 4
+
+  [[courses.assessments]]
+  name = "Exercise sheets"
+  kind = "sheet"
+  schedule = "weekly, discussed in the exercise session"
+  counts_for = "none"
+  assistance = "hints-only"
+
+  [courses.bonus]
+  scheme = "best-n"
+  description = "Pass 10 of the 12 online quizzes (70 % each) for +0.25"
+  max_bonus = 0.25
+  rule = "At least 10 of the 12 weekly quizzes passed with >= 70 %; fewer passes give a proportional share."
+  target = "10 / 12"
+  required = 10
+  total = 12
+  proportional = true
+  unit = "quizzes"
+
+[[courses]]
+id = "prog"
+name = "Introduction to Programming"
+short = "PROG"
+folder = "PROG"
+slug = "prog"
+colour = "#d20f39"
+colour_light = "#f2788f"
+language = "English"
+lecturers = []
+lecture_slots = ["Tue 13:15-15:00", "Fri 13:15-15:00"]
+exercise_slots = ["Wed 10:15-12:00"]
+sheet_release = "Tue 18:00"
+sheet_due = "Tue 18:00, one week later"
+official_subfolders = ["PROG assignments", "PROG slides"]
+error_log_streams = ["theory", "programming"]
+assistance = "coach"
+notes = ["Never store finished solutions or code for graded tasks."]
+
+  [[courses.assessments]]
+  name = "Programming exercises"
+  kind = "sheet"
+  schedule = "weekly, autograded"
+  counts_for = "admission"
+  assistance = "hints-only"
+
+  [[courses.assessments]]
+  name = "Team project"
+  kind = "project"
+  schedule = "weeks 10 to 13, in pairs"
+  counts_for = "grade"
+  assistance = "hints-only"
+
+  [courses.bonus]
+  scheme = "none"
+  description = ""
+  max_bonus = 0
+  rule = ""
+
+[schedule]
+daily_prep = ["17:30", "19:30"]
+prep_check = "07:30"
+week_page = { day = "Sun", time = "10:00" }
+check_in = { day = "Sat", time = "19:45", every = "week" }
+heartbeat = ["07:50", "13:05", "18:05"]
+heartbeat_days = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+inbox_sync = ["07:15", "13:15", "18:15"]
+study_cutoff = "19:00"
+heartbeat_weekend = ["09:00", "17:40"]
+heartbeat_weekend_days = ["Sun"]
+inbox_poll_window = "07:00-22:00"
+inbox_poll_every_min = 10
+inbox_poll_min_gap_min = 60
+lecture_skim = ["19:00"]
+lecture_skim_days = ["Sun", "Tue"]
+day_start = "08:00"
+weekday_stop = "18:15"
+focus_minutes = 70
+break_minutes = 10
+quiz_prep = ["09:00"]
+quiz_prep_dates = ""
+waiting_on_you = ["19:00"]
+waiting_on_you_days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+vault_watch = ["08:17", "13:17", "18:17", "22:17"]
+vm_verdict = { day = "Sun", time = "19:30" }
+
+[notify]
+provider = "ntfy"
+ntfy_server = "https://ntfy.sh"
+ntfy_topic_file = "~/.config/uni-os/ntfy-topic"
+max_per_day = 3
+min_gap_hours = 2
+quiet_hours = "21:00-07:30"
+dedupe_hours = 24
+never_all_good = true
+quiet_windows = [
+  { from = "2027-01-25", to = "2027-02-19", reason = "exam session", urgent_ok = true },
+]
+inbox_stale_hours = 4
+inbox_stale_hours_taps = 14
+title = "Uni OS"
+default_click = ""
+require_id = true
+block_personal = true
+extra_all_good_patterns = []
+max_length = 300
+hold_max_hours = 24
+direct_priority = 4
+
+[calendar]
+provider = "google"
+courses = "Courses"
+study_blocks = "Study blocks"
+events = "Events"
+busy = "Busy"
+notation = "default"
+lecture_prefix = "L:"
+exercise_prefix = "E:"
+standing_approval = false
+default_location = "Library"
+
+[runtime]
+laptop_os = "windows"
+use_vm = false
+use_cloud_sessions = false
+laptop_scheduler = "agent-app"
+
+[vm]
+provider = "gcp"
+host_alias = "uni-vm"
+project = ""
+zone = "us-central1-a"
+machine_type = "e2-custom-small-4096"
+linux_user = ""
+remote_control_name = "Uni (VM)"
+budget_month = 13
+budget_currency = "EUR"
+disk_gb = 30
+mount_path = "~/Uni"
+drive_remote = "uni-drive"
+repo_url = ""
+rc_prefix = "uni-vm"
+rc_capacity = 10
+rc_chrome = true
+rc_update_hour = 4
+default_model = "sonnet"
+default_effort = "high"
+monthly_credit = 0
+snapshot_retention_days = 21
+health_every_min = 15
+history_minute = 40
+history_exclude = [".obsidian/plugins/**", "**/node_modules/**", "_agent/vm/snapshot.json"]
+mem_alert_mb = 500
+mem_close_jobs_mb = 700
+swapin_alert_rate = 250
+disk_alert_pct = 90
+alert_repeat_h = 3
+big_context_k = 300
+outcome_prep_grace_min = 60
+
+[cockpit]
+enabled = true
+layout = "focus"
+default_tab = "home"
+open_on_startup = false
+color_mode = "accent"
+prep_switch_hour = 18
+prep_warn_after = "19:30"
+feed_minutes = 10
+write_snapshot = true
+stale_days = 2
+urgent_hours = 24
+day_start = 7
+day_end = 21
+status_path = "progress/current-status.md"
+weeks_folder = "progress/weeks"
+prep_folder = "semester/prep"
+plans_folder = "semester/plans"
+overview_path = "courses-overview.md"
+study_folders = ["notes", "quiz-prep"]
+snapshot_path = ""
+rules_path = ""
+prompt_note = ""
+lecture_pattern = "^(?:V|L):"
+exercise_pattern = "^(?:U|Ü|E):"
+optional_pattern = '^\(|^OP\b'
+deep_pattern = '\bdeep\b'
+focus_marker = "FOCUS:"
+main_marker = "_"
+done_words = ["✓", "done", "submitted", "closed", "handed in", "uploaded", "dropped", "skipped"]
+pending_words = ["not reported", "pending", "not recorded"]
+no_bonus_words = ["none", "no", "feedback only"]
+soft_prefixes = ["tutorial"]
+soft_markers = ["(tentative)"]
+not_released_words = ["not released"]
+fast_model = "claude-haiku-5-5"
+strong_model = "claude-sonnet-5-5"
+
+[cockpit.headings]
+due = "Due this week"
+results = "Results this week"
+notes = "Notes"
+check_in = "End-of-week check-in"
+next = "Next 10 days"
+exercises = "Exercises"
+self_rating = "Self-rated"
+snapshot = "Snapshot:"
+
+[heartbeat]
+act_mode = "safe"
+safe_windows = []
+event_hours = "07:30-20:45"
+event_cap = 2
+event_near_slot_min = 45
+event_min_gap_min = 30
+min_memory_mb = 600
+grace_min = 20
+checkin_grace_hours = 16
+gap_open_hours = 24
+result_window_days = 7
+snapshot_file = "_agent/vm/snapshot.json"
+snapshot_stale_min = 40
+jobs_log = "{state}/jobs.log"
+flags_dir = "_agent/logs/flags"
+block_log_glob = ""
+non_study_block_prefixes = ["L:", "E:", "V:", "U:", "OP", "("]
+done_words = ["✓", "done", "submitted", "closed", "handed in", "uploaded", "dropped", "skipped"]
+event_words = ["quiz", "timed", "oral", "exam", "midterm", "tutorial", "rehearsal", "test"]
+on_demand_roles = ["course-files-fetch"]
+ask_mode = "auto"
+start_job_command = ""
+rerun_allowed = ["study-prep-morning-check"]
+outcome_prefix = "Outcome check: "
+
+[course_fetch]
+task_name = "Uni OS course pick-up"
+install_dir = '%USERPROFILE%\Documents\uni-os\course-pickup'
+downloads_dir = ""
+interval_minutes = 1
+extra_hosts = []
+check_referrer = false
+allowed_types = [
+  "pdf", "zip", "txt", "md", "java", "html", "htm", "tex", "csv", "py", "ipynb", "c", "cpp",
+  "h", "hpp", "pptx", "docx", "xlsx",
+]
+max_mb = 50
+max_age_hours = 12
+wait_minutes = 30
+date_guards = []
+request_timeout_min = 15
+verify_timeout_min = 5
+preferred_language = "English"
+browser_hint = ""
+
+[vault_watch]
+task_name = "Uni OS vault watch"
+install_dir = '%USERPROFILE%\Documents\uni-os\vault-watch'
+at_logon = true
+logon_delay_min = 5
+scopes = ["notes", "sources"]
+toast_title = "Uni OS vault watch"
+toast_summary_over = 3
+push = false
+push_command = []
+note_root_files = ["*.md", "*.canvas", "*.base"]
+note_folders = ["me", "progress", "semester", "resources", "views", "inbox", "_agent", "_templates"]
+course_note_subfolders = ["notes", "reference", "quiz-prep"]
+churn = [
+  "_agent/logs/**", "_agent/inbox-applied/**", "_agent/vault-sync-log.md",
+  "_agent/vault-watch/log.md", "_agent/vault-watch/alerts.md",
+  "_agent/vault-watch/sources-inventory.tsv", "_agent/course-fetch/pending/**",
+  "_agent/course-fetch/done/**", "_agent/heartbeat/state.json", "_agent/heartbeat/flags.json",
+  "_agent/vm/status.md", "_agent/vm/performance.md", "_agent/vm/snapshot.json", "_agent/vm/ran/**",
+  "_agent/uni-os.json", "_agent/.uni-os-manifest.json",
+]
+never_list = ["private", "*/private"]
+source_top_dirs = []
+quiet_dirs = []
+quiet_patterns = ["*handwritten*"]
+frozen_dirs = ["z_archive", "archive"]
+ignore_top_dirs = []
+conflict_patterns = ["* (1)*", "*conflicted copy*", "*.sync-conflict-*", "Copy of *"]
+half_mount_ratio = 0.2
+half_mount_min_files = 50
+alert_prune_days = 120
+group_new_over = 3
+log_max_paths = 20
+write_inventory = true
+stale_update_hours = 24
+update_note_patterns = ["*-update.md"]
+prep_watchdog = true
+prep_folder = "semester/prep"
+prep_pattern = "prep-{date}*.md"
+prep_morning = "08:00-12:00"
+prep_evening_from = "21:00"
+
+[modules]
+enabled = [
+  "core",
+  "student-model",
+  "courses",
+  "error-logs",
+  "study-pages",
+  "exercise-help",
+  "obsidian",
+  "progress",
+  "planning",
+  "check-in",
+  "daily-prep",
+  "lecture-rundowns",
+  "quiz-coaching",
+  "roles",
+  "scheduler-local",
+  "heartbeat",
+  "notifications",
+  "resources",
+  "handwritten-notes",
+  "cockpit",
+  "inbox-sync",
+  "experiments",
+]

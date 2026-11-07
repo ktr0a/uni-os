@@ -1,0 +1,181 @@
+id = "cockpit"
+name = "Cockpit (Obsidian plugin)"
+tier = "addon"
+summary = "An Obsidian plugin that turns the vault's own notes and your calendar feeds into a calm study dashboard (now/next, due this week, bonus standing, daily prep card, week grid), with Done taps through the inbox and an optional AI side panel on your own API key."
+requires = ["core", "courses", "progress"]
+recommends = ["obsidian", "planning", "daily-prep", "inbox-sync", "check-in"]
+obsidian = "required"
+os = ["any"]
+runtime = ["laptop"]
+config_keys = [
+  "cockpit.enabled",
+  "cockpit.layout",
+  "cockpit.default_tab",
+  "cockpit.open_on_startup",
+  "cockpit.color_mode",
+  "cockpit.prep_switch_hour",
+  "cockpit.prep_warn_after",
+  "cockpit.feed_minutes",
+  "cockpit.write_snapshot",
+  "cockpit.stale_days",
+  "cockpit.urgent_hours",
+  "cockpit.day_start",
+  "cockpit.day_end",
+  "cockpit.status_path",
+  "cockpit.weeks_folder",
+  "cockpit.prep_folder",
+  "cockpit.plans_folder",
+  "cockpit.overview_path",
+  "cockpit.study_folders",
+  "cockpit.lecture_pattern",
+  "cockpit.exercise_pattern",
+  "cockpit.optional_pattern",
+  "cockpit.deep_pattern",
+  "cockpit.focus_marker",
+  "cockpit.main_marker",
+  "cockpit.done_words",
+  "cockpit.pending_words",
+  "cockpit.no_bonus_words",
+  "cockpit.soft_prefixes",
+  "cockpit.soft_markers",
+  "cockpit.not_released_words",
+  "cockpit.fast_model",
+  "cockpit.strong_model",
+  "cockpit.headings",
+  "cockpit.snapshot_path",
+  "cockpit.rules_path",
+  "cockpit.prompt_note",
+  "student.name",
+  "student.handle",
+  "student.language",
+  "university.name",
+  "university.short",
+  "university.programme",
+  "term.label",
+  "term.timezone",
+  "term.week0_monday",
+  "paths.agent_dir",
+  "paths.inbox",
+  "schedule.daily_prep",
+  "schedule.prep_check",
+  "schedule.inbox_sync",
+  "schedule.study_cutoff",
+  "calendar.courses",
+  "calendar.study_blocks",
+  "calendar.events",
+  "calendar.busy",
+  "calendar.lecture_prefix",
+  "calendar.exercise_prefix",
+  "agent.reply_rules",
+  "modules.enabled",
+  "courses",
+  "course.aliases",
+  "course.detect",
+  "course.assistance",
+  "course.error_log_streams",
+  "course.assessments",
+  "course.assessments.dates",
+  "course.bonus",
+  "course.bonus.threshold",
+  "course.bonus.total",
+  "course.bonus.total_estimated",
+  "course.bonus.proportional",
+  "course.bonus.full_at",
+  "course.bonus.required",
+  "course.bonus.unit",
+  "course.bonus.counts",
+]
+# The built plugin is copied as is (minified JavaScript is full of braces the template renderer must not touch).
+verbatim = ["vault/.obsidian/plugins/uni-os-cockpit/*"]
+
+[defaults]
+
+[defaults.cockpit]
+enabled = true
+# First-run defaults of the plugin's own settings (after that, Settings -> Uni OS cockpit; "Reset" reads these again).
+layout = "focus"                 # focus | dashboard | agenda
+default_tab = "home"             # home | week | courses
+open_on_startup = false
+color_mode = "accent"            # accent | mono | vivid
+prep_switch_hour = 18            # before this hour the prep card shows today's note, from it tomorrow's
+prep_warn_after = "19:30"        # tomorrow's prep note still missing after this time -> orange alert
+feed_minutes = 10                # live iCal feeds are fetched this often while Obsidian is open
+write_snapshot = true            # rewrite the vault's calendar snapshot from the live feeds when they change
+stale_days = 2                   # warn when the calendar snapshot is older than this
+urgent_hours = 24                # a deadline closer than this is urgent
+day_start = 7                    # timeline and week grid range (hours)
+day_end = 21
+# Where the notes are (the vault layout of the core, progress, planning and daily-prep modules).
+status_path = "progress/current-status.md"
+weeks_folder = "progress/weeks"
+prep_folder = "semester/prep"
+plans_folder = "semester/plans"
+overview_path = "courses-overview.md"
+study_folders = ["notes", "quiz-prep"]   # per course: the newest notes from these subfolders are listed
+# Optional overrides; "" = derived from paths.agent_dir:
+snapshot_path = ""               # "" = "<agent_dir>/cockpit/calendar-snapshot.json"
+rules_path = ""                  # "" = "<agent_dir>/rules.md" (the assistant reads it first)
+prompt_note = ""                 # "" = "<agent_dir>/cockpit/assistant-prompt.md"
+# Calendar notation (regular expressions; "/pattern/flags" also works). Defaults follow the planning module's
+# block notation; change them if your calendar titles look different.
+lecture_pattern = "^(?:V|L):"    # classes calendar: lecture
+exercise_pattern = "^(?:U|Ü|E):" # classes calendar: exercise class (anything else there is a graded fixture)
+optional_pattern = "^\\(|^OP\\b" # study blocks titled "(X)" or "OP ..." are optional
+deep_pattern = "\\bdeep\\b"      # "deep" in a title marks a deep block (case-insensitive)
+focus_marker = "FOCUS:"          # the lines after it in an event description are the block's focus
+main_marker = "_"                # "LA_ mock A": the segment with this marker is the block's main subject
+# Status vocabulary of the week page's due table (see the progress module's contract).
+done_words = ["✓", "done", "submitted", "closed", "handed in", "uploaded", "dropped", "skipped"]  # only at the START of the Status cell; a score "x / y" always counts
+pending_words = ["not reported", "pending", "not recorded"]  # anywhere in the cell: waiting for a result, never overdue
+no_bonus_words = ["none", "no", "feedback only"]            # Bonus cell starting with one of these (or empty): drops off once its date is over
+soft_prefixes = ["tutorial"]      # a deadline cell starting with one of these is a soft date (never overdue or urgent)
+soft_markers = ["(tentative)"]    # ... or containing one of these
+not_released_words = ["not released"]  # no Done button
+# Assistant panel (your own Anthropic API key, stored in Obsidian's secret storage, never in the vault).
+fast_model = "claude-haiku-5-5"
+strong_model = "claude-sonnet-5-5"
+
+[defaults.cockpit.headings]
+due = "Due this week"            # week page
+results = "Results this week"    # week page
+notes = "Notes"                  # week page
+check_in = "End-of-week check-in"  # week page ("End-of-week check-in (Sat)" matches too)
+next = "Next 10 days"            # progress page (any "Next <n> days" also matches)
+exercises = "Exercises"          # progress page: "## Exercises: done vs. to do" with ### per course
+self_rating = "Self-rated"       # progress page: "## Self-rated understanding"
+snapshot = "Snapshot:"           # progress page: the bold "**Snapshot: ...**" line
+
+[defaults.schedule]
+daily_prep = ["17:30", "19:30"]  # the daily-prep job and its change check (shown in the prep card's texts)
+prep_check = "07:30"             # the morning check (today's missing note is an alarm 15 min after it)
+inbox_sync = ["07:15", "13:15", "18:15"]  # when Done taps reach the week page ("applied at 13:15")
+study_cutoff = "19:00"           # Agenda: "Done for today. No study after 19:00." ("" = no cutoff)
+
+[defaults.calendar]
+courses = "Courses"
+study_blocks = "Study blocks"
+events = "Events"
+busy = "Busy"
+lecture_prefix = "L:"            # same defaults as the planning module: lecture titles in the Courses calendar ...
+exercise_prefix = "E:"           # ... and exercise classes (always recognised on top of cockpit.lecture_pattern / exercise_pattern)
+
+[defaults.paths]
+agent_dir = "_agent"
+inbox = "inbox"
+
+[defaults.course]
+aliases = []                     # extra names the cockpit recognises the course by (short codes in capitals match case-sensitively)
+detect = ""                      # optional raw regular expression for recognising the course ("" = none), e.g. "\bE\d+\b"
+# Per assessment ([[courses.assessments]]), the cockpit also reads `dates = ["YYYY-MM-DD", "YYYY-MM-DD HH:MM", ...]`
+# (dated sittings, for "N quizzes left"); list-of-table items can't carry module defaults, so it is simply optional.
+
+# The bonus rule engine's keys, on top of the courses module's scheme / description / max_bonus / rule.
+[defaults.course.bonus]
+threshold = 0.8                  # threshold: share of all points that gives the full bonus (80 also means 80 %)
+total = 0                        # total points if published (0 = unknown; the card's "~N pts" in bonus_target is the estimate)
+total_estimated = false          # true when `total` is your own estimate
+proportional = true              # threshold / best-n: a proportional share below the mark (false = all or nothing)
+full_at = 0                      # points: points that give the full bonus (0 = the total: linear, no slack)
+required = 0                     # best-n: how many must be passed (0 = all)
+unit = "points"                  # label of the points, e.g. "quiz points"
+counts = []                      # names of the assessments whose dates count as sittings ([] = all that count for the bonus)

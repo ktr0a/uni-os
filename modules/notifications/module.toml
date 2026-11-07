@@ -1,0 +1,51 @@
+id = "notifications"
+name = "Notifications (ntfy push + push gate)"
+tier = "standard"
+summary = "Phone pushes through one shared gate: a daily budget, a minimum gap, dedupe per problem, quiet hours and quiet windows (held, not dropped), never an 'all good', no personal details; plus deterministic outcome checks."
+requires = ["core"]
+recommends = ["heartbeat"]
+obsidian = "irrelevant"
+os = ["any"]
+runtime = ["laptop", "vm"]
+config_keys = [
+  "notify.provider",
+  "notify.ntfy_server",
+  "notify.ntfy_topic_file",
+  "notify.title",
+  "notify.default_click",
+  "notify.max_per_day",
+  "notify.min_gap_hours",
+  "notify.dedupe_hours",
+  "notify.quiet_hours",
+  "notify.quiet_windows",
+  "notify.never_all_good",
+  "notify.require_id",
+  "notify.block_personal",
+  "notify.extra_all_good_patterns",
+  "notify.max_length",
+  "notify.hold_max_hours",
+  "notify.direct_priority",
+]
+verbatim = []
+
+[[jobs]]
+id = "outcome-checks"
+
+[defaults.notify]
+provider = "ntfy"
+ntfy_server = "https://ntfy.sh"
+ntfy_topic_file = "~/.config/uni-os/ntfy-topic"
+title = "Uni OS"
+default_click = ""
+max_per_day = 3
+min_gap_hours = 2
+dedupe_hours = 24
+quiet_hours = "21:00-07:30"
+quiet_windows = []
+never_all_good = true
+require_id = true
+block_personal = true
+extra_all_good_patterns = []
+max_length = 300
+hold_max_hours = 24
+direct_priority = 4

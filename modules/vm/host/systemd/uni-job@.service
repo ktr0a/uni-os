@@ -1,0 +1,15 @@
+# Uni OS host: one run of a job (instance = job id). Started by uni-job-<job>.timer, which
+# `uni-vm jobs sync` writes from the job's SLOTS/DAYS/DATES or SCHEDULE. UNI_SCHEDULED=1 lets
+# run-job apply failover mode and the DATES guard (manual `uni-vm jobs run` always runs).
+[Unit]
+Description=Uni OS job %i
+After=uni-drive.service network-online.target
+Wants=uni-drive.service
+
+[Service]
+Type=oneshot
+Environment=PATH=%h/.local/bin:@@HOST_DIR@@/bin:/usr/local/bin:/usr/bin:/bin
+Environment=UNI_SCHEDULED=1
+ExecStart=@@HOST_DIR@@/bin/run-job %i
+TimeoutStartSec=2h
+Nice=5

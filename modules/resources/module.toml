@@ -1,0 +1,55 @@
+id = "resources"
+name = "Resources"
+tier = "standard"
+summary = "Cross-course method pages: a sources registry with an explicit authority order and the real source per course, a log for TA and community websites with a review checklist, and the course-fact verification method (claims, checks, verdicts, propagation)."
+requires = ["core", "courses"]
+recommends = []
+obsidian = "optional"
+os = ["any"]
+runtime = ["laptop", "cloud", "vm"]
+verbatim = []
+
+config_keys = [
+  "university.lms", "university.lms_url",
+  "university.website", "university.catalogue", "university.recordings",
+  "term.label",
+  "course.name", "course.short", "course.folder", "course.slug",
+  "course.lms_url", "course.website", "course.platforms", "course.recordings",
+  "course.official_subfolders", "course.handwritten_folder", "course.real_source", "course.lecture_slots",
+  "course.exercise_slots", "course.exercise_group", "course.sheet_release",
+  "course.sheet_due", "course.hand_in", "course.session_rule", "course.exam_format",
+  "course.integrity", "course.week_numbering", "course.assessments",
+  "course.bonus.scheme", "course.bonus.rule", "course.bonus.target",
+]
+
+[defaults.university]
+lms = "Moodle"
+lms_url = ""
+website = ""
+catalogue = ""
+recordings = ""
+
+[defaults.course]
+lms_url = ""
+website = ""
+platforms = []
+recordings = ""
+official_subfolders = ["assignments", "assignments/solutions", "script and slides"]
+handwritten_folder = ""    # read only when handwritten-notes is enabled
+real_source = ""
+lecture_slots = []
+exercise_slots = []
+exercise_group = ""
+sheet_release = ""
+sheet_due = ""
+hand_in = ""
+session_rule = ""
+week_numbering = ""
+exam_format = ""
+integrity = ""
+assessments = []
+
+[defaults.course.bonus]
+scheme = "none"
+rule = ""
+target = ""

@@ -1,0 +1,27 @@
+filters:
+  and:
+    - file.ext == "md"
+    - not:
+        - file.inFolder("_agent/archive")
+        - file.inFolder("_agent/inbox-applied")
+        - file.inFolder("_agent/logs")
+        - file.inFolder("_templates")
+        - file.path.contains("/reference/")
+properties:
+  file.name:
+    displayName: Note
+  file.folder:
+    displayName: Folder
+  file.mtime:
+    displayName: Changed
+views:
+  - type: table
+    name: Recently changed
+    order:
+      - file.name
+      - file.folder
+      - file.mtime
+    sort:
+      - property: file.mtime
+        direction: DESC
+    limit: 15

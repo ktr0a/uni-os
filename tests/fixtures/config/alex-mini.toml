@@ -1,0 +1,67 @@
+# Small fictional config for the tools tests (Alex Example at the Example Institute of Technology).
+# "@TOPIC_FILE@" is replaced by the tests with a path outside the test vault.
+
+[uni_os]
+version = "0.1.0"
+preset = "custom"
+
+[student]
+name = "Alex Example"
+handle = "alex"
+
+[university]
+name = "Example Institute of Technology"
+short = "EIT"
+programme = "BSc Computer Science"
+
+[term]
+label = "Autumn 2026"
+timezone = "Europe/Zurich"
+week0_monday = 2026-09-14
+last_lecture_day = 2026-12-18
+lecture_free_from = 2026-12-19
+exam_session_start = 2027-01-25
+exam_session_end = 2027-02-19
+holidays = [{ name = "Reading day", from = 2026-11-20, to = 2026-11-20 }]
+
+[notify]
+ntfy_topic_file = "@TOPIC_FILE@"
+
+[[courses]]
+id = "algo"
+name = "Algorithms and Data Structures"
+short = "AD"
+folder = "A&D"
+slug = "ad"
+colour = "#1e66f5"
+lecture_slots = ["Mon 10:15-12:00", "Thu 10:15-12:00"]
+official_subfolders = ["sheets", "sheets/solutions", "script & slides"]
+
+  [[courses.assessments]]
+  name = "Exercise sheets"
+  kind = "sheet"
+  counts_for = "bonus"
+
+  [[courses.assessments]]
+  name = "Graded quiz"
+  kind = "quiz"
+  counts_for = "bonus"
+  assistance = "solo"
+
+  [courses.bonus]
+  scheme = "threshold"
+  max_bonus = 0.25
+
+[[courses]]
+id = "prog"
+name = "Introduction to Programming"
+short = "PROG"
+folder = "PROG"
+slug = "prog"
+colour = "#d20f39"
+error_log_streams = ["theory", "programming"]
+handwritten_folder = "PROG tablet"
+
+[modules]
+# Fixture modules: core is always added; progress and study are the ones under test.
+enabled = ["progress", "study"]

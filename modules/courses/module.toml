@@ -1,0 +1,97 @@
+id = "courses"
+name = "Courses"
+tier = "core"
+summary = "One folder per course: a course card (facts, weekly rhythm, assessments, bonus scheme, help policy, real sources, lecture log, file index), a backlog, notes and reference folders, add-only official-file folders, an all-courses overview and the course-facts skill."
+requires = ["core"]
+recommends = ["resources", "error-logs", "study-pages", "progress"]
+obsidian = "recommended"
+os = ["any"]
+runtime = ["laptop", "cloud", "vm"]
+verbatim = []
+
+# Keys this module reads. "course.<key>" means: a key of every [[courses]] entry.
+config_keys = [
+  "university.name", "university.short", "university.programme", "university.lms",
+  "university.catalogue", "university.recordings",
+  "term.label", "term.timezone", "term.week0_monday", "term.last_lecture_day",
+  "term.lecture_free_from", "term.holidays", "term.exam_session_start", "term.exam_session_end",
+  "calendar.courses", "calendar.study_blocks",
+  "course.id", "course.name", "course.short", "course.folder", "course.slug",
+  "course.colour", "course.colour_light", "course.language", "course.ects",
+  "course.lecturers", "course.lecture_slots", "course.exercise_slots", "course.exercise_group",
+  "course.lms_url", "course.website", "course.platforms", "course.recordings",
+  "course.sheet_release", "course.sheet_due", "course.hand_in",
+  "course.session_rule", "course.week_numbering",
+  "course.official_subfolders", "course.real_source", "course.page_offsets",
+  "course.exam_format", "course.integrity", "course.assistance", "course.notes",
+  "course.error_log_streams", "course.handwritten_folder",   # course.error_logs is derived from error_log_streams
+  "course.assessments", "course.bonus.scheme", "course.bonus.description",
+  "course.bonus.max_bonus", "course.bonus.rule", "course.bonus.target",
+]
+
+[[skills]]
+id = "course-facts"
+
+# Empty folders that `uni-os init` and `uni-os render` create (never deleted, no
+# placeholder files inside: official folders hold only official files). One folder per
+# entry of each course's official_subfolders, e.g. "AD/AD assignments/".
+[[folders]]
+path = "{{course.folder}}/{{item}}"
+each = "course.official_subfolders"
+
+# ---------------------------------------------------------------------------
+# Defaults (deep-merged UNDER the user's config; the user's values win).
+# Identity keys of a course (id, name, short, folder, slug, colour) and the
+# term anchor (term.label, term.week0_monday) have no defaults: setup asks.
+# ---------------------------------------------------------------------------
+
+[defaults.university]
+lms = "Moodle"
+catalogue = ""        # course catalogue URL (the official list of courses, rooms, exam modes)
+recordings = ""       # lecture recording portal URL, if any
+
+[defaults.term]
+holidays = []             # [{ name, from, to }]; listed in the course-facts skill
+last_lecture_day = ""
+lecture_free_from = ""
+exam_session_start = ""   # exam-session dates only (for exam-phase scheduling)
+exam_session_end = ""
+
+[defaults.calendar]
+courses = "Courses"
+study_blocks = "Study blocks"
+
+[defaults.course]
+colour_light = ""          # lighter shade of the course colour (exercise sessions); "" = derive
+# language: not defaulted here; Uni OS derives it from student.language when a course lacks it
+ects = ""
+lecturers = []             # optional; the vault is private, but never put real names in shared examples
+lecture_slots = []         # e.g. ["Tue 10:15-12:00", "Thu 10:15-12:00"]
+exercise_slots = []        # e.g. ["Wed 14:15-16:00"]
+exercise_group = ""        # your own exercise group / tutorial id, e.g. "group 3"
+lms_url = ""               # this course's page on the LMS
+website = ""               # course website outside the LMS, if any
+platforms = []             # other platforms, e.g. ["online judge with hidden tests (programming sheets)", "git server (hand-in)"]
+recordings = ""            # e.g. "recorded, not streamed; usually online next day"
+sheet_release = ""         # e.g. "Mon (on the LMS)"
+sheet_due = ""             # e.g. "Sun 23:59 of the same week"
+hand_in = ""               # e.g. "LMS upload, one per working group" | "git push" | "not handed in"
+session_rule = ""          # THE key fact: what the exercise session of term week n covers
+week_numbering = ""        # course-internal numbering vs term weeks, e.g. "LMS 'Week k' = term week k-1"
+official_subfolders = ["assignments", "assignments/solutions", "script and slides"]
+real_source = ""           # which documents are ground truth for "what was lectured"
+page_offsets = []          # [{ source = "Script 2026 (PDF)", rule = "PDF page = printed page + 8" }]
+exam_format = ""           # logistics only: length, mode, language, allowed aids
+integrity = ""             # the course's official integrity / AI rule, in one or two sentences
+# assistance: not defaulted here; derived from study.assistance_default (solo | hints-only | coach | full)
+notes = []                 # course-specific conventions, one string each
+error_log_streams = ["main"]
+handwritten_folder = ""    # "" = "<course folder> handwritten" (used if handwritten-notes is enabled)
+assessments = []
+
+[defaults.course.bonus]
+scheme = "none"            # none | threshold | points | best-n | custom
+description = ""           # e.g. "quiz 4 + theory sheet 4 + peer grading 1 per week, programming 4 per sheet"
+# max_bonus: base default 0; a number in grade units (e.g. 0.25) or a percentage
+rule = ""                  # free text the agents read, e.g. "bonus = min(0.25, 0.25 * points / (0.8 * max))"
+target = ""                # short display string for the card property, e.g. "80 % of all points" or "5 / 7"

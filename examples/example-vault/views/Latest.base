@@ -1,0 +1,97 @@
+filters:
+  and:
+    - file.ext == "md"
+properties:
+  file.name:
+    displayName: Note
+  file.ctime:
+    displayName: Created
+views:
+  - type: table
+    name: Week plan
+    filters:
+      and:
+        - file.inFolder("semester/plans")
+        - file.basename.startsWith("week-")
+        - file.basename.endsWith("-plan")
+    order:
+      - file.name
+    sort:
+      - property: file.name
+        direction: DESC
+    limit: 1
+  - type: table
+    name: Prep notes
+    filters:
+      and:
+        - file.inFolder("semester/prep")
+        - file.basename.startsWith("prep-")
+    order:
+      - file.name
+      - file.ctime
+    sort:
+      - property: file.name
+        direction: DESC
+    limit: 2
+  - type: table
+    name: "AD quiz prep"
+    filters:
+      and:
+        - file.inFolder("AD/quiz-prep")
+    order:
+      - file.name
+      - file.ctime
+    sort:
+      - property: file.ctime
+        direction: DESC
+    limit: 3
+  - type: table
+    name: "DM quiz prep"
+    filters:
+      and:
+        - file.inFolder("DM/quiz-prep")
+    order:
+      - file.name
+      - file.ctime
+    sort:
+      - property: file.ctime
+        direction: DESC
+    limit: 3
+  - type: table
+    name: "LA quiz prep"
+    filters:
+      and:
+        - file.inFolder("LA/quiz-prep")
+    order:
+      - file.name
+      - file.ctime
+    sort:
+      - property: file.ctime
+        direction: DESC
+    limit: 3
+  - type: table
+    name: "PROG quiz prep"
+    filters:
+      and:
+        - file.inFolder("PROG/quiz-prep")
+    order:
+      - file.name
+      - file.ctime
+    sort:
+      - property: file.ctime
+        direction: DESC
+    limit: 3
+  - type: table
+    name: Newest notes
+    filters:
+      and:
+        - not:
+            - file.inFolder("_agent")
+            - file.inFolder("_templates")
+    order:
+      - file.name
+      - file.ctime
+    sort:
+      - property: file.ctime
+        direction: DESC
+    limit: 10

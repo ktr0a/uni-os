@@ -1,0 +1,39 @@
+# Line endings. Everything is stored with LF and checked out with LF on every system,
+# also on Windows with core.autocrlf = true: shell scripts, job.conf and host.env files
+# run on Linux and break with CR characters, and `uni-os` writes every rendered file
+# with LF anyway.
+* text=auto eol=lf
+
+# Windows script files are checked out with CRLF on every system: they are Windows-native
+# (cmd.exe misreads labels and `goto` in LF-only batch files; CRLF is the safe choice for
+# Windows Script Host and PowerShell 5.1 too). `uni-os` renders these types without
+# touching their line endings (tools/uni_os/install.py, KEEP_LINE_ENDINGS), so the CRLF of
+# the checkout is what lands in the vault, the same on every OS.
+*.ps1 text eol=crlf
+*.psm1 text eol=crlf
+*.psd1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.vbs text eol=crlf
+
+# Binary files: never converted, never diffed as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.zip binary
+*.gz binary
+
+# Generated files: committed on purpose (users install the cockpit without Node), but
+# collapsed in diffs and left out of language statistics.
+modules/cockpit/dist/main.js linguist-generated=true
+modules/cockpit/vault/.obsidian/plugins/uni-os-cockpit/main.js linguist-generated=true
+examples/example-vault/.obsidian/plugins/uni-os-cockpit/main.js linguist-generated=true
+modules/cockpit/plugin/package-lock.json linguist-generated=true

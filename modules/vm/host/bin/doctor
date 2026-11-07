@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# doctor: one read-only look at the whole host, for the student or a session that would
+# otherwise spend many tool calls checking (`uni-vm doctor`). No agent, no pushes, changes
+# nothing, a few seconds. Lines with !! need a look. Exit 0 if none, 1 if any.
+# Sections:
+#   MACHINE   vault, Remote Control unit, agent login, memory, disk
+#   JOBS      last runs that failed, failures in 24 h, jobs that changed in the vault since the
+#             last `uni-vm jobs sync`, jobs switched on, snapshot readable
+#   RESULTS   outcome-checks --dry-run (did the jobs' work happen?)
+#   SESSIONS  each role session's state and context size (a session re-reads its whole context
+#             on every turn: over BIG_CONTEXT_K thousand tokens is flagged), open job sessions
+#   DATA      notes history age, rclone errors today, last push, laptop last seen
+#   PLUGINS   every executable in ~/.config/uni-os/doctor.d/ prints its own "ok ..." / "!! ..."
+#             lines (module-specific checks, e.g. integrity rules for a course)
+set -uo pipefail
+HOST_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+. "$HOST_DIR/lib/common.sh"
+H="$HOME/vault-history"
+OUT=$(mktemp); trap 'rm -f "$OUT"' EXIT
+bad=0
+ok()   { echo "  ok  $*" >> "$OUT"; }
+warn() { echo "  !!  $*" >> "$OUT"; bad=$((bad + 1)); }
+head_() { echo "$*" >> "$OUT"; }
+now=$(date +%s)
+
+head_ "MACHINE"
+if vault_ok; then ok "vault $VAULT"; else warn "vault is down: uni-vm restart drive"; fi
+if is_claude && yes_ "$RC_ENABLED"; then
+  if systemctl --user is-active -q uni-rc.service; then ok "Remote Control server \"$RC_NAME\""; else warn "Remote Control server is not running: uni-vm restart rc"; fi
+fi
+if agent_logged_in; then ok "agent login ($AGENT_CLI)"; else warn "the agent is logged out: MAINTENANCE.md, Logins"; fi
+avail=$(free -m | awk '/Mem:/ {print $7}'); disk=$(df --output=pcent / | tail -1 | tr -dc 0-9)
+if [ "$avail" -ge "$MEM_CLOSE_JOBS_MB" ]; then ok "memory ${avail} MB available"; else warn "only ${avail} MB memory available (uni-vm perf 24h)"; fi
+if [ "$disk" -le $(( DISK_ALERT_PCT - 5 )) ]; then ok "disk ${disk}%"; else warn "disk ${disk}% full"; fi
+yes_ "$JOBS_LIVE" || ok "trial host (JOBS_LIVE=no): job timers stay off"
+yes_ "$VAULT_WRITES" || ok "VAULT_WRITES=no: another host writes _agent/vm/*"
+
+head_ "JOBS"
+snap=$("$HOST_DIR/bin/uni-vm" snapshot 2>/dev/null)
+if [ -z "$snap" ] || ! have jq; then warn "could not read the job list (uni-vm snapshot failed or jq missing)"
+else
+  on=$(jq -r '[.jobs[] | select(.on == true) | .name] | join(", ")' <<< "$snap")
+  ok "switched on: ${on:-none}"
+  failed=$(jq -r '[.jobs[] | select(.on == true and (.exit // 0) != 0) | "\(.name) exit \(.exit)"] | join(", ")' <<< "$snap")
+  [ -z "$failed" ] && ok "every switched-on job's last run exited 0" || warn "last run failed: $failed (uni-vm jobs log <job>)"
+fi
+recent=$(awk -v since="$(date -d '24 hours ago' '+%Y-%m-%d %H:%M')" -F' \\| ' '$1 >= since && $3 ~ /^exit [1-9]/ {print $1, $2, $3}' "$STATE/jobs.log" 2>/dev/null | tail -n 3)
+[ -z "$recent" ] || warn "failed in the last 24 h: $(tr '\n' ';' <<< "$recent")"
+drift=$("$HOST_DIR/bin/uni-vm" jobs sync --check 2>/dev/null); rc=$?
+if [ "$rc" = 10 ]; then while IFS= read -r l; do warn "jobs: $l (uni-vm jobs sync)"; done <<< "$drift"
+elif [ "$rc" = 0 ]; then ok "host jobs match the vault"; fi
+
+head_ "RESULTS"
+ok "outcome checks run by: $( [ "$(outcome_checks_owner)" = job ] && echo 'the job outcome-checks (its timer is on)' || echo 'the built-in check in uni-vm health' ) (the one sender on this host)"
+oc=$("$HOST_DIR/bin/outcome-checks" --dry-run 2>/dev/null)
+if [ -z "$oc" ]; then ok "outcome checks: nothing to report"; else while IFS= read -r l; do warn "$l"; done <<< "$oc"; fi
+
+head_ "SESSIONS"
+while read -r role st _; do
+  [ "$role" = ROLE ] && continue
+  sid=$(cat "$STATE/roles/$role.sid" 2>/dev/null); k=""
+  [ -n "$sid" ] && [ "$sid" != "-" ] && k=$(context_k "$(transcript_path "$sid")")
+  k=${k:-0}
+  case "$st" in
+    running|off) if [ "$k" -ge "$BIG_CONTEXT_K" ]; then warn "$role: $st, context ${k}k (re-read on every turn: hand over to a fresh session)"; else ok "$role: $st, context ${k}k"; fi ;;
+    *) warn "$role: $st (uni-vm roles up)" ;;
+  esac
+done < <("$HOST_DIR/bin/role-sessions" list 2>/dev/null)
+js=$("${TM_JOBS[@]}" list-sessions -F '#{session_name}' 2>/dev/null | grep -vc '^hold$')
+ok "job sessions open: ${js:-0}"
+
+head_ "DATA"
+if [ -d "$H/.git" ]; then
+  age=$(( (now - $(git -C "$H" log -1 --format=%ct 2>/dev/null || echo "$now")) / 60 ))
+  if [ "$age" -le 130 ]; then ok "notes history: last commit ${age} min ago"; else warn "notes history: last commit ${age} min ago (job vault-history)"; fi
+fi
+if [ "$STORAGE_MODE" = rclone-mount ]; then
+  errs=$(grep -c "^$(date +%Y/%m/%d).*ERROR" "$STATE/rclone.log" 2>/dev/null); errs=${errs:-0}
+  if [ "$errs" -le 5 ]; then ok "rclone errors today: $errs"; else warn "rclone errors today: $errs (uni-vm logs drive)"; fi
+fi
+ok "last push: $(tail -n 1 "$STATE/notify.log" 2>/dev/null | cut -c1-70)"
+[ -f "$STATE/laptop-seen" ] && ok "laptop last seen $(( (now - $(stat -c %Y "$STATE/laptop-seen")) / 60 )) min ago"
+
+if compgen -G "$CONF_DIR/doctor.d/*" >/dev/null; then
+  head_ "PLUGINS"
+  for p in "$CONF_DIR/doctor.d"/*; do
+    [ -x "$p" ] || continue
+    while IFS= read -r l; do
+      case "$l" in "!! "*) warn "${l#!! }" ;; "ok "*) ok "${l#ok }" ;; esac
+    done < <(UNI_VAULT="$VAULT" timeout 20 "$p" 2>/dev/null)
+  done
+fi
+
+echo "uni-vm doctor on $HOST_NAME $(date '+%a %d %b %H:%M'): $( [ "$bad" = 0 ] && echo 'nothing to look at' || echo "$bad line(s) to look at" )"
+cat "$OUT"
+[ "$bad" = 0 ]

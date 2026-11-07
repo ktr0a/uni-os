@@ -1,0 +1,73 @@
+filters:
+  and:
+    - type == "error-log"
+    - not:
+        - file.inFolder("_templates")
+properties:
+  file.name:
+    displayName: Error log
+  note.course:
+    displayName: Course
+  note.updated:
+    displayName: Updated
+  file.mtime:
+    displayName: Last changed
+views:
+  - type: table
+    name: Error logs
+    order:
+      - file.name
+      - course
+      - updated
+      - file.mtime
+    sort:
+      - property: file.mtime
+        direction: DESC
+  - type: table
+    name: "AD"
+    filters:
+      and:
+        - file.inFolder("AD")
+    order:
+      - file.name
+      - updated
+      - file.mtime
+    sort:
+      - property: file.mtime
+        direction: DESC
+  - type: table
+    name: "DM"
+    filters:
+      and:
+        - file.inFolder("DM")
+    order:
+      - file.name
+      - updated
+      - file.mtime
+    sort:
+      - property: file.mtime
+        direction: DESC
+  - type: table
+    name: "LA"
+    filters:
+      and:
+        - file.inFolder("LA")
+    order:
+      - file.name
+      - updated
+      - file.mtime
+    sort:
+      - property: file.mtime
+        direction: DESC
+  - type: table
+    name: "PROG"
+    filters:
+      and:
+        - file.inFolder("PROG")
+    order:
+      - file.name
+      - updated
+      - file.mtime
+    sort:
+      - property: file.mtime
+        direction: DESC

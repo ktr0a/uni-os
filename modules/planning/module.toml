@@ -1,0 +1,59 @@
+id = "planning"
+name = "Planning"
+tier = "standard"
+summary = "Weekly planning with a calendar: a term calendar page (weeks, weekly grid, rhythm, key dates, exam logistics), the planning system (calendar set, block notation, event conventions, house rules, principles, week-plan procedure), week plans, a study-approach decision record and an exam-phase scheduling frame; role Plan & progress, plus an optional read-only deadline-audit job (off by default)."
+requires = ["core", "courses", "progress"]
+recommends = ["check-in", "daily-prep", "student-model", "heartbeat", "experiments"]
+obsidian = "optional"
+os = ["any"]
+runtime = ["laptop", "cloud", "vm"]
+
+# schedule.daily_prep and schedule.check_in / week_page are only read inside
+# {{#if modules.daily-prep}} / {{#if modules.check-in}} blocks (defaults in those modules).
+config_keys = [
+  "calendar.provider", "calendar.courses", "calendar.study_blocks", "calendar.events", "calendar.busy",
+  "calendar.notation", "calendar.lecture_prefix", "calendar.exercise_prefix",
+  "calendar.standing_approval", "calendar.default_location",
+  "schedule.day_start", "schedule.weekday_stop", "schedule.study_cutoff",
+  "schedule.focus_minutes", "schedule.break_minutes",
+  "schedule.daily_prep", "schedule.check_in", "schedule.week_page",
+  "study.personal_deadline_rule", "study.target_column",
+  "term.label", "term.timezone", "term.week0_monday", "term.last_lecture_day", "term.lecture_free_from",
+  "term.exam_session_start", "term.exam_session_end", "term.holidays",
+  "student.name", "paths.agent_dir",
+  "courses.short", "courses.name", "courses.folder", "courses.slug", "courses.lecture_slots", "courses.exercise_slots",
+  "courses.sheet_release", "courses.sheet_due", "courses.assessments", "courses.assistance",
+  "courses.week_numbering", "courses.exam_format",
+  "modules.enabled",
+]
+verbatim = []
+
+[[roles]]
+id = "plan-and-progress"
+
+# Optional, off when installed: the read-only deadline audit, once on term.last_lecture_day at
+# schedule.day_start (existing keys; no schedule without a last lecture day). Usually run on request.
+[[jobs]]
+id = "deadline-audit"
+
+[defaults.calendar]
+provider = "google"            # google | other | none (other: any calendar tool your agent has; none: the week plan's Blocks section is the schedule)
+courses = "Courses"            # official timetable: lectures, exercise classes, graded fixtures
+study_blocks = "Study blocks"  # self-study blocks in block notation (the planner writes, the prep job appends MATERIAL)
+events = "Events"              # personal one-offs (read only for collisions)
+busy = "Busy"                  # busy time only (sleep, fixed commitments)
+notation = "default"           # default | custom (set custom after you change the block-notation table)
+lecture_prefix = "L:"          # title prefix of lectures in the Courses calendar (the original: "V:", German "Vorlesung")
+exercise_prefix = "E:"         # title prefix of exercise classes (the original: "U:", German "Uebung")
+standing_approval = false      # true: the planner changes study blocks without asking first, then reports
+default_location = ""          # e.g. "Library (default spot)": put in every block's location until real spots are named
+
+[defaults.schedule]
+day_start = "08:00"            # earliest start of a study block
+weekday_stop = "18:15"         # weekday study ends by then (the original: hard stop 18:15-18:30)
+study_cutoff = "19:00"         # no study blocks after this time
+focus_minutes = 70             # focus span before a break (the original student's measured ~70 min)
+break_minutes = 10             # fixed break inside long blocks
+
+[defaults.term]
+holidays = []                  # [{ name = "...", from = 2026-12-24, to = 2027-01-01 }]

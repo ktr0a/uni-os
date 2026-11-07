@@ -1,0 +1,88 @@
+/* Uni OS vault styling, generated from _agent/uni-os.toml (courses[].colour, obsidian.area_colours).
+   Change colours in the config and re-render; don't edit this file by hand.
+   Enable it in Settings > Appearance > CSS snippets ("uni-os").
+
+   Colour convention: one colour per course, the same everywhere (callouts, file explorer, graph,
+   vault map); the other areas use clearly different colours. Never give two areas similar colours.
+{{#each courses}}
+     {{course.short}}: {{course.colour}}
+{{/each}}
+     me {{obsidian.area_colours.me}} · progress and weeks {{obsidian.area_colours.progress}} · semester {{obsidian.area_colours.semester}}
+     deadline {{obsidian.area_colours.deadline}} · agent {{obsidian.area_colours.agent}} · neutral course {{obsidian.area_colours.course}}
+
+   Why explicit colours: some Obsidian versions ignored --callout-color for custom callout types,
+   so background, border and title colour are set directly (mixed from one --uos-c colour). */
+
+/* Wider page for the Home dashboard (Home.md has cssclasses: uni-os-home) */
+.uni-os-home {
+  --file-line-width: 1150px;
+}
+.uni-os-home table {
+  width: 100%;
+}
+.uni-os-home h1 {
+  margin-bottom: 0.2em;
+}
+
+/* Custom callout colours and icons */
+{{#each courses}}
+.callout[data-callout="{{course.slug}}"] { --uos-c: {{course.colour}}; --callout-icon: lucide-graduation-cap; }
+{{/each}}
+.callout[data-callout="course"]   { --uos-c: {{obsidian.area_colours.course}}; --callout-icon: lucide-graduation-cap; }
+.callout[data-callout="me"]       { --uos-c: {{obsidian.area_colours.me}}; --callout-icon: lucide-user; }
+.callout[data-callout="week"]     { --uos-c: {{obsidian.area_colours.progress}}; --callout-icon: lucide-calendar-days; }
+.callout[data-callout="semester"] { --uos-c: {{obsidian.area_colours.semester}}; --callout-icon: lucide-calendar-range; }
+.callout[data-callout="deadline"] { --uos-c: {{obsidian.area_colours.deadline}}; --callout-icon: lucide-alarm-clock; }
+.callout[data-callout="agent"]    { --uos-c: {{obsidian.area_colours.agent}}; --callout-icon: lucide-bot; }
+
+.callout:is({{#each courses}}[data-callout="{{course.slug}}"], {{/each}}[data-callout="course"], [data-callout="me"],
+  [data-callout="week"], [data-callout="semester"], [data-callout="deadline"], [data-callout="agent"]) {
+  background-color: color-mix(in srgb, var(--uos-c) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--uos-c) 35%, transparent);
+  border-left: 4px solid var(--uos-c);
+}
+.callout:is({{#each courses}}[data-callout="{{course.slug}}"], {{/each}}[data-callout="course"], [data-callout="me"],
+  [data-callout="week"], [data-callout="semester"], [data-callout="deadline"], [data-callout="agent"]) > .callout-title,
+.callout:is({{#each courses}}[data-callout="{{course.slug}}"], {{/each}}[data-callout="course"], [data-callout="me"],
+  [data-callout="week"], [data-callout="semester"], [data-callout="deadline"], [data-callout="agent"]) > .callout-title .callout-icon {
+  color: var(--uos-c);
+}
+
+/* Grid layout: nested callouts inside "> [!grid]" sit side by side (Home tiles) */
+.callout[data-callout="grid"] {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+.callout[data-callout="grid"] > .callout-title {
+  display: none;
+}
+.callout[data-callout="grid"] > .callout-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.6em;
+}
+.callout[data-callout="grid"] > .callout-content > .callout {
+  margin: 0;
+}
+
+/* Agent-only area and agent entry files: muted in the file explorer */
+.nav-folder-title[data-path="_agent"],
+.nav-folder-title[data-path^="_agent/"],
+.nav-file-title[data-path^="_agent/"],
+.nav-folder-title[data-path="_templates"],
+.nav-file-title[data-path^="_templates/"],
+.nav-file-title[data-path="AGENTS.md"],
+.nav-file-title[data-path="CLAUDE.md"] {
+  opacity: 0.6;
+}
+
+/* Course folders in the file explorer carry their course colour */
+{{#each courses}}
+.nav-folder-title[data-path="{{course.folder}}"] { color: {{course.colour}}; }
+{{/each}}
+
+/* Area folders carry their area colour */
+.nav-folder-title[data-path="me"]       { color: {{obsidian.area_colours.me}}; }
+.nav-folder-title[data-path="progress"] { color: {{obsidian.area_colours.progress}}; }
+.nav-folder-title[data-path="semester"] { color: {{obsidian.area_colours.semester}}; }

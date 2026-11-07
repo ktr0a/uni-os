@@ -1,0 +1,69 @@
+filters:
+  and:
+    - file.ext == "md"
+properties:
+  file.name:
+    displayName: Note
+  file.ctime:
+    displayName: Created
+views:
+{{#if modules.planning}}
+  - type: table
+    name: Week plan
+    filters:
+      and:
+        - file.inFolder("semester/plans")
+        - file.basename.startsWith("week-")
+        - file.basename.endsWith("-plan")
+    order:
+      - file.name
+    sort:
+      - property: file.name
+        direction: DESC
+    limit: 1
+{{/if}}
+{{#if modules.daily-prep}}
+  - type: table
+    name: Prep notes
+    filters:
+      and:
+        - file.inFolder("semester/prep")
+        - file.basename.startsWith("prep-")
+    order:
+      - file.name
+      - file.ctime
+    sort:
+      - property: file.name
+        direction: DESC
+    limit: 2
+{{/if}}
+{{#if modules.quiz-coaching}}
+{{#each courses}}
+  - type: table
+    name: "{{course.short}} quiz prep"
+    filters:
+      and:
+        - file.inFolder("{{course.folder}}/quiz-prep")
+    order:
+      - file.name
+      - file.ctime
+    sort:
+      - property: file.ctime
+        direction: DESC
+    limit: 3
+{{/each}}
+{{/if}}
+  - type: table
+    name: Newest notes
+    filters:
+      and:
+        - not:
+            - file.inFolder("_agent")
+            - file.inFolder("_templates")
+    order:
+      - file.name
+      - file.ctime
+    sort:
+      - property: file.ctime
+        direction: DESC
+    limit: 10

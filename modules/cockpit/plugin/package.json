@@ -1,0 +1,23 @@
+{
+  "name": "uni-os-cockpit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Uni OS cockpit: a calm study dashboard inside Obsidian, read live from the vault's own notes and calendar feeds.",
+  "license": "MIT",
+  "scripts": {
+    "build": "node esbuild.config.mjs",
+    "check": "tsc --noEmit -p tsconfig.json",
+    "test": "node esbuild.config.mjs --test && node test/run-all.mjs",
+    "smoke": "node esbuild.config.mjs && node test/smoke.cjs"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "builtin-modules": "^5.4.0",
+    "esbuild": "^0.28.2",
+    "obsidian": "^1.14.4",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.3.0"
+  }
+}

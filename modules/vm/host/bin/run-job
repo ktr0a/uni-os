@@ -1,0 +1,281 @@
+#!/usr/bin/env bash
+# run-job: run ONE Uni OS job on the always-on host.
+#
+# Called by the systemd unit uni-job@<job>.service (timer runs: UNI_SCHEDULED=1) and by
+# `uni-vm jobs run <job> [--dry-run]` (manual runs: always run at once, no failover wait).
+# A job is ~/.local/share/uni-os/jobs/<job>/ (the host copy of <vault>/_agent/jobs/<job>/,
+# made by `uni-vm jobs sync`): job.conf plus prompt.md (KIND=agent) or a COMMAND (KIND=command).
+#
+# What it does, in order (every step is a job.conf key; README "The job runner"):
+#   1. unsets API-key variables, so agent jobs always use the subscription login
+#   2. loads the job (defaults, then job.conf); --dry-run exports UNI_DRY_RUN=1 for every helper
+#   3. per-job lock (already running -> exit 0)
+#   4. DISABLED marker (`uni-os disable <module>`) -> skip; RUNTIME=laptop -> skip;
+#      scheduled run outside DATES -> skip
+#   5. failover mode (host-side `uni-vm jobs mode <job> failover`): wait FAILOVER_DELAY_MIN,
+#      skip if the laptop ran this slot (laptop ping data), else run here and leave a ran-marker
+#   6. NEEDS_VAULT=yes: wait for the vault mount + sentinel, else log "skipped" and exit 3
+#   7. agent jobs: AGENT_LOCK shared|exclusive|none on one lock file (flock, fd 7)
+#   8. PRECHECK (a shell test; non-zero = nothing to do, exit 0 without starting the agent)
+#   9. runs it: SESSION=print headless, SESSION=rc an interactive Remote Control session the
+#      student can open from the phone (Claude Code), KIND=command `bash -c COMMAND`;
+#      everything under `timeout TIMEOUT_MIN`
+#  10. log jobs/<job>/<YYYY-MM-DD_HHMMSS>[-dry].log ending "# exit N after Ss", one jobs.log line
+#  11. non-zero exit (not a dry run) -> a direct push "Job X failed"
+# Environment for PRECHECK and COMMAND: cwd = the vault (or $HOME with NEEDS_VAULT=no),
+# UNI_JOB, UNI_VAULT, UNI_STATE_DIR, UNI_OS_HOME, UNI_HOST=vm, UNI_DRY_RUN (dry runs).
+# Usage: run-job <job> [--dry-run]
+# Exit: the job's code; 0 for skips; 2 unknown job; 3 vault down.
+set -uo pipefail
+HOST_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+. "$HOST_DIR/lib/common.sh"
+. "$HOST_DIR/lib/jobconf.sh"
+
+NAME="${1:?usage: run-job <job> [--dry-run]}"
+DRY=""; [ "${2:-}" = "--dry-run" ] && DRY=1
+unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN CLAUDE_CODE_OAUTH_TOKEN
+JOBDIR="$JOBS_DIR/$NAME"
+JSTATE="$STATE/jobs/$NAME"
+mkdir -p "$JSTATE"
+[ -f "$JOBDIR/job.conf" ] || { echo "run-job: no job '$NAME' in $JOBS_DIR (run: uni-vm jobs sync)" >&2; exit 2; }
+
+set +u; job_load "$JOBDIR"; set -u
+[ -n "$DRY" ] && export UNI_DRY_RUN=1
+MODE=always; [ -s "$STATE/modes/$NAME" ] && MODE=$(cat "$STATE/modes/$NAME")
+MODEL="${MODEL:-$AGENT_DEFAULT_MODEL}"; EFFORT="${EFFORT:-$AGENT_DEFAULT_EFFORT}"
+export UNI_JOB="$NAME" UNI_VAULT="$VAULT" UNI_STATE_DIR="$STATE" UNI_OS_HOME UNI_HOST=vm UNI_PUSH_SOURCE="job:$NAME"
+
+joblog() { echo "$(now_hm) | $NAME | $*" >> "$STATE/jobs.log"; }
+
+exec 9>"$JSTATE/.lock"
+if ! flock -n 9; then echo "run-job: $NAME is already running" >&2; exit 0; fi
+
+# `uni-os disable <module>` drops a DISABLED file into its jobs' folders; `uni-vm jobs sync` copies it.
+if [ -e "$JOBDIR/DISABLED" ]; then joblog "skipped | module disabled (DISABLED marker): uni-vm jobs off $NAME"; exit 0; fi
+if [ "$RUNTIME" = laptop ]; then joblog "skipped | RUNTIME=laptop (not a host job)"; exit 0; fi
+if [ "${UNI_SCHEDULED:-0}" = 1 ] && ! dates_include "$DATES" "$(date +%F)"; then
+  joblog "skipped | outside DATES"; exit 0
+fi
+
+# ---- failover: the laptop's agent app runs this task while the laptop is awake --------------
+# The laptop ping (every 10 min) sends the app's last-run time per task to
+# $STATE/laptop-tasks.json and touches $STATE/laptop-seen. After the delay: the laptop ran
+# this slot -> skip; laptop still online but not run yet -> wait once more; else run here.
+FAILOVER_RAN=0
+if [ "$MODE" = failover ] && [ -z "$DRY" ] && [ "${UNI_SCHEDULED:-0}" = 1 ]; then
+  SLOT=$(( $(date +%s) / 60 * 60 ))       # the timer fires within ~21 s of the nominal minute
+  laptop_ran() {
+    local f="$STATE/laptop-tasks.json" t
+    [ -f "$f" ] && have jq || return 1
+    t=$(jq -r --arg id "$LAPTOP_TASK" '.tasks[$id].lastScheduledFor // .tasks[$id].lastRunAt // empty' "$f" 2>/dev/null)
+    [ -n "$t" ] && [ "$(date -d "$t" +%s 2>/dev/null || echo 0)" -ge $(( SLOT - 300 )) ]
+  }
+  laptop_online() {
+    local f="$STATE/laptop-seen"
+    [ -f "$f" ] && [ $(( $(date +%s) - $(stat -c %Y "$f") )) -lt $(( LAPTOP_SEEN_MIN * 60 )) ]
+  }
+  sleep $(( FAILOVER_DELAY_MIN * 60 ))
+  if laptop_ran; then joblog "skipped | laptop ran this slot"; exit 0; fi
+  if laptop_online; then
+    sleep "${UNI_FAILOVER_RECHECK_S:-1200}"
+    if laptop_ran; then joblog "skipped | laptop ran this slot (late)"; exit 0; fi
+    joblog "laptop online but did not run it; running here"
+  fi
+  FAILOVER_RAN=1
+fi
+
+# ---- the vault -------------------------------------------------------------------------------
+if [ "$NEEDS_VAULT" = yes ]; then
+  if ! wait_vault; then
+    joblog "skipped | vault $VAULT is not available"
+    exit 3                                  # vm-health alerts about the mount itself
+  fi
+  cd "$VAULT" || exit 3
+else
+  cd "$HOME" || exit 3                      # pure push jobs keep working during a Drive outage
+fi
+
+# ---- one lock for all agent jobs (memory) ----------------------------------------------------
+# shared: never waits for other ordinary jobs, only for an exclusive holder, and runs anyway
+# after LOCK_WAIT_MIN. exclusive: waits until no other agent job runs, skips after
+# LOCK_WAIT_MIN. fd 7 is closed for every child (7>&-), so only this process holds the lock.
+if [ "$KIND" = agent ] && [ "$AGENT_LOCK" != none ]; then
+  exec 7>"$STATE/agent-jobs.lock"
+  if [ "$AGENT_LOCK" = exclusive ]; then
+    if ! flock -x -w $(( LOCK_WAIT_MIN * 60 )) 7; then
+      joblog "skipped | another agent job still running after ${LOCK_WAIT_MIN} min"; exit 0
+    fi
+  elif ! flock -s -w $(( LOCK_WAIT_MIN * 60 )) 7; then
+    joblog "waited ${LOCK_WAIT_MIN} min for an exclusive job; running anyway"
+  fi
+fi
+
+# ---- PRECHECK: the main cost saver ------------------------------------------------------------
+if [ -n "$PRECHECK" ] && ! bash -c "$PRECHECK" >/dev/null 2>&1 7>&-; then
+  joblog "skipped | nothing to do (precheck)"; exit 0
+fi
+
+# ---- interactive Remote Control session (Claude Code) ----------------------------------------
+# Started on the uni-jobs tmux server so it outlives this oneshot unit (systemd kills a
+# unit's children) and stays open for replies until `uni-vm health` closes it (KEEP_H idle
+# hours, from transcript timestamps). Waits for the end of the first turn (a Stop hook writes
+# a .done file), pushes NOTIFY_DONE with the session link, warns once if a dialog blocks it.
+SESS="$STATE/sessions"
+ensure_jobs_server() {
+  "${TM_JOBS[@]}" has-session -t hold 2>/dev/null && return 0
+  systemctl --user start uni-jobs.service 2>/dev/null; sleep 2
+  "${TM_JOBS[@]}" has-session -t hold 2>/dev/null || { echo "uni-jobs.service is not running"; return 1; }
+}
+rc_session() {
+  mkdir -p "$SESS"; ensure_jobs_server || return 1
+  local sid sn label done settings link="" t0 code=124 stuck=0 warned=""
+  sid=$(cat /proc/sys/kernel/random/uuid)
+  sn="$NAME-$(date +%d%H%M%S)"
+  label="job: $TITLE · $(date '+%a %H:%M')"
+  done="$SESS/$sn.done"; settings="$SESS/$sn.settings.json"
+  jq -n --arg f "$done" '{hooks: {Stop: [{hooks: [{type: "command", command: ("date -Iseconds >> " + ($f | @sh))}]}]}}' > "$settings"
+  printf '%s' "$PROMPT" > "$SESS/$sn.prompt.md"      # via a file: tmux messages are capped at 16 KB
+  "${TM_JOBS[@]}" new-session -d -s "$sn" -x 200 -y 50 -c "$PWD" -e "PATH=$PATH" -e "UNI_PROMPT_FILE=$SESS/$sn.prompt.md" \
+    bash -c 'exec "$@" "$(cat "$UNI_PROMPT_FILE")"' job-session \
+    "$AGENT_BIN" --remote-control="$label" -n "$label" --session-id "$sid" \
+    ${MODEL:+--model "$MODEL"} ${EFFORT:+--effort "$EFFORT"} --permission-mode "$AGENT_PERMISSION_MODE" --no-chrome \
+    --settings "$settings" 7>&- || return 1
+  "${TM_JOBS[@]}" set-option -t "$sn" @sid "$sid"; "${TM_JOBS[@]}" set-option -t "$sn" @keep_h "$KEEP_H"
+  echo "# Remote Control session \"$label\" (tmux -L uni-jobs, session $sn, id $sid)"
+  t0=$(date +%s)
+  while [ $(( $(date +%s) - t0 )) -lt $(( TIMEOUT_MIN * 60 )) ]; do
+    if [ -z "$link" ]; then
+      link=$(pane_link uni-jobs "$sn")
+      [ -n "$link" ] && { echo "# open in the app: $link"; echo "$link" > "$SESS/$sn.link"; }
+    fi
+    if [ -s "$done" ]; then code=0; break; fi
+    "${TM_JOBS[@]}" has-session -t "$sn" 2>/dev/null || { code=1; echo "the agent exited before finishing its first turn"; break; }
+    # A one-time dialog or a question blocks the first turn, and the normal footer is gone
+    # then. Say so once instead of timing out silently.
+    if pane_ready uni-jobs "$sn"; then stuck=0; else stuck=$(( stuck + 10 )); fi
+    if [ "$stuck" -ge 120 ] && [ -z "$warned" ]; then
+      warned=1
+      echo "# waiting at a dialog or question for 2 min; screen:"
+      "${TM_JOBS[@]}" capture-pane -p -t "$sn" 2>/dev/null | grep -v '^[[:space:]]*$' | tail -n 12
+      # No session name in the push: its date stamp is a long digit run, which the push gate
+      # refuses as a possible personal number. `uni-vm jobs sessions` lists the name.
+      uni_notify "Job $TITLE on $HOST_NAME is waiting at a dialog or question and can't go on until someone answers: uni-vm jobs sessions, then uni-vm jobs attach <name>" default "${link:-https://claude.ai/code}"
+    fi
+    sleep 10
+  done
+  echo "--- the agent's messages (end):"
+  jq -r 'select(.type == "assistant") | .message.content[]? | select(.type == "text") | .text' \
+    "$(transcript_path "$sid" "$PWD")" 2>/dev/null | tail -n 80
+  if [ "$code" = 124 ]; then
+    echo "timed out after $TIMEOUT_MIN min; session closed"; "${TM_JOBS[@]}" kill-session -t "$sn" 2>/dev/null
+  else
+    sleep 3; "${TM_JOBS[@]}" send-keys -t "$sn" Escape 2>/dev/null   # dismiss a tip/upsell dialog, if any
+    if [ "$code" = 0 ] && [ -n "$NOTIFY_DONE" ]; then
+      if [ -n "$NOTIFY_GATE" ]; then
+        uni_push_gate --source "$NAME" --ids "$NOTIFY_GATE" --text "$NOTIFY_DONE" --click "${link:-https://claude.ai/code}" --urgent
+      else
+        uni_notify "$NOTIFY_DONE" default "${link:-https://claude.ai/code}"
+      fi
+    fi
+  fi
+  return "$code"
+}
+
+# Agents other than Claude Code (untested): an interactive session in tmux that the student
+# attaches to over ssh (`uni-vm jobs attach <name>`). No end-of-turn detection: it returns at
+# once, and `uni-vm health` closes it KEEP_H hours after it started.
+interactive_session() {
+  mkdir -p "$SESS"; ensure_jobs_server || return 1
+  local sn; local -a cmd=()
+  read -ra cmd <<< "$AGENT_INTERACTIVE_CMD"
+  [ "${#cmd[@]}" -gt 0 ] || { echo "SESSION=rc needs AGENT_INTERACTIVE_CMD in host.env for $AGENT_CLI"; return 2; }
+  sn="$NAME-$(date +%d%H%M%S)"
+  printf '%s' "$PROMPT" > "$SESS/$sn.prompt.md"
+  "${TM_JOBS[@]}" new-session -d -s "$sn" -x 200 -y 50 -c "$PWD" -e "PATH=$PATH" -e "UNI_PROMPT_FILE=$SESS/$sn.prompt.md" \
+    bash -c 'exec "$@" "$(cat "$UNI_PROMPT_FILE")"' job-session "${cmd[@]}" 7>&- || return 1
+  "${TM_JOBS[@]}" set-option -t "$sn" @sid "-"; "${TM_JOBS[@]}" set-option -t "$sn" @keep_h "$KEEP_H"
+  echo "# interactive session $sn (tmux -L uni-jobs); attach: uni-vm jobs attach $sn"
+  uni_notify "${NOTIFY_DONE:-Job $TITLE waits for you}: ssh to $HOST_NAME, then uni-vm jobs sessions and uni-vm jobs attach <name>" default
+  return 0
+}
+
+headless() {
+  if is_claude; then
+    timeout "${TIMEOUT_MIN}m" "$AGENT_BIN" -p "$PROMPT" \
+      ${MODEL:+--model "$MODEL"} ${EFFORT:+--effort "$EFFORT"} \
+      --permission-mode "$AGENT_PERMISSION_MODE" --no-chrome \
+      --name "job: $NAME $TS${DRY:+ (dry run)}" \
+      --output-format text </dev/null 7>&-
+  else
+    local -a cmd=()
+    read -ra cmd <<< "$AGENT_HEADLESS_CMD"
+    [ "${#cmd[@]}" -gt 0 ] || { echo "no AGENT_HEADLESS_CMD in host.env for $AGENT_CLI"; return 2; }
+    timeout "${TIMEOUT_MIN}m" "${cmd[@]}" "$PROMPT" </dev/null 7>&-
+  fi
+}
+
+TS=$(date +%Y-%m-%d_%H%M%S)
+LOG="$JSTATE/$TS${DRY:+-dry}.log"
+START=$(date +%s)
+{
+  echo "# job $NAME  started $(date -Iseconds)  kind=$KIND session=$SESSION mode=$MODE ${DRY:+DRY-RUN}"
+  if [ "$KIND" = command ]; then
+    if [ -n "$DRY" ] && [ "$DRY_OK" != yes ]; then
+      echo "dry run: would run: $COMMAND"
+    else
+      timeout "${TIMEOUT_MIN}m" bash -c "$COMMAND${DRY:+ --dry-run}" 7>&-
+    fi
+  else
+    HEADER="$AGENT_FILES/job-header.md"; [ -f "$HEADER" ] || HEADER="$HOST_DIR/agent/job-header.md"
+    PROMPT="$(cat "$HEADER" "$JOBDIR/prompt.md" 2>/dev/null)"
+    if [ -n "$DRY" ]; then
+      PROMPT="DRY RUN (test of this job on the always-on host): do every read step for real (files, calendar, mail), but do NOT create, edit, move or delete any file, calendar event or message, and do not send anything. At the end, list exactly what you WOULD have changed, and every problem you hit (missing tools, paths, permissions).
+
+$PROMPT"
+    elif [ "$SESSION" != rc ]; then
+      PROMPT="This run is headless: nobody can open or answer it, so a line below about replying in this session doesn't apply, and there is no one to wait for. Reach laptop sessions through the relay rule below. If something truly needs $OWNER, say so in your final message and send one line with \`uni-vm notify \"<text>\"\`.
+
+$PROMPT"
+    fi
+    if [ "$SESSION" = rc ] && [ -z "$DRY" ] && have tmux; then
+      if ! is_claude; then interactive_session
+      elif yes_ "$RC_ENABLED"; then rc_session
+      else echo "# SESSION=rc but Remote Control is off on this host (RC_ENABLED=no): running headless"; headless; fi
+    else
+      headless
+    fi
+  fi
+} >"$LOG" 2>&1
+CODE=$?
+SECS=$(( $(date +%s) - START ))
+echo "# exit $CODE after ${SECS}s" >> "$LOG"     # quiet jobs have no jobs.log line; the snapshot reads this
+
+if [ "$CODE" -ne 0 ] || [ "$QUIET_OK" != yes ]; then
+  joblog "${DRY:+dry run | }exit $CODE | ${SECS}s | $(basename "$LOG")"
+fi
+ls -1t "$JSTATE"/*.log 2>/dev/null | tail -n +$(( JOB_LOGS_KEEP + 1 )) | xargs -r rm -f
+(
+  flock 8
+  if [ -f "$STATE/jobs.log" ] && [ "$(wc -l < "$STATE/jobs.log")" -gt 1500 ]; then
+    tail -n 1000 "$STATE/jobs.log" > "$STATE/jobs.log.tmp" && cat "$STATE/jobs.log.tmp" > "$STATE/jobs.log"; rm -f "$STATE/jobs.log.tmp"
+  fi
+) 8>"$STATE/.jobs-log.lock"
+
+# After a failover run, a marker the laptop's copy of the task checks when the agent app
+# catches up a missed slot on wake-up: <vault>/_agent/vm/ran/<task>.md (nominal slot).
+if [ "$FAILOVER_RAN" = 1 ] && [ "$MARKER" = yes ] && yes_ "$VAULT_WRITES" && vault_ok; then
+  mkdir -p "$VAULT/$AGENT_DIR/vm/ran"
+  {
+    agent_frontmatter
+    echo "slot: $(date -d "@$SLOT" '+%Y-%m-%d %H:%M')"
+    echo "ran_on_host: $(date '+%Y-%m-%d %H:%M')"
+    echo "exit: $CODE"
+    echo
+    echo "The always-on host ($HOST_NAME) ran the laptop task \"$LAPTOP_TASK\" for the slot above because the laptop missed it (failover). A laptop catch-up run for the same slot can stop."
+  } > "$VAULT/$AGENT_DIR/vm/ran/$LAPTOP_TASK.md"
+fi
+
+if [ "$CODE" -ne 0 ] && [ -z "$DRY" ]; then
+  uni_notify "Job $NAME failed on $HOST_NAME (exit $CODE after ${SECS}s). Details: uni-vm jobs log $NAME" high
+fi
+exit "$CODE"

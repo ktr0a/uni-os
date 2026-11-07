@@ -1,0 +1,94 @@
+id = "heartbeat"
+name = "Heartbeat (proactive watcher)"
+tier = "standard"
+summary = "A few times a day a cheap deterministic pre-check decides whether an agent run is worth it; the agent then reads the whole study system, judges drift, and stays silent, sends one combined push, or asks one combined question."
+requires = ["core", "notifications"]
+recommends = ["progress", "daily-prep", "check-in", "planning", "roles"]
+obsidian = "optional"
+os = ["any"]
+runtime = ["laptop", "vm"]
+config_keys = [
+  "schedule.heartbeat",
+  "schedule.heartbeat_days",
+  "schedule.heartbeat_weekend",
+  "schedule.heartbeat_weekend_days",
+  "heartbeat.act_mode",
+  "heartbeat.safe_windows",
+  "heartbeat.event_hours",
+  "heartbeat.event_cap",
+  "heartbeat.event_near_slot_min",
+  "heartbeat.event_min_gap_min",
+  "heartbeat.min_memory_mb",
+  "heartbeat.grace_min",
+  "heartbeat.inbox_stuck_hours",
+  "heartbeat.inbox_tap_stuck_hours",
+  "notify.inbox_stale_hours",
+  "notify.inbox_stale_hours_taps",
+  "runtime.laptop_scheduler",
+  "heartbeat.checkin_grace_hours",
+  "heartbeat.gap_open_hours",
+  "heartbeat.result_window_days",
+  "heartbeat.snapshot_file",
+  "heartbeat.snapshot_stale_min",
+  "heartbeat.jobs_log",
+  "heartbeat.flags_dir",
+  "heartbeat.block_log_glob",
+  "heartbeat.non_study_block_prefixes",
+  "heartbeat.done_words",
+  "heartbeat.event_words",
+  "heartbeat.on_demand_roles",
+  "heartbeat.ask_mode",
+  "heartbeat.start_job_command",
+  "heartbeat.rerun_allowed",
+  "heartbeat.outcome_prefix",
+]
+verbatim = ["vault/_agent/heartbeat/*.json"]
+
+[[jobs]]
+id = "heartbeat"
+
+[[jobs]]
+id = "heartbeat-weekend"
+
+[[jobs]]
+id = "heartbeat-watch"
+
+[[jobs]]
+id = "heartbeat-ask"
+
+[defaults.schedule]
+heartbeat = ["07:50", "13:05", "18:05"]
+heartbeat_days = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+heartbeat_weekend = ["09:00", "17:40"]
+heartbeat_weekend_days = ["Sun"]
+
+[defaults.heartbeat]
+act_mode = "safe"
+safe_windows = []
+event_hours = "07:30-20:45"
+event_cap = 2
+event_near_slot_min = 45
+event_min_gap_min = 30
+min_memory_mb = 600
+grace_min = 20
+# Stuck inbox notes: the one threshold is notify.inbox_stale_hours / notify.inbox_stale_hours_taps
+# (module inbox-sync). These two are aliases kept for old configs: 0 = use the notify.* value.
+inbox_stuck_hours = 0
+inbox_tap_stuck_hours = 0
+checkin_grace_hours = 16
+gap_open_hours = 24
+result_window_days = 7
+snapshot_file = "_agent/vm/snapshot.json"
+snapshot_stale_min = 40
+jobs_log = "{state}/jobs.log"
+flags_dir = "_agent/logs/flags"
+block_log_glob = ""
+non_study_block_prefixes = ["L:", "E:", "V:", "U:", "OP", "("]
+# the done-status vocabulary of module progress (_agent/progress-tracking.md); keep it equal to cockpit.done_words
+done_words = ["✓", "done", "submitted", "closed", "handed in", "uploaded", "dropped", "skipped"]
+event_words = ["quiz", "timed", "oral", "exam", "midterm", "tutorial", "rehearsal", "test"]
+on_demand_roles = ["course-files-fetch"]
+ask_mode = "auto"
+start_job_command = ""
+rerun_allowed = ["study-prep-morning-check"]
+outcome_prefix = "Outcome check: "

@@ -1,0 +1,224 @@
+#!/usr/bin/env bash
+# role-sessions: persistent role sessions on the always-on host.
+#
+# A role (plan-and-progress, exercise-help, ...) is defined in the vault: _agent/roles/<role>.md
+# (the brief, from the module that owns the role). On the host, a small role.conf in
+# ~/.config/uni-os/roles/<role>.conf says how to run it (title, model, effort, idle stop).
+# Each running role is one interactive agent session in the tmux server `tmux -L uni-roles`
+# (uni-roles.service, OOMScoreAdjust 400: the kernel kills job sessions and server sessions
+# first). With Claude Code it is a Remote Control session the student opens from the phone and
+# other sessions reach by SendMessage under its TITLE.
+#
+# Sessions never close on their own. After a crash or reboot, `up` (run by uni-roles.service
+# at boot and by `uni-vm health` every 15 min) resumes each started role from its transcript
+# (same history, same app link). `stop` keeps the conversation for `resume`; `start` begins a
+# NEW conversation (only for a new role). A role with IDLE_STOP_H stops itself after that many
+# idle hours (idle = newest transcript timestamp, never the file mtime), to save memory.
+#
+# Usage: role-sessions list | json | add <role> [--title T] [--model M] [--effort E] [--idle-stop-h N]
+#        | start <role> | up [role] | restart <role> | stop <role> | resume <role>
+#        | set <role> KEY=VALUE... | attach <role> | idle-stop
+# State: ~/.local/state/uni-os/roles/<role>.enabled|.sid|.link, log roles.log.
+set -uo pipefail
+HOST_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+. "$HOST_DIR/lib/common.sh"
+RS="$STATE/roles"
+LOG="$STATE/roles.log"
+mkdir -p "$RS" "$ROLES_CONF_DIR"
+
+log() { echo "$(now_hm) $*" >> "$LOG"; echo "$*"; }
+role_names() { local f; for f in "$ROLES_CONF_DIR"/*.conf; do [ -f "$f" ] && basename "$f" .conf; done; }
+conf() {
+  ( BRIEF="" TITLE="$1" MODEL="" EFFORT="" IDLE_STOP_H="" HANDOVER="" START_PROMPT="" CHROME="$RC_CHROME"
+    # shellcheck disable=SC1090
+    . "$ROLES_CONF_DIR/$1.conf" 2>/dev/null
+    [ -n "$BRIEF" ] || BRIEF="$AGENT_DIR/roles/$1.md"
+    [ -n "$MODEL" ] || MODEL="$AGENT_DEFAULT_MODEL"
+    [ -n "$EFFORT" ] || EFFORT="$AGENT_DEFAULT_EFFORT"
+    eval "printf '%s' \"\${$2}\"" )
+}
+running() { "${TM_ROLES[@]}" has-session -t "$1" 2>/dev/null; }
+state_of() { local st=off; [ -f "$RS/$1.enabled" ] && st=down; running "$1" && st=running; echo "$st"; }
+
+ensure_server() {
+  "${TM_ROLES[@]}" has-session -t hold 2>/dev/null && return 0
+  systemctl --user start uni-roles.service; sleep 2
+  "${TM_ROLES[@]}" has-session -t hold 2>/dev/null
+}
+
+# The first prompt of a fresh conversation: the role's own START_PROMPT file, or the host
+# template (agent/role-start-prompt.md, rendered at install) with this role's values.
+start_prompt() {
+  local r="$1" f
+  f=$(conf "$r" START_PROMPT)
+  [ -n "$f" ] && [ -f "$f" ] && { cat "$f"; return; }
+  f="$AGENT_FILES/role-start-prompt.md"; [ -f "$f" ] || f="$HOST_DIR/agent/role-start-prompt.md"
+  local handover; handover=$(conf "$r" HANDOVER)
+  esc() { printf '%s' "$1" | sed 's/[|&\\]/\\&/g'; }
+  sed -e "s|@@ROLE@@|$(esc "$r")|g" -e "s|@@TITLE@@|$(esc "$(conf "$r" TITLE)")|g" \
+      -e "s|@@BRIEF@@|$(esc "$(conf "$r" BRIEF)")|g" \
+      -e "s|@@HANDOVER@@|$(esc "${handover:-none}")|g" "$f"
+}
+
+# launch <role> fresh|resume
+launch() {
+  local r="$1" how="$2" title model effort sid link="" pf
+  local -a args=() cmd=()
+  title=$(conf "$r" TITLE); model=$(conf "$r" MODEL); effort=$(conf "$r" EFFORT)
+  if is_claude; then
+    args=(--remote-control="$title" -n "$title" ${model:+--model "$model"} ${effort:+--effort "$effort"}
+          --permission-mode "$AGENT_PERMISSION_MODE")
+    yes_ "$(conf "$r" CHROME)" && args+=(--chrome)
+    if [ "$how" = resume ]; then
+      sid=$(cat "$RS/$r.sid")
+      "${TM_ROLES[@]}" new-session -d -s "$r" -x 200 -y 50 -c "$VAULT" -e "PATH=$PATH" \
+        "$AGENT_BIN" --resume "$sid" "${args[@]}" || return 1
+    else
+      sid=$(cat /proc/sys/kernel/random/uuid); echo "$sid" > "$RS/$r.sid"
+      pf="$RS/$r.start-prompt.md"; start_prompt "$r" > "$pf"
+      "${TM_ROLES[@]}" new-session -d -s "$r" -x 200 -y 50 -c "$VAULT" -e "PATH=$PATH" -e "UNI_PROMPT_FILE=$pf" \
+        bash -c 'exec "$@" "$(cat "$UNI_PROMPT_FILE")"' role-session \
+        "$AGENT_BIN" --session-id "$sid" "${args[@]}" || return 1
+    fi
+    "${TM_ROLES[@]}" set-option -t "$r" @sid "$sid" >/dev/null
+    for _ in $(seq 1 12); do
+      sleep 5; link=$(pane_link uni-roles "$r"); [ -n "$link" ] && break
+    done
+    [ -n "$link" ] && echo "$link" > "$RS/$r.link"
+  else
+    # Other agents (untested): a fresh interactive session with the start prompt every time;
+    # the role's memory is its brief, handover notes and the vault itself.
+    read -ra cmd <<< "$AGENT_INTERACTIVE_CMD"
+    [ "${#cmd[@]}" -gt 0 ] || { log "no AGENT_INTERACTIVE_CMD in host.env: can't start $r"; return 2; }
+    pf="$RS/$r.start-prompt.md"; start_prompt "$r" > "$pf"; echo "-" > "$RS/$r.sid"
+    "${TM_ROLES[@]}" new-session -d -s "$r" -x 200 -y 50 -c "$VAULT" -e "PATH=$PATH" -e "UNI_PROMPT_FILE=$pf" \
+      bash -c 'exec "$@" "$(cat "$UNI_PROMPT_FILE")"' role-session "${cmd[@]}" || return 1
+    "${TM_ROLES[@]}" set-option -t "$r" @sid "-" >/dev/null
+    sleep 5
+  fi
+  log "$how $r \"$title\" (${model:-default}, ${effort:-default}) ${link:-no link}"
+  # A one-time dialog (browser extension intro, auto-mode question) blocks the session until
+  # someone answers it, and the normal footer is gone then: say so instead of guessing an
+  # answer. Not every dialog says "Enter to confirm".
+  if is_claude && running "$r" && ! pane_ready uni-roles "$r"; then
+    log "WARN $r is waiting at a dialog: tmux -L uni-roles attach -t $r (look first; detach: Ctrl-b d)"
+    uni_notify "Role session $title is waiting at a dialog on $HOST_NAME" default
+  fi
+}
+
+up_one() {
+  local r="$1" sid
+  [ -f "$RS/$r.enabled" ] || return 0
+  running "$r" && return 0
+  sid=$(cat "$RS/$r.sid" 2>/dev/null)
+  if is_claude && [ -n "$sid" ] && [ "$sid" != "-" ] && [ -f "$(transcript_path "$sid")" ]; then launch "$r" resume
+  else launch "$r" fresh; fi
+}
+
+need_role() { [ -f "$ROLES_CONF_DIR/$1.conf" ] || { echo "no role $1 on this host (uni-vm roles add $1)"; exit 2; }; }
+
+# add <role>: write role.conf from the brief's frontmatter (title, model, effort).
+cmd_add() {
+  local r="${1:?role}" title="" model="" effort="" idle="" brief f a
+  shift
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --title) title="$2"; shift 2 ;; --model) model="$2"; shift 2 ;;
+      --effort) effort="$2"; shift 2 ;; --idle-stop-h) idle="$2"; shift 2 ;; *) echo "unknown option $1"; exit 2 ;;
+    esac
+  done
+  [ -f "$ROLES_CONF_DIR/$r.conf" ] && { echo "$r already exists: $ROLES_CONF_DIR/$r.conf (edit it, or uni-vm roles set)"; exit 0; }
+  brief="$AGENT_DIR/roles/$r.md"; f="$VAULT/$brief"
+  local sfx="VM"; [ "$HOST_KIND" = home-server ] && sfx="home"
+  if [ -f "$f" ]; then
+    # frontmatter values of the brief (between the first two --- lines)
+    fm() { sed -n '1,/^---$/{/^---$/d;p}' "$f" | sed -n -E "s/^$1:[[:space:]]*[\"']?([^\"'#]*)[\"']?.*$/\1/p" | head -n 1 | sed 's/[[:space:]]*$//'; }
+    a=$(fm title); [ -n "$title" ] || title="${a:-$r} ($sfx)"
+    [ -n "$model" ] || model=$(fm model); [ -n "$effort" ] || effort=$(fm effort)
+  else
+    echo "note: no brief $brief in the vault yet; the session will be told to read it anyway"
+    [ -n "$title" ] || title="$r ($sfx)"
+  fi
+  cat > "$ROLES_CONF_DIR/$r.conf" <<EOF
+# Role session on $HOST_NAME (bin/role-sessions). Format: modules/vm/host/roles/README.md
+# If the model is switched in the session (/model), also run: uni-vm roles set $r MODEL=<model>
+BRIEF="$brief"
+TITLE="$title"
+MODEL="$model"
+EFFORT="$effort"
+IDLE_STOP_H="$idle"
+HANDOVER=""
+EOF
+  echo "added $r: $ROLES_CONF_DIR/$r.conf (start it with: uni-vm roles start $r)"
+}
+
+# set <role> KEY=VALUE...: change role.conf (model/effort changes made in a session with
+# /model are lost on the next resume unless they are written here).
+cmd_set() {
+  local r="${1:?role}" kv k v f
+  shift; need_role "$r"; f="$ROLES_CONF_DIR/$r.conf"
+  for kv in "$@"; do
+    k=${kv%%=*}; v=${kv#*=}
+    case "$k" in BRIEF|TITLE|MODEL|EFFORT|IDLE_STOP_H|HANDOVER|START_PROMPT|CHROME) ;; *) echo "unknown key $k"; exit 2 ;; esac
+    grep -v -E "^$k=" "$f" > "$f.tmp"; printf '%s="%s"\n' "$k" "$v" >> "$f.tmp"; mv "$f.tmp" "$f"
+    echo "$r: $k=$v (takes effect at the next start or resume: uni-vm roles restart $r)"
+  done
+}
+
+cmd="${1:-list}"; shift || true
+case "$cmd" in
+  list)
+    printf '%-24s %-8s %-18s %-32s %s\n' ROLE STATE MODEL TITLE LINK
+    for r in $(role_names); do
+      printf '%-24s %-8s %-18s %-32s %s\n' "$r" "$(state_of "$r")" "$(conf "$r" MODEL)" "$(conf "$r" TITLE)" "$(cat "$RS/$r.link" 2>/dev/null)"
+    done ;;
+  json)                                    # for the snapshot: no links
+    have jq || { echo '[]'; exit 0; }
+    for r in $(role_names); do
+      jq -n --arg role "$r" --arg title "$(conf "$r" TITLE)" --arg state "$(state_of "$r")" --arg model "$(conf "$r" MODEL)" \
+        '{role: $role, title: $title, state: $state, model: $model}'
+    done | jq -s . ;;
+  add) cmd_add "$@" ;;
+  set) cmd_set "$@" ;;
+  start)
+    r="${1:?role}"; need_role "$r"
+    running "$r" && { echo "$r is already running"; exit 0; }
+    ensure_server || { echo "uni-roles.service is not running"; exit 1; }
+    wait_vault || { echo "the vault $VAULT is not available"; exit 3; }
+    touch "$RS/$r.enabled"; rm -f "$RS/$r.sid"; launch "$r" fresh ;;
+  up)
+    [ -n "$(role_names)" ] || exit 0
+    ensure_server || exit 1
+    wait_vault 150 || exit 3
+    if [ -n "${1:-}" ]; then up_one "$1"; else for r in $(role_names); do up_one "$r"; done; fi ;;
+  restart)
+    r="${1:?role}"; need_role "$r"
+    if running "$r" && pane_busy uni-roles "$r"; then echo "$r is busy (mid-turn or a background task): not restarting"; exit 2; fi
+    "${TM_ROLES[@]}" kill-session -t "$r" 2>/dev/null; sleep 2; touch "$RS/$r.enabled"; up_one "$r" ;;
+  stop)
+    r="${1:?role}"; rm -f "$RS/$r.enabled"; "${TM_ROLES[@]}" kill-session -t "$r" 2>/dev/null && log "stopped $r" ;;
+  resume)
+    r="${1:?role}"; need_role "$r"
+    [ -s "$RS/$r.sid" ] || { echo "$r has no conversation yet: use start"; exit 2; }
+    ensure_server || exit 1
+    wait_vault || exit 3
+    touch "$RS/$r.enabled"; up_one "$r" ;;
+  attach)
+    r="${1:?role}"
+    "${TM_ROLES[@]}" capture-pane -p -t "$r" 2>/dev/null | grep -v '^[[:space:]]*$' | tail -n 5
+    exec "${TM_ROLES[@]}" attach -t "$r" ;;
+  idle-stop)
+    for r in $(role_names); do
+      h=$(conf "$r" IDLE_STOP_H)
+      [ -n "$h" ] && running "$r" && [ -s "$RS/$r.sid" ] || continue
+      # A just-resumed session counts from its start, not from its old transcript.
+      c=$("${TM_ROLES[@]}" display -p -t "$r" '#{session_created}')
+      sid=$(cat "$RS/$r.sid"); m=""
+      [ "$sid" != "-" ] && m=$(last_activity "$(transcript_path "$sid")")
+      m=${m:-$c}; [ "$m" -lt "$c" ] && m=$c
+      if [ $(( $(date +%s) - m )) -ge $(( h * 3600 )) ] && ! pane_busy uni-roles "$r"; then
+        rm -f "$RS/$r.enabled"; "${TM_ROLES[@]}" kill-session -t "$r" 2>/dev/null && log "idle-stop $r (idle ${h}+ h); uni-vm roles resume $r brings it back"
+      fi
+    done ;;
+  *) echo "usage: role-sessions list | json | add <role> | start <role> | up [role] | restart <role> | stop <role> | resume <role> | set <role> K=V | attach <role> | idle-stop"; exit 2 ;;
+esac

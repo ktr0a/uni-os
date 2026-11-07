@@ -1,0 +1,82 @@
+id = "core"
+name = "Core"
+tier = "core"
+summary = "The vault skeleton every other module builds on: agent entry points, start page, standing rules, update conventions with the routing table, component registry, tool lore, inbox drop zone, note templates, Home dashboard and the generated vault maps."
+requires = []
+recommends = ["student-model", "courses", "obsidian"]
+obsidian = "optional"
+os = ["any"]
+runtime = ["laptop", "cloud", "vm"]
+
+# Keys this module reads. Keys marked (required) have no default: the setup interview
+# always fills them, and `uni-os init` reports them as missing otherwise.
+#   (required) student.name, university.name, university.short,
+#   (required) university.programme, term.label, term.timezone, term.week0_monday
+#   (optional, default "") student.handle: an identifier only; prose names the student by student.name
+# Keys owned by other modules (schedule.*, calendar.*, notify.*, study.chunk_words ...) are
+# only referenced inside {{#if modules.<id>}} blocks, so they exist whenever they are read.
+config_keys = [
+  "student.name", "student.handle", "student.language", "student.dictates",
+  "university.name", "university.short", "university.programme", "university.lms",
+  "term.label", "term.timezone", "term.week0_monday", "term.last_lecture_day",
+  "term.lecture_free_from", "term.exam_session_start", "term.exam_session_end",
+  "storage.provider", "obsidian.enabled",
+  "agent.primary", "agent.permission_posture", "agent.default_model", "agent.heavy_model",
+  "agent.reply_rules",
+  "study.formats", "study.math", "study.assistance_default", "study.personal_deadline_rule",
+  "runtime.laptop_os", "runtime.use_cloud_sessions",
+  "modules.enabled",
+  "courses.id", "courses.name", "courses.short", "courses.folder", "courses.slug",
+  "courses.assistance", "courses.notes", "courses.assessments", "courses.error_log_files",
+  # read only inside {{#if modules.<id>}} blocks (defined by that module's defaults):
+  "calendar.provider", "calendar.courses", "calendar.study_blocks", "calendar.events", "calendar.busy",
+  "calendar.lecture_prefix", "calendar.exercise_prefix", "calendar.standing_approval",
+  "schedule.daily_prep", "schedule.prep_check", "schedule.check_in", "schedule.week_page",
+  "schedule.heartbeat", "schedule.heartbeat_days", "schedule.heartbeat_weekend", "schedule.heartbeat_weekend_days",
+  "schedule.inbox_sync", "schedule.inbox_poll_every_min", "schedule.inbox_poll_window",
+  "notify.provider", "notify.ntfy_topic_file", "study.chunk_words",
+]
+
+# Nothing is copied verbatim: every file is a template.
+verbatim = []
+
+[defaults.student]
+language = "English"          # reply and file language
+dictates = false              # true: the student dictates, so expect word slips
+
+[defaults.university]
+lms = "Moodle"                # name of the learning platform, used in prose only
+
+[defaults.term]
+# Optional dates. Empty string = not set (the templates leave the sentence out).
+last_lecture_day = ""
+lecture_free_from = ""
+exam_session_start = ""
+exam_session_end = ""
+
+[defaults.storage]
+provider = "google-drive"
+
+[defaults.obsidian]
+enabled = true
+
+[defaults.agent]
+primary = "claude-code"
+permission_posture = "accept-edits"   # bypass | accept-edits | ask (the original ran "bypass")
+default_model = ""                    # e.g. a mid-size model at high effort
+heavy_model = ""                      # e.g. the largest model, only for heavy tasks
+reply_rules = []                      # personal reply rules, one sentence each
+
+[defaults.study]
+formats = ["html", "md"]              # subset of html, md, pdf
+math = "katex"
+assistance_default = "hints-only"     # solo | hints-only | coach | full
+personal_deadline_rule = ""           # e.g. "every sheet released in a week is done by that week's Sunday"
+
+[defaults.runtime]
+laptop_os = "windows"
+use_cloud_sessions = false
+
+[defaults.course]
+assistance = "hints-only"             # default assistance policy for a course
+notes = []                            # course-specific standing rules, one sentence each

@@ -1,0 +1,81 @@
+id = "roles"
+name = "Roles and the coordinator"
+tier = "standard"
+summary = "Run the study system as a small team of agent sessions: durable role briefs, one coordinator session that routes the student's requests and checks results in the vault, a generated routing table, messaging rules, handoffs when a role moves between runtimes, and handovers for one-off side sessions."
+requires = ["core"]
+recommends = ["planning", "exercise-help", "lecture-rundowns", "scheduler-local"]
+obsidian = "optional"
+os = ["any"]
+runtime = ["laptop", "cloud", "vm"]
+
+# Keys this module reads. (required) = no default here; core asks for them in setup.
+#   (required) student.name, university.short, term.label, term.timezone, term.week0_monday
+# Keys of other modules (calendar.*, vm.*) are only read inside {{#if modules.<id>}} blocks;
+# safe defaults for them are repeated below so a missing key can never break the render.
+config_keys = [
+  "student.name", "university.short", "term.label", "term.timezone", "term.week0_monday",
+  "paths.inbox",
+  "obsidian.enabled",
+  "agent.primary", "agent.permission_posture", "agent.default_model", "agent.heavy_model",
+  "agent.coordinator_title", "agent.context_refresh_tokens",
+  "agent.usage_stop_weekly_pct", "agent.usage_pause_5h_pct", "agent.max_helpers",
+  "runtime.use_vm", "runtime.use_cloud_sessions",
+  "vm.remote_control_name",
+  "calendar.study_blocks",
+  "courses.short", "courses.name", "courses.folder", "courses.slug", "courses.assistance",
+  "modules.enabled",
+  "schedule.waiting_on_you", "schedule.waiting_on_you_days",   # optional job waiting-on-you (off by default)
+  "notify.max_length", "paths.agent_dir",
+]
+
+# Every file is a template (the handoff/handover templates use <angle-bracket> placeholders,
+# which the renderer leaves alone).
+verbatim = []
+
+[[roles]]
+id = "coordinator"
+
+# Optional, off when installed: one daily "what's waiting on you" page for the student plus at most one push.
+[[jobs]]
+id = "waiting-on-you"
+
+# ---------------------------------------------------------------------------
+# Defaults (deep-merged UNDER the user's config; the user's values win).
+# ---------------------------------------------------------------------------
+
+[defaults.agent]
+# Session title of the coordinator, the student's single entry point. The original used a
+# long descriptive title; a short one is easier to address by title from other sessions.
+coordinator_title = "Uni coordinator"
+# Recycle long-lived sessions (coordinator, infrastructure, any role) when their context
+# passes about this many tokens. The original measured: a fresh coordinator boots from its
+# state page in ~31k tokens, while an old one re-read ~550k tokens on every turn.
+context_refresh_tokens = 300000
+# Usage caps for unattended side sessions (overnight work). Percent of the plan's limits.
+usage_stop_weekly_pct = 90     # weekly limit at or above this: finish the file, write the HANDOVER, stop
+usage_pause_5h_pct = 90        # 5-hour limit at or above this: pause until it resets
+max_helpers = 2                # helper agents (subagents) running at the same time
+default_model = ""
+heavy_model = ""
+permission_posture = "accept-edits"
+
+[defaults.schedule]
+# Job waiting-on-you (off when installed): when the daily page is written and, if anything is due soon,
+# pushed. The original's coordinator wrote such a page in the morning for a reminder at 19:00; pick a time
+# you are usually still able to act, before notify.quiet_hours start.
+waiting_on_you = ["19:00"]
+waiting_on_you_days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+[defaults.runtime]
+use_vm = false
+use_cloud_sessions = false
+
+[defaults.vm]
+remote_control_name = "Uni (VM)"
+
+[defaults.paths]
+agent_dir = "_agent"
+inbox = "inbox"
+
+[defaults.calendar]
+study_blocks = "Study blocks"

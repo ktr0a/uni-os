@@ -1,0 +1,28 @@
+filters:
+  and:
+    - type == "week"
+    - not:
+        - file.inFolder("_templates")
+properties:
+  file.name:
+    displayName: Week page
+  note.week:
+    displayName: Term week
+  note.start:
+    displayName: Starts
+  note.end:
+    displayName: Ends
+  note.status:
+    displayName: Status
+views:
+  - type: table
+    name: Weeks
+    order:
+      - file.name
+      - week
+      - start
+      - end
+      - status
+    sort:
+      - property: week
+        direction: DESC

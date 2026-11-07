@@ -1,0 +1,81 @@
+filters:
+  and:
+    - or:
+        - file.inFolder("AD")
+        - file.inFolder("DM")
+        - file.inFolder("LA")
+        - file.inFolder("PROG")
+    - or:
+        - file.path.contains("/notes/")
+        - file.path.contains("/quiz-prep/")
+    - or:
+        - type == "study-page"
+        - file.ext == "html"
+        - file.ext == "pdf"
+properties:
+  file.name:
+    displayName: Page
+  file.ext:
+    displayName: Format
+  file.folder:
+    displayName: Folder
+  file.mtime:
+    displayName: Changed
+views:
+  - type: table
+    name: All courses
+    groupBy:
+      property: file.folder
+      direction: ASC
+    order:
+      - file.name
+      - file.ext
+      - file.mtime
+  - type: table
+    name: "AD"
+    filters:
+      and:
+        - file.inFolder("AD")
+    groupBy:
+      property: file.folder
+      direction: ASC
+    order:
+      - file.name
+      - file.ext
+      - file.mtime
+  - type: table
+    name: "DM"
+    filters:
+      and:
+        - file.inFolder("DM")
+    groupBy:
+      property: file.folder
+      direction: ASC
+    order:
+      - file.name
+      - file.ext
+      - file.mtime
+  - type: table
+    name: "LA"
+    filters:
+      and:
+        - file.inFolder("LA")
+    groupBy:
+      property: file.folder
+      direction: ASC
+    order:
+      - file.name
+      - file.ext
+      - file.mtime
+  - type: table
+    name: "PROG"
+    filters:
+      and:
+        - file.inFolder("PROG")
+    groupBy:
+      property: file.folder
+      direction: ASC
+    order:
+      - file.name
+      - file.ext
+      - file.mtime

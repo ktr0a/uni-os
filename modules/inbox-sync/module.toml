@@ -1,0 +1,65 @@
+id = "inbox-sync"
+name = "Inbox sync (update notes for create-only writers)"
+tier = "advanced"
+summary = "A fallback that lets writers who can only create files (cloud agent sessions through a storage connector, the cockpit's Done taps) change existing vault files safely: they drop update notes with exact anchors into the inbox, and one trusted job applies them, parks stale ones, forwards messages and archives everything."
+requires = ["core"]
+recommends = ["roles", "scheduler-local", "notifications"]
+obsidian = "irrelevant"
+os = ["any"]
+runtime = ["laptop", "vm"]
+
+# Keys this module reads. (required) = no default here; core asks for them in setup.
+#   (required) student.name, university.short, term.label, term.timezone, term.week0_monday
+config_keys = [
+  "student.name", "university.short", "term.label", "term.timezone", "term.week0_monday",
+  "paths.inbox",
+  "obsidian.enabled",
+  "agent.default_model",
+  "runtime.use_cloud_sessions",
+  "schedule.inbox_sync",
+  "schedule.inbox_poll_window",
+  "schedule.inbox_poll_every_min",
+  "schedule.inbox_poll_min_gap_min",
+  "notify.inbox_stale_hours",
+  "notify.inbox_stale_hours_taps",
+  "courses.short", "courses.folder", "courses.slug", "courses.assistance",
+  "modules.enabled",
+]
+
+# The poll script lives in scripts/ (not rendered); everything else is a template.
+verbatim = []
+
+[[jobs]]
+id = "inbox-sync"
+
+[[jobs]]
+id = "inbox-poll"
+
+# ---------------------------------------------------------------------------
+# Defaults (deep-merged UNDER the user's config; the user's values win).
+# The original's values: fixed runs 07:15, 13:15, 18:15; poll every 10 min 07:00-22:00,
+# at most one sync per hour; alert after 4 h (14 h for Done taps).
+# ---------------------------------------------------------------------------
+
+[defaults.schedule]
+inbox_sync = ["07:15", "13:15", "18:15"]   # fixed safety-net runs of the applier (local time)
+inbox_poll_window = "07:00-22:00"          # the poll starts syncs only inside this window ("always" = all day)
+inbox_poll_every_min = 10                  # how often the poll looks at the inbox
+inbox_poll_min_gap_min = 60                # at most one sync per this many minutes (fixed runs count)
+
+[defaults.notify]
+# The ONE stuck-note threshold for every sender: the poll's OUTCOME line, the heartbeat rules and
+# `uni-os heartbeat outcomes`, the vm host's own check. The old keys heartbeat.inbox_stuck_hours /
+# inbox_tap_stuck_hours and vm.inbox_stuck_h / tap_stuck_h are aliases (0 = use these).
+inbox_stale_hours = 4                      # an update note waiting longer than this counts as stuck
+inbox_stale_hours_taps = 14                # Done taps wait for fixed runs by design, so they get longer
+
+[defaults.agent]
+default_model = ""                         # empty = the agent's default; the original used a mid-size model
+
+[defaults.runtime]
+use_cloud_sessions = false
+
+[defaults.paths]
+agent_dir = "_agent"
+inbox = "inbox"

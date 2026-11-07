@@ -1,0 +1,23 @@
+id = "study-pages"
+name = "Study pages"
+tier = "standard"
+summary = "Self-contained HTML teaching pages with KaTeX (navigation, demos, mid quizzes checked by code, cheat sheet, final self-test, dark mode, phone width) plus a Markdown twin for Obsidian, or Markdown-only / HTML-only / PDF, with converters and quality checks."
+requires = ["core", "courses"]
+recommends = ["obsidian", "error-logs", "lecture-rundowns"]
+obsidian = "recommended"
+os = ["any"]
+runtime = ["laptop", "cloud", "vm"]
+config_keys = ["study.formats", "study.math", "study.chunk_words", "study.intuition_first", "study.pdf_browser", "obsidian.enabled"]
+verbatim = ["vault/**/*.html", "vault/**/*.py"]
+
+[[skills]]
+id = "study-page"
+
+[defaults]
+
+[defaults.study]
+formats = ["html", "md"]      # subset of "html", "md", "pdf"; html+md = interactive original + Obsidian twin
+math = "katex"                # the template loads KaTeX 0.16.9 from cdnjs
+chunk_words = 750             # target words per section (original rule: ~700-800, 2-4 subsections, 1 demo + 1 mid quiz)
+intuition_first = true        # lead with intuition and pictures, then the precise definitions
+pdf_browser = "auto"          # html2pdf.py: auto | chrome | edge | chromium | <path to the browser>

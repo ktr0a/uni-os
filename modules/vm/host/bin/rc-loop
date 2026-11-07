@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# rc-loop: keep the agent's remote-control server running inside the vault.
+#
+# Runs forever inside the tmux session "rc" of `tmux -L uni-rc`, started by uni-rc.service.
+# Waits for the vault (mount + sentinel), cd's into it and starts the server; when the server
+# exits (network outage, update, crash) it logs that and starts it again after 15 s.
+#
+# Claude Code specifics (tested with Claude Code 2.1.x; check `claude remote-control --help`
+# on your version, flag names have changed before):
+#   --name                       the server's name in the Claude app (RC_NAME)
+#   --remote-control-session-name-prefix   automatic names of the sessions it spawns (RC_PREFIX)
+#   --permission-mode            same mode as every other session on the host, otherwise
+#                                cross-session messages wait for an approval
+#   --chrome                     sessions opened from the app get the browser-extension bridge to
+#                                the student's logged-in Chrome (while that Chrome is open)
+#   --spawn same-dir             every new session starts in the vault
+#   --capacity                   claude.ai counts FINISHED sessions against this limit until they
+#                                are archived in the app, so leave headroom; only running ones use RAM
+# The very first start asks one interactive question ("y"): answer it once with `uni-vm attach`.
+# Every new Remote Control session sends the phone a "Remote control enabled" notification,
+# which is why jobs that ask nothing run headless.
+#
+# Other agents: there is no remote-control server. The equivalent is ssh + tmux: the student
+# opens a shell on the host (`ssh <host>`, or the Termius/Blink app on a phone) and starts the
+# agent in the vault in a tmux session. install-user.sh does not enable uni-rc.service then.
+HOST_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+. "$HOST_DIR/lib/common.sh"
+CAPACITY="${UNI_RC_CAPACITY:-$RC_CAPACITY}"
+
+if ! is_claude || ! yes_ "$RC_ENABLED"; then
+  echo "$(date -Iseconds) Remote Control is off on this host (AGENT_CLI=$AGENT_CLI, RC_ENABLED=$RC_ENABLED)" | tee -a "$STATE/rc.log"
+  exec sleep infinity
+fi
+
+while true; do
+  until vault_ok; do
+    echo "$(date -Iseconds) waiting for the vault $VAULT" | tee -a "$STATE/rc.log"
+    sleep 10
+  done
+  cd "$VAULT" || { sleep 10; continue; }
+  echo "$(date -Iseconds) starting remote-control \"$RC_NAME\" (capacity $CAPACITY)" | tee -a "$STATE/rc.log"
+  args=(--name "$RC_NAME" --remote-control-session-name-prefix "$RC_PREFIX"
+        --permission-mode "$AGENT_PERMISSION_MODE" --spawn same-dir --capacity "$CAPACITY")
+  yes_ "$RC_CHROME" && args+=(--chrome)
+  "$AGENT_BIN" remote-control "${args[@]}"
+  code=$?
+  echo "$(date -Iseconds) remote-control exited with $code; restarting in 15 s" | tee -a "$STATE/rc.log"
+  sleep 15
+done

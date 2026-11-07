@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DM: induction on sums (hint page, template sample)</title>
+<meta name="uni-os:type" content="study-page">
+<meta name="uni-os:kind" content="hint-page">
+<meta name="uni-os:course" content="dm">
+<meta name="uni-os:sources" content="template sample: standard proof by induction (no course script)">
+<meta name="uni-os:created" content="2026-09-14">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+/* COURSE ACCENT: set --acc / --accb (light) and the dark pair to the course colour from the config. */
+:root{--bg:#f7f7f3;--fg:#1c1c1a;--mut:#62625b;--line:#d9d9d0;--card:#fff;--acc:#40a02b;--accb:#e6f4e1;--warn:#a85a00;--warnb:#fff1dc;--bad:#b3261e;--badb:#fde7e5;--ok:#1b7f3b;--okb:#e0f3e4;--c4:#7c3aed}
+@media (prefers-color-scheme:dark){:root{--bg:#151513;--fg:#ecebe4;--mut:#a5a59b;--line:#3b3b36;--card:#1e1e1b;--acc:#7fd36a;--accb:#1f3a1a;--warn:#e7a54b;--warnb:#3a2c14;--bad:#ff8a80;--badb:#3c1d1a;--ok:#6fd58b;--okb:#1c3523;--c4:#b69bff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:860px;margin:0 auto;padding:12px 16px 80px}
+h1{font-size:1.6rem;line-height:1.25;margin:.6em 0 .2em}
+h2{font-size:1.3rem;margin:1.6em 0 .3em;padding-top:.4em;border-top:2px solid var(--line)}
+h3{font-size:1.05rem;margin:1.2em 0 .3em}
+p{margin:.55em 0}
+.sub,.note{color:var(--mut);font-size:.9rem}
+.src{display:inline-block;font-size:.76rem;font-weight:400;color:var(--mut);border:1px solid var(--line);border-radius:10px;padding:0 8px;margin-left:6px;vertical-align:1px;white-space:nowrap}
+.banner{border:1px dashed var(--warn);background:var(--warnb);border-radius:10px;padding:10px 14px;margin:12px 0;font-size:.92rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:12px 0}
+.card.key{border-left:5px solid var(--acc)}
+.card.trap{border-left:5px solid var(--warn);background:var(--warnb)}
+.card.proc{border-left:5px solid var(--c4)}
+ul,ol{padding-left:1.25em;margin:.4em 0}li{margin:.2em 0}
+code{font:.9em ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:rgba(127,127,127,.13);padding:0 4px;border-radius:4px}
+details.hint{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--c4);border-radius:10px;padding:8px 14px;margin:10px 0}
+details.hint>summary{cursor:pointer;font-weight:600;color:var(--c4)}
+details.hint.locked>summary{color:var(--mut);cursor:not-allowed}
+details.hint.top{border-left-color:var(--warn)}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+td,th{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:rgba(127,127,127,.1)}
+.katex-display{overflow-x:auto;overflow-y:hidden}
+#uos-check{position:fixed;left:12px;right:12px;bottom:12px;z-index:30;max-width:760px;margin:0 auto;background:var(--badb);border:1px solid var(--bad);border-radius:10px;padding:8px 12px;font-size:.88rem}
+.hide{display:none}
+footer{color:var(--mut);font-size:.85rem;margin-top:40px;border-top:1px solid var(--line);padding-top:10px}
+@media print{#uos-check{display:none!important}body{background:#fff;color:#000}}
+</style>
+</head>
+<body>
+<!--
+  HINT PAGE TEMPLATE (exercise-help role). Rules:
+  - Section 1 explains the technique on a DIFFERENT, fully worked example (never the student's task).
+  - Section 2 is a hint ladder for the student's task: rung 1 = which definition or technique applies, rung 2 = the
+    first step, rung 3 = the intermediate claim to aim for, top rung (only after the time cap) = the missing idea in
+    ONE line. Each rung is a <details class="hint">; the script opens them only in order. NEVER the final answer,
+    never the written-out proof or code, nothing at all for work under the solo assistance level.
+  - Section 3: "Check your own steps" (a checklist) and, for "show how to compute" tasks, what a finished answer
+    looks like (its shape, not its content).
+  - Every source cited with printed pages; a literal "<" before a letter in maths is written \lt.
+  - Then: python _agent/tools/check_study_page.py <page>, html2md.py for the twin, a row in the course card, show it.
+-->
+<main>
+<h1>Induction on sums: hints for Sheet 3, Exercise 2</h1>
+<p class="sub">Hint page (template sample). The technique on a different example, then a hint ladder for your task. It never contains your task's answer. Open a hint only after a real cold attempt; each one opens only after the previous one.</p>
+<div class="banner"><b>Template sample.</b> A real hint page names the sheet and task, explains the technique on a different example from the course's sources, and keeps every rung of the ladder short.</div>
+
+<h2>1. The technique on a different example</h2>
+<h3>Claim: $\sum_{i=1}^{n} (2i - 1) = n^2$ for every $n \ge 1$ <span class="src">template sample</span></h3>
+<div class="card key">
+<p><b>Base case</b> $n = 1$: the left side is $2 \cdot 1 - 1 = 1$ and the right side is $1^2 = 1$.</p>
+<p><b>Induction step.</b> Assume $\sum_{i=1}^{n} (2i - 1) = n^2$ for some $n \ge 1$ (induction hypothesis). Then</p>
+<p>$$\sum_{i=1}^{n+1} (2i - 1) = \sum_{i=1}^{n} (2i - 1) + (2(n+1) - 1) = n^2 + 2n + 1 = (n+1)^2.$$</p>
+<p>The first equality splits off the last term, the second uses the hypothesis, the third is the binomial formula.</p>
+</div>
+<div class="card trap"><b>Where this usually goes wrong:</b> splitting off the wrong term (the last term of the sum up to $n+1$ is the one with $i = n + 1$), and using the claim for $n + 1$ instead of proving it.</div>
+
+<h2>2. Your task: hint ladder</h2>
+<p class="note">Open one rung, try again for a while, then open the next if you are still stuck.</p>
+<details class="hint"><summary>Hint 1: which technique applies</summary><p>The claim is about every natural number $n \ge 1$ and contains a sum up to $n$: induction on $n$ fits, exactly as in section 1.</p></details>
+<details class="hint"><summary>Hint 2: the first step</summary><p>Check the base case with the smallest $n$ the claim talks about, and write the induction hypothesis down word for word before you use it.</p></details>
+<details class="hint"><summary>Hint 3: the intermediate claim to aim for</summary><p>In the step, after splitting off the last term and using the hypothesis, aim for an expression you can recognise as the right-hand side with $n + 1$ in place of $n$.</p></details>
+<details class="hint top"><summary>Top rung: the missing idea in one line (only after the time cap)</summary><p>Write the sum up to $n+1$ as the sum up to $n$ plus its last term.</p></details>
+
+<h2>3. Check your own steps</h2>
+<div class="card proc"><ul>
+<li>Does your base case use the smallest $n$ in the claim, and do both sides agree?</li>
+<li>Is the induction hypothesis stated for a fixed $n$, and used only once you have split the sum?</li>
+<li>Did you end with exactly the claim for $n + 1$ (not just "this looks right")?</li>
+<li>Test the claim on $n = 1, 2, 3$ by hand before you trust your algebra.</li>
+</ul></div>
+<p class="note">What a finished answer looks like: base case (two lines), the hypothesis (one line), the step (a chain of equalities, one reason per equality), a closing sentence that names the principle of induction.</p>
+
+<footer>Source: template sample (standard proof by induction); a real hint page cites the course's script with printed pages and the exact sheet and task. <span data-md="skip">Hints used on this device: <span id="used">0</span> of 4.</span> Built 14 Sep 2026.</footer>
+</main>
+<div id="uos-check" class="hide" role="status"></div>
+<script>
+const $=(s,r)=>(r||document).querySelector(s);
+const $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const KEY='uos_hints_'+(location.pathname.split('/').pop()||'page');
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v);}catch(e){}return null;}
+function runChecks(){const box=$('#uos-check');const msgs=[];if(/\$/.test(document.body.textContent)&&!window.katex)msgs.push('KaTeX did not load (offline or blocked), so formulas show as raw LaTeX.');
+  const errs=$$('.katex-error');if(errs.length)msgs.push('<b>'+errs.length+' formula'+(errs.length===1?'':'s')+' failed to render.</b> First: <code>'+esc(errs[0].textContent.slice(0,80))+'</code>');
+  box.innerHTML=msgs.join('<br>');box.classList.toggle('hide',!msgs.length);}
+function mathify(){try{if(window.renderMathInElement)renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false});}catch(e){}setTimeout(runChecks,60);}
+/* Hint ladder: a rung opens only after the previous one; the number of rungs used is remembered on this device. */
+function initLadder(){
+  const rungs=$$('details.hint');let used=Math.min(rungs.length,parseInt(store(KEY)||'0',10)||0);let printing=false;
+  function paint(){rungs.forEach((d,i)=>d.classList.toggle('locked',i>used));$('#used').textContent=used;}
+  rungs.forEach((d,i)=>{d.addEventListener('toggle',()=>{if(!d.open||printing)return;if(i>used){d.open=false;return;}if(i===used){used=i+1;store(KEY,String(used));paint();}});});
+  paint();
+  const printAll=()=>{printing=true;rungs.forEach(d=>d.open=true);};
+  window.addEventListener('beforeprint',printAll);window.addEventListener('afterprint',()=>{printing=false;});
+  if(/[?&]print=1/.test(location.search))printAll();
+}
+function boot(){initLadder();mathify();}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+</script>
+</body>
+</html>

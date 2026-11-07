@@ -1,0 +1,21 @@
+# Test fixture (not a real module): per-stream error logs, a verbatim HTML page and a skill.
+id = "study"
+name = "Study (fixture)"
+tier = "standard"
+summary = "Fixture: error logs per stream, verbatim HTML, a skill."
+requires = ["core"]
+verbatim = ["vault/**/*.html"]
+
+[[skills]]
+id = "course-facts"
+
+[defaults.course]
+handwritten_folder = ""   # "" = "<course folder> handwritten"
+
+# One empty folder per official subfolder of each course, and the handwritten folder.
+[[folders]]
+path = "{{course.folder}}/{{item}}"
+each = "course.official_subfolders"
+
+[[folders]]
+path = "{{course.folder}}/{{course.handwritten_dir}}"

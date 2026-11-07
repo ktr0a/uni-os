@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# brief-nudge: a prompt-submit hook for every agent session on the host.
+#
+# When the shared rules (_agent/rules.md) or a role brief (_agent/roles/*.md) changed since this
+# session last looked, it prints ONE FIXED sentence at the session's next turn, so nobody has to
+# be woken just to hear a new default. It never passes on file content: the sentence is fixed,
+# and its only variable part is a time read from the files' own dates. Reason: nothing a session
+# writes into the vault may reach other sessions with the weight of a user message (prompt
+# injection). A session's first prompt only records the date (it reads those files at start).
+# It always exits 0 (a hook must never block a prompt), uses 2 s timeouts, says nothing when the
+# mount is slow, and prunes its state after 30 days.
+# Cost: every edit of those files costs every session one re-read: no cosmetic edits.
+#
+# In Claude Code: a UserPromptSubmit hook in ~/.claude/settings.json (install-user.sh adds it);
+# its stdout reaches the session as context. Other agents: use their prompt hook if they have
+# one; otherwise leave it out (the brief still says "re-read before editing").
+# Input: the hook's JSON on stdin ({"session_id": ...}).
+# Test hooks: BRIEF_NUDGE_FILES (space-separated paths), BRIEF_NUDGE_STATE (state dir).
+HOST_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+. "$HOST_DIR/lib/common.sh" 2>/dev/null
+S="${BRIEF_NUDGE_STATE:-$STATE/brief-nudge}"
+
+sid=$(timeout 2 cat 2>/dev/null | sed -n -E 's/.*"session_id"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/p' | head -n 1 | tr -cd 'A-Za-z0-9-')
+[ -n "$sid" ] || exit 0
+mkdir -p "$S" 2>/dev/null || exit 0
+
+if [ -n "${BRIEF_NUDGE_FILES:-}" ]; then
+  read -ra files <<< "$BRIEF_NUDGE_FILES"
+else
+  files=("$VAULT/$AGENT_DIR/rules.md")
+  while IFS= read -r f; do files+=("$f"); done < <(timeout 2 find "$VAULT/$AGENT_DIR/roles" -maxdepth 1 -name '*.md' 2>/dev/null)
+fi
+
+newest=0
+for f in "${files[@]}"; do
+  m=$(timeout 2 stat -c %Y "$f" 2>/dev/null) || continue
+  [ "${m:-0}" -gt "$newest" ] && newest=$m
+done
+[ "$newest" -gt 0 ] || exit 0           # the mount is down or slow: say nothing
+
+seen=$(cat "$S/$sid" 2>/dev/null)
+echo "$newest" > "$S/$sid" 2>/dev/null
+if [ -n "$seen" ] && [ "$newest" -gt "$seen" ]; then
+  echo "_agent/rules.md or a role brief in _agent/roles/ changed at $(date -d "@$newest" '+%a %-d %b %H:%M'): re-read the common rules and your own brief."
+fi
+find "$S" -maxdepth 1 -type f -mtime +30 -delete 2>/dev/null
+exit 0

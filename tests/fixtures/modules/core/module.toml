@@ -1,0 +1,13 @@
+# Test fixture (not a real module): the vault skeleton.
+id = "core"
+name = "Core (fixture)"
+tier = "core"
+summary = "Fixture: vault skeleton for the tools tests."
+requires = []
+obsidian = "optional"
+os = ["any"]
+runtime = ["any"]
+config_keys = ["student.name", "term.label"]
+
+[defaults.student]
+language = "English"

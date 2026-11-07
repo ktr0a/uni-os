@@ -1,0 +1,1068 @@
+{
+  "_generated": "do not edit; edit uni-os.toml",
+  "_framework_version": "0.1.0",
+  "uni_os": {
+    "version": "0.1.0",
+    "preset": "custom"
+  },
+  "student": {
+    "handle": "alex",
+    "language": "English",
+    "dictates": false,
+    "pronouns": "",
+    "name": "Alex Example"
+  },
+  "university": {
+    "short": "EIT",
+    "programme": "BSc Computer Science",
+    "lms": "Moodle",
+    "lms_url": "https://lms.example.edu",
+    "website": "https://www.example.edu",
+    "catalogue": "",
+    "recordings": "",
+    "name": "Example Institute of Technology"
+  },
+  "term": {
+    "last_lecture_day": "2026-12-18",
+    "lecture_free_from": "2026-12-19",
+    "exam_session_start": "2027-01-25",
+    "exam_session_end": "2027-02-19",
+    "holidays": [
+      {
+        "name": "Reading day",
+        "from": "2026-11-20",
+        "to": "2026-11-20"
+      }
+    ],
+    "label": "Autumn 2026",
+    "timezone": "Europe/Zurich",
+    "week0_monday": "2026-09-14",
+    "weeks": [
+      {
+        "number": 0,
+        "nn": "00",
+        "start": "Mon 14 Sep 2026",
+        "start_iso": "2026-09-14"
+      },
+      {
+        "number": 1,
+        "nn": "01",
+        "start": "Mon 21 Sep 2026",
+        "start_iso": "2026-09-21"
+      },
+      {
+        "number": 2,
+        "nn": "02",
+        "start": "Mon 28 Sep 2026",
+        "start_iso": "2026-09-28"
+      },
+      {
+        "number": 3,
+        "nn": "03",
+        "start": "Mon 5 Oct 2026",
+        "start_iso": "2026-10-05"
+      },
+      {
+        "number": 4,
+        "nn": "04",
+        "start": "Mon 12 Oct 2026",
+        "start_iso": "2026-10-12"
+      },
+      {
+        "number": 5,
+        "nn": "05",
+        "start": "Mon 19 Oct 2026",
+        "start_iso": "2026-10-19"
+      },
+      {
+        "number": 6,
+        "nn": "06",
+        "start": "Mon 26 Oct 2026",
+        "start_iso": "2026-10-26"
+      },
+      {
+        "number": 7,
+        "nn": "07",
+        "start": "Mon 2 Nov 2026",
+        "start_iso": "2026-11-02"
+      },
+      {
+        "number": 8,
+        "nn": "08",
+        "start": "Mon 9 Nov 2026",
+        "start_iso": "2026-11-09"
+      },
+      {
+        "number": 9,
+        "nn": "09",
+        "start": "Mon 16 Nov 2026",
+        "start_iso": "2026-11-16"
+      },
+      {
+        "number": 10,
+        "nn": "10",
+        "start": "Mon 23 Nov 2026",
+        "start_iso": "2026-11-23"
+      },
+      {
+        "number": 11,
+        "nn": "11",
+        "start": "Mon 30 Nov 2026",
+        "start_iso": "2026-11-30"
+      },
+      {
+        "number": 12,
+        "nn": "12",
+        "start": "Mon 7 Dec 2026",
+        "start_iso": "2026-12-07"
+      },
+      {
+        "number": 13,
+        "nn": "13",
+        "start": "Mon 14 Dec 2026",
+        "start_iso": "2026-12-14"
+      }
+    ]
+  },
+  "paths": {
+    "vault": "G:/My Drive/Uni-EIT",
+    "agent_dir": "_agent",
+    "inbox": "inbox",
+    "never_open": [
+      "**/private/**"
+    ],
+    "handwriting_app_data": "",
+    "handwriting_app_exports": ""
+  },
+  "storage": {
+    "provider": "google-drive"
+  },
+  "obsidian": {
+    "enabled": true,
+    "area_colours": {
+      "me": "#F6BF26",
+      "progress": "#00BCD4",
+      "semester": "#795548",
+      "deadline": "#EF6C00",
+      "agent": "#6E7681",
+      "course": "#607D8B"
+    }
+  },
+  "agent": {
+    "primary": "claude-code",
+    "permission_posture": "bypass",
+    "default_model": "",
+    "heavy_model": "",
+    "reply_rules": [
+      "Keep replies short; use a table when comparing options.",
+      "Write dates as Ddd D Mon YYYY, e.g. Mon 26 Oct 2026."
+    ],
+    "skills_dir": ".claude/skills",
+    "coordinator_title": "Uni coordinator",
+    "context_refresh_tokens": 300000,
+    "usage_stop_weekly_pct": 90,
+    "usage_pause_5h_pct": 90,
+    "max_helpers": 2,
+    "cli": "claude",
+    "headless_command": ""
+  },
+  "study": {
+    "formats": [
+      "html",
+      "md"
+    ],
+    "math": "katex",
+    "chunk_words": 750,
+    "assistance_default": "hints-only",
+    "personal_deadline_rule": "Sheets released in a week are done by that Sunday.",
+    "error_logs": {
+      "retests": false,
+      "retest_items": 3,
+      "retest_minutes": 20
+    },
+    "intuition_first": true,
+    "pdf_browser": "auto",
+    "exercise_help": {
+      "cold_minutes": 25,
+      "part_cap_minutes": 45,
+      "stuck_bug_minutes": 25,
+      "official_solutions_after_attempt": true
+    },
+    "target_column": "Personal target",
+    "rundowns": {
+      "skim_lead_hours": 1,
+      "recall_keys": false,
+      "skim_courses": [
+        "dm"
+      ]
+    },
+    "quiz": {
+      "auto_mocks": false,
+      "prep_lead_days": 4
+    },
+    "handwriting_app": "GoodNotes",
+    "experiment_weeks": 2
+  },
+  "courses": [
+    {
+      "colour_light": "#7aa2f7",
+      "lecturers": [],
+      "lecture_slots": [
+        "Tue 10:15-12:00",
+        "Thu 10:15-12:00"
+      ],
+      "exercise_slots": [
+        "Wed 14:15-16:00"
+      ],
+      "sheet_release": "Thu 12:00",
+      "sheet_due": "Thu 23:59, one week later",
+      "official_subfolders": [
+        "AD assignments",
+        "AD slides & script"
+      ],
+      "error_log_streams": [
+        "main"
+      ],
+      "notes": [
+        "Written answers use the pseudocode conventions of the script."
+      ],
+      "assessments": [
+        {
+          "kind": "sheet",
+          "schedule": "out Thu, due the next Thu 23:59",
+          "counts_for": "bonus",
+          "points_max": 0,
+          "name": "Weekly exercise sheets",
+          "assistance": "hints-only"
+        },
+        {
+          "kind": "quiz",
+          "schedule": "weeks 4, 8 and 12, in the exercise session",
+          "counts_for": "bonus",
+          "points_max": 10,
+          "name": "In-class quizzes",
+          "assistance": "hints-only",
+          "dates": [
+            "2026-10-14 14:15",
+            "2026-11-11 14:15",
+            "2026-12-09 14:15"
+          ]
+        }
+      ],
+      "bonus": {
+        "scheme": "threshold",
+        "description": "+0.25 grade bonus at 80 % of all sheet points",
+        "max_bonus": 0.25,
+        "rule": "Sum of sheet points over the term; quizzes count double.",
+        "target": "80 % of all sheet points",
+        "threshold": 0.8,
+        "total": 0,
+        "total_estimated": false,
+        "proportional": true,
+        "full_at": 0,
+        "required": 0,
+        "unit": "points",
+        "counts": []
+      },
+      "fetch_sources": [],
+      "watch_note_subfolders": [],
+      "assistance": "hints-only",
+      "ects": "8",
+      "exercise_group": "group 3",
+      "lms_url": "https://lms.example.edu/course/algo",
+      "website": "https://algo.example.edu",
+      "platforms": [
+        "online judge with hidden tests (programming tasks)"
+      ],
+      "recordings": "recorded, usually online the next day",
+      "hand_in": "LMS upload, one PDF per person",
+      "session_rule": "The exercise session of week n discusses sheet n-1 and introduces sheet n.",
+      "week_numbering": "Sheet k is released in term week k.",
+      "real_source": "the lecture script and the slides on the LMS",
+      "page_offsets": [
+        {
+          "source": "Script 2026 (PDF)",
+          "rule": "PDF page = printed page + 2"
+        }
+      ],
+      "exam_format": "written, 120 min, English, one handwritten A4 sheet allowed",
+      "integrity": "Sheets are individual work; AI may explain concepts, never produce solutions.",
+      "handwritten_folder": "",
+      "aliases": [
+        "Algo"
+      ],
+      "detect": "",
+      "id": "algo",
+      "name": "Algorithms and Data Structures",
+      "short": "AD",
+      "folder": "AD",
+      "slug": "ad",
+      "colour": "#1e66f5",
+      "language": "English",
+      "colour_rgb": "30, 102, 245",
+      "colour_int": 1992437,
+      "colour_light_rgb": "122, 162, 247",
+      "colour_light_int": 8037111,
+      "card": "AD/ad.md",
+      "error_logs": [
+        {
+          "stream": "main",
+          "file": "ad-error-log.md",
+          "path": "AD/ad-error-log.md",
+          "title": "Error log"
+        }
+      ],
+      "error_log_files": [
+        "ad-error-log.md"
+      ],
+      "handwritten_dir": "AD handwritten"
+    },
+    {
+      "colour_light": "#7ccf6b",
+      "lecturers": [],
+      "lecture_slots": [
+        "Mon 08:15-10:00",
+        "Wed 08:15-10:00"
+      ],
+      "exercise_slots": [
+        "Tue 16:15-18:00"
+      ],
+      "sheet_release": "Mon 12:00",
+      "sheet_due": "Mon 12:00, one week later",
+      "official_subfolders": [
+        "DM assignments",
+        "DM script"
+      ],
+      "error_log_streams": [
+        "main"
+      ],
+      "notes": [],
+      "assessments": [
+        {
+          "kind": "sheet",
+          "schedule": "every second week",
+          "counts_for": "bonus",
+          "points_max": 2,
+          "name": "Graded sheets",
+          "assistance": "solo"
+        },
+        {
+          "kind": "sheet",
+          "schedule": "weekly",
+          "counts_for": "none",
+          "points_max": 0,
+          "name": "Practice sheets",
+          "assistance": "hints-only"
+        }
+      ],
+      "bonus": {
+        "scheme": "points",
+        "description": "Up to 2 points per graded sheet; 8 points give +0.25",
+        "max_bonus": 0.25,
+        "rule": "Bonus = 0.25 * min(points, 8) / 8.",
+        "target": "8 points",
+        "threshold": 0.8,
+        "total": 0,
+        "total_estimated": false,
+        "proportional": true,
+        "full_at": 8,
+        "required": 0,
+        "unit": "points",
+        "counts": []
+      },
+      "fetch_sources": [],
+      "watch_note_subfolders": [],
+      "assistance": "hints-only",
+      "ects": "",
+      "exercise_group": "",
+      "lms_url": "",
+      "website": "",
+      "platforms": [],
+      "recordings": "",
+      "hand_in": "",
+      "session_rule": "",
+      "week_numbering": "",
+      "real_source": "",
+      "page_offsets": [],
+      "exam_format": "",
+      "integrity": "",
+      "handwritten_folder": "",
+      "aliases": [],
+      "detect": "",
+      "id": "dm",
+      "name": "Discrete Mathematics",
+      "short": "DM",
+      "folder": "DM",
+      "slug": "dm",
+      "colour": "#40a02b",
+      "language": "English",
+      "colour_rgb": "64, 160, 43",
+      "colour_int": 4235307,
+      "colour_light_rgb": "124, 207, 107",
+      "colour_light_int": 8179563,
+      "card": "DM/dm.md",
+      "error_logs": [
+        {
+          "stream": "main",
+          "file": "dm-error-log.md",
+          "path": "DM/dm-error-log.md",
+          "title": "Error log"
+        }
+      ],
+      "error_log_files": [
+        "dm-error-log.md"
+      ],
+      "handwritten_dir": "DM handwritten"
+    },
+    {
+      "colour_light": "#b58af5",
+      "lecturers": [],
+      "lecture_slots": [
+        "Mon 13:15-15:00",
+        "Fri 10:15-12:00"
+      ],
+      "exercise_slots": [
+        "Thu 16:15-18:00"
+      ],
+      "sheet_release": "Fri 18:00",
+      "sheet_due": "Mon 09:00",
+      "official_subfolders": [
+        "LA assignments",
+        "LA plan & notes"
+      ],
+      "error_log_streams": [
+        "main"
+      ],
+      "notes": [],
+      "assessments": [
+        {
+          "kind": "quiz",
+          "schedule": "weekly on the LMS, open Fri 18:00 to Mon 09:00",
+          "counts_for": "bonus",
+          "points_max": 4,
+          "name": "Online quizzes",
+          "assistance": "solo"
+        },
+        {
+          "kind": "sheet",
+          "schedule": "weekly, discussed in the exercise session",
+          "counts_for": "none",
+          "points_max": 0,
+          "name": "Exercise sheets",
+          "assistance": "hints-only"
+        }
+      ],
+      "bonus": {
+        "scheme": "best-n",
+        "description": "Pass 10 of the 12 online quizzes (70 % each) for +0.25",
+        "max_bonus": 0.25,
+        "rule": "At least 10 of the 12 weekly quizzes passed with >= 70 %; fewer passes give a proportional share.",
+        "target": "10 / 12",
+        "threshold": 0.8,
+        "total": 12,
+        "total_estimated": false,
+        "proportional": true,
+        "full_at": 0,
+        "required": 10,
+        "unit": "quizzes",
+        "counts": []
+      },
+      "fetch_sources": [],
+      "watch_note_subfolders": [],
+      "assistance": "hints-only",
+      "ects": "",
+      "exercise_group": "",
+      "lms_url": "",
+      "website": "",
+      "platforms": [],
+      "recordings": "",
+      "hand_in": "",
+      "session_rule": "",
+      "week_numbering": "",
+      "real_source": "",
+      "page_offsets": [],
+      "exam_format": "",
+      "integrity": "",
+      "handwritten_folder": "",
+      "aliases": [],
+      "detect": "",
+      "id": "la",
+      "name": "Linear Algebra",
+      "short": "LA",
+      "folder": "LA",
+      "slug": "la",
+      "colour": "#8839ef",
+      "language": "English",
+      "colour_rgb": "136, 57, 239",
+      "colour_int": 8927727,
+      "colour_light_rgb": "181, 138, 245",
+      "colour_light_int": 11897589,
+      "card": "LA/la.md",
+      "error_logs": [
+        {
+          "stream": "main",
+          "file": "la-error-log.md",
+          "path": "LA/la-error-log.md",
+          "title": "Error log"
+        }
+      ],
+      "error_log_files": [
+        "la-error-log.md"
+      ],
+      "handwritten_dir": "LA handwritten"
+    },
+    {
+      "colour_light": "#f2788f",
+      "lecturers": [],
+      "lecture_slots": [
+        "Tue 13:15-15:00",
+        "Fri 13:15-15:00"
+      ],
+      "exercise_slots": [
+        "Wed 10:15-12:00"
+      ],
+      "sheet_release": "Tue 18:00",
+      "sheet_due": "Tue 18:00, one week later",
+      "official_subfolders": [
+        "PROG assignments",
+        "PROG slides"
+      ],
+      "error_log_streams": [
+        "theory",
+        "programming"
+      ],
+      "notes": [
+        "Never store finished solutions or code for graded tasks."
+      ],
+      "assessments": [
+        {
+          "kind": "sheet",
+          "schedule": "weekly, autograded",
+          "counts_for": "admission",
+          "points_max": 0,
+          "name": "Programming exercises",
+          "assistance": "hints-only"
+        },
+        {
+          "kind": "project",
+          "schedule": "weeks 10 to 13, in pairs",
+          "counts_for": "grade",
+          "points_max": 0,
+          "name": "Team project",
+          "assistance": "hints-only"
+        }
+      ],
+      "bonus": {
+        "scheme": "none",
+        "description": "",
+        "max_bonus": 0,
+        "rule": "",
+        "target": "",
+        "threshold": 0.8,
+        "total": 0,
+        "total_estimated": false,
+        "proportional": true,
+        "full_at": 0,
+        "required": 0,
+        "unit": "points",
+        "counts": []
+      },
+      "fetch_sources": [],
+      "watch_note_subfolders": [],
+      "assistance": "coach",
+      "ects": "",
+      "exercise_group": "",
+      "lms_url": "",
+      "website": "",
+      "platforms": [],
+      "recordings": "",
+      "hand_in": "",
+      "session_rule": "",
+      "week_numbering": "",
+      "real_source": "",
+      "page_offsets": [],
+      "exam_format": "",
+      "integrity": "",
+      "handwritten_folder": "",
+      "aliases": [],
+      "detect": "",
+      "id": "prog",
+      "name": "Introduction to Programming",
+      "short": "PROG",
+      "folder": "PROG",
+      "slug": "prog",
+      "colour": "#d20f39",
+      "language": "English",
+      "colour_rgb": "210, 15, 57",
+      "colour_int": 13766457,
+      "colour_light_rgb": "242, 120, 143",
+      "colour_light_int": 15890575,
+      "card": "PROG/prog.md",
+      "error_logs": [
+        {
+          "stream": "theory",
+          "file": "prog-error-log-theory.md",
+          "path": "PROG/prog-error-log-theory.md",
+          "title": "Error log (theory)"
+        },
+        {
+          "stream": "programming",
+          "file": "prog-error-log-programming.md",
+          "path": "PROG/prog-error-log-programming.md",
+          "title": "Error log (programming)"
+        }
+      ],
+      "error_log_files": [
+        "prog-error-log-theory.md",
+        "prog-error-log-programming.md"
+      ],
+      "handwritten_dir": "PROG handwritten"
+    }
+  ],
+  "schedule": {
+    "daily_prep": [
+      "17:30",
+      "19:30"
+    ],
+    "prep_check": "07:30",
+    "week_page": {
+      "day": "Sun",
+      "time": "10:00"
+    },
+    "check_in": {
+      "day": "Sat",
+      "time": "19:45",
+      "every": "week"
+    },
+    "heartbeat": [
+      "07:50",
+      "13:05",
+      "18:05"
+    ],
+    "heartbeat_days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ],
+    "inbox_sync": [
+      "07:15",
+      "13:15",
+      "18:15"
+    ],
+    "study_cutoff": "19:00",
+    "vault_watch": [
+      "08:17",
+      "13:17",
+      "18:17",
+      "22:17"
+    ],
+    "vm_verdict": {
+      "day": "Sun",
+      "time": "19:30"
+    },
+    "day_start": "08:00",
+    "weekday_stop": "18:15",
+    "focus_minutes": 70,
+    "break_minutes": 10,
+    "lecture_skim": [
+      "19:00"
+    ],
+    "lecture_skim_days": [
+      "Sun",
+      "Tue"
+    ],
+    "quiz_prep": [
+      "09:00"
+    ],
+    "quiz_prep_dates": "",
+    "waiting_on_you": [
+      "19:00"
+    ],
+    "waiting_on_you_days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat",
+      "Sun"
+    ],
+    "heartbeat_weekend": [
+      "09:00",
+      "17:40"
+    ],
+    "heartbeat_weekend_days": [
+      "Sun"
+    ],
+    "inbox_poll_window": "07:00-22:00",
+    "inbox_poll_every_min": 10,
+    "inbox_poll_min_gap_min": 60
+  },
+  "notify": {
+    "provider": "ntfy",
+    "ntfy_server": "https://ntfy.sh",
+    "ntfy_topic_file": "~/.config/uni-os/ntfy-topic",
+    "max_per_day": 3,
+    "min_gap_hours": 2,
+    "quiet_hours": "21:00-07:30",
+    "dedupe_hours": 24,
+    "never_all_good": true,
+    "quiet_windows": [
+      {
+        "from": "2027-01-25",
+        "to": "2027-02-19",
+        "reason": "exam session",
+        "urgent_ok": true
+      }
+    ],
+    "title": "Uni OS",
+    "default_click": "",
+    "require_id": true,
+    "block_personal": true,
+    "extra_all_good_patterns": [],
+    "max_length": 300,
+    "hold_max_hours": 24,
+    "direct_priority": 4,
+    "inbox_stale_hours": 4,
+    "inbox_stale_hours_taps": 14
+  },
+  "calendar": {
+    "provider": "google",
+    "courses": "Courses",
+    "study_blocks": "Study blocks",
+    "events": "Events",
+    "busy": "Busy",
+    "notation": "default",
+    "lecture_prefix": "L:",
+    "exercise_prefix": "E:",
+    "standing_approval": false,
+    "default_location": "Library"
+  },
+  "runtime": {
+    "laptop_os": "windows",
+    "use_vm": false,
+    "use_cloud_sessions": false,
+    "laptop_scheduler": "agent-app"
+  },
+  "vm": {
+    "provider": "gcp",
+    "host_alias": "uni-vm",
+    "project": "",
+    "zone": "us-central1-a",
+    "machine_type": "e2-custom-small-4096",
+    "linux_user": "",
+    "remote_control_name": "Uni (VM)",
+    "budget_month": 13,
+    "budget_currency": "EUR",
+    "disk_gb": 30,
+    "mount_path": "~/Uni",
+    "drive_remote": "uni-drive",
+    "repo_url": "",
+    "rc_prefix": "uni-vm",
+    "rc_capacity": 10,
+    "rc_chrome": true,
+    "rc_update_hour": 4,
+    "default_model": "sonnet",
+    "default_effort": "high",
+    "monthly_credit": 0,
+    "snapshot_retention_days": 21,
+    "health_every_min": 15,
+    "history_minute": 40,
+    "history_exclude": [
+      ".obsidian/plugins/**",
+      "**/node_modules/**",
+      "_agent/vm/snapshot.json"
+    ],
+    "mem_alert_mb": 500,
+    "mem_close_jobs_mb": 700,
+    "swapin_alert_rate": 250,
+    "disk_alert_pct": 90,
+    "alert_repeat_h": 3,
+    "big_context_k": 300,
+    "outcome_prep_grace_min": 60,
+    "inbox_stuck_h": 0,
+    "tap_stuck_h": 0
+  },
+  "cockpit": {
+    "enabled": true,
+    "layout": "focus",
+    "default_tab": "home",
+    "open_on_startup": false,
+    "color_mode": "accent",
+    "prep_switch_hour": 18,
+    "prep_warn_after": "19:30",
+    "feed_minutes": 10,
+    "write_snapshot": true,
+    "stale_days": 2,
+    "urgent_hours": 24,
+    "day_start": 7,
+    "day_end": 21,
+    "status_path": "progress/current-status.md",
+    "weeks_folder": "progress/weeks",
+    "prep_folder": "semester/prep",
+    "plans_folder": "semester/plans",
+    "overview_path": "courses-overview.md",
+    "study_folders": [
+      "notes",
+      "quiz-prep"
+    ],
+    "snapshot_path": "",
+    "rules_path": "",
+    "prompt_note": "",
+    "lecture_pattern": "^(?:V|L):",
+    "exercise_pattern": "^(?:U|Ü|E):",
+    "optional_pattern": "^\\(|^OP\\b",
+    "deep_pattern": "\\bdeep\\b",
+    "focus_marker": "FOCUS:",
+    "main_marker": "_",
+    "done_words": [
+      "✓",
+      "done",
+      "submitted",
+      "closed",
+      "handed in",
+      "uploaded",
+      "dropped",
+      "skipped"
+    ],
+    "pending_words": [
+      "not reported",
+      "pending",
+      "not recorded"
+    ],
+    "no_bonus_words": [
+      "none",
+      "no",
+      "feedback only"
+    ],
+    "soft_prefixes": [
+      "tutorial"
+    ],
+    "soft_markers": [
+      "(tentative)"
+    ],
+    "not_released_words": [
+      "not released"
+    ],
+    "fast_model": "claude-haiku-5-5",
+    "strong_model": "claude-sonnet-5-5",
+    "headings": {
+      "due": "Due this week",
+      "results": "Results this week",
+      "notes": "Notes",
+      "check_in": "End-of-week check-in",
+      "next": "Next 10 days",
+      "exercises": "Exercises",
+      "self_rating": "Self-rated",
+      "snapshot": "Snapshot:"
+    }
+  },
+  "modules": {
+    "enabled": [
+      "core",
+      "student-model",
+      "courses",
+      "error-logs",
+      "study-pages",
+      "exercise-help",
+      "obsidian",
+      "progress",
+      "planning",
+      "check-in",
+      "daily-prep",
+      "lecture-rundowns",
+      "quiz-coaching",
+      "roles",
+      "scheduler-local",
+      "notifications",
+      "heartbeat",
+      "resources",
+      "handwritten-notes",
+      "cockpit",
+      "inbox-sync",
+      "experiments"
+    ]
+  },
+  "course_fetch": {
+    "task_name": "Uni OS course pick-up",
+    "install_dir": "%USERPROFILE%\\Documents\\uni-os\\course-pickup",
+    "downloads_dir": "",
+    "interval_minutes": 1,
+    "extra_hosts": [],
+    "check_referrer": false,
+    "allowed_types": [
+      "pdf",
+      "zip",
+      "txt",
+      "md",
+      "java",
+      "html",
+      "htm",
+      "tex",
+      "csv",
+      "py",
+      "ipynb",
+      "c",
+      "cpp",
+      "h",
+      "hpp",
+      "pptx",
+      "docx",
+      "xlsx"
+    ],
+    "max_mb": 50,
+    "max_age_hours": 12,
+    "wait_minutes": 30,
+    "date_guards": [],
+    "request_timeout_min": 15,
+    "verify_timeout_min": 5,
+    "preferred_language": "English",
+    "browser_hint": ""
+  },
+  "vault_watch": {
+    "task_name": "Uni OS vault watch",
+    "install_dir": "%USERPROFILE%\\Documents\\uni-os\\vault-watch",
+    "at_logon": true,
+    "logon_delay_min": 5,
+    "scopes": [
+      "notes",
+      "sources"
+    ],
+    "toast_title": "Uni OS vault watch",
+    "toast_summary_over": 3,
+    "push": false,
+    "push_command": [],
+    "note_root_files": [
+      "*.md",
+      "*.canvas",
+      "*.base"
+    ],
+    "note_folders": [
+      "me",
+      "progress",
+      "semester",
+      "resources",
+      "views",
+      "inbox",
+      "_agent",
+      "_templates"
+    ],
+    "course_note_subfolders": [
+      "notes",
+      "reference",
+      "quiz-prep"
+    ],
+    "churn": [
+      "_agent/logs/**",
+      "_agent/inbox-applied/**",
+      "_agent/vault-sync-log.md",
+      "_agent/vault-watch/log.md",
+      "_agent/vault-watch/alerts.md",
+      "_agent/vault-watch/sources-inventory.tsv",
+      "_agent/course-fetch/pending/**",
+      "_agent/course-fetch/done/**",
+      "_agent/heartbeat/state.json",
+      "_agent/heartbeat/flags.json",
+      "_agent/vm/status.md",
+      "_agent/vm/performance.md",
+      "_agent/vm/snapshot.json",
+      "_agent/vm/ran/**",
+      "_agent/uni-os.json",
+      "_agent/.uni-os-manifest.json"
+    ],
+    "never_list": [
+      "private",
+      "*/private"
+    ],
+    "source_top_dirs": [],
+    "quiet_dirs": [],
+    "quiet_patterns": [
+      "*handwritten*"
+    ],
+    "frozen_dirs": [
+      "z_archive",
+      "archive"
+    ],
+    "ignore_top_dirs": [],
+    "conflict_patterns": [
+      "* (1)*",
+      "*conflicted copy*",
+      "*.sync-conflict-*",
+      "Copy of *"
+    ],
+    "half_mount_ratio": 0.2,
+    "half_mount_min_files": 50,
+    "alert_prune_days": 120,
+    "group_new_over": 3,
+    "log_max_paths": 20,
+    "write_inventory": true,
+    "stale_update_hours": 24,
+    "update_note_patterns": [
+      "*-update.md"
+    ],
+    "prep_watchdog": true,
+    "prep_folder": "semester/prep",
+    "prep_pattern": "prep-{date}*.md",
+    "prep_morning": "08:00-12:00",
+    "prep_evening_from": "21:00"
+  },
+  "heartbeat": {
+    "act_mode": "safe",
+    "safe_windows": [],
+    "event_hours": "07:30-20:45",
+    "event_cap": 2,
+    "event_near_slot_min": 45,
+    "event_min_gap_min": 30,
+    "min_memory_mb": 600,
+    "grace_min": 20,
+    "inbox_stuck_hours": 0,
+    "inbox_tap_stuck_hours": 0,
+    "checkin_grace_hours": 16,
+    "gap_open_hours": 24,
+    "result_window_days": 7,
+    "snapshot_file": "_agent/vm/snapshot.json",
+    "snapshot_stale_min": 40,
+    "jobs_log": "{state}/jobs.log",
+    "flags_dir": "_agent/logs/flags",
+    "block_log_glob": "",
+    "non_study_block_prefixes": [
+      "L:",
+      "E:",
+      "V:",
+      "U:",
+      "OP",
+      "("
+    ],
+    "done_words": [
+      "✓",
+      "done",
+      "submitted",
+      "closed",
+      "handed in",
+      "uploaded",
+      "dropped",
+      "skipped"
+    ],
+    "event_words": [
+      "quiz",
+      "timed",
+      "oral",
+      "exam",
+      "midterm",
+      "tutorial",
+      "rehearsal",
+      "test"
+    ],
+    "on_demand_roles": [
+      "course-files-fetch"
+    ],
+    "ask_mode": "auto",
+    "start_job_command": "",
+    "rerun_allowed": [
+      "study-prep-morning-check"
+    ],
+    "outcome_prefix": "Outcome check: "
+  }
+}

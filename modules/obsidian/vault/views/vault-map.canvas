@@ -1,0 +1,81 @@
+{
+	"nodes":[
+{{#if modules.student-model}}
+		{"id":"g-me","type":"group","x":-1140,"y":960,"width":320,"height":540,"color":"{{obsidian.area_colours.me}}","label":"Me"},
+{{/if}}
+{{#if modules.planning}}
+		{"id":"g-semester","type":"group","x":-780,"y":960,"width":320,"height":540,"color":"{{obsidian.area_colours.semester}}","label":"Semester"},
+{{/if}}
+{{#if modules.progress}}
+		{"id":"g-progress","type":"group","x":-420,"y":960,"width":320,"height":540,"color":"{{obsidian.area_colours.progress}}","label":"Progress"},
+{{/if}}
+{{#if modules.courses}}
+		{"id":"g-courses","type":"group","x":-60,"y":960,"width":320,"height":660,"color":"{{obsidian.area_colours.course}}","label":"Courses"},
+{{/if}}
+{{#if modules.resources}}
+		{"id":"g-resources","type":"group","x":300,"y":960,"width":320,"height":440,"label":"Resources"},
+{{/if}}
+		{"id":"g-agent","type":"group","x":-1140,"y":1700,"width":1760,"height":140,"color":"{{obsidian.area_colours.agent}}","label":"For agents (_agent/): I don't need to read these"},
+{{#if modules.student-model}}
+		{"id":"me-profile","type":"text","text":"**[[me/profile|Profile]]**\nWho I am, goals, tools, shorthand, self-ratings.","x":-1120,"y":1000,"width":280,"height":90},
+		{"id":"me-weak","type":"text","text":"**[[me/weak-spots|Weak spots]]**\nRecurring mistakes per course and their fixes.","x":-1120,"y":1100,"width":280,"height":90},
+		{"id":"me-learning","type":"text","text":"**[[me/learning-style|Learning style]]**\nWhat works for me, per course.","x":-1120,"y":1200,"width":280,"height":90},
+		{"id":"me-rhythm","type":"text","text":"**[[me/rhythm-and-habits|Rhythm and habits]]**\nEnergy curve, focus span, week shape.","x":-1120,"y":1300,"width":280,"height":90},
+{{#if modules.experiments}}
+		{"id":"me-experiments","type":"text","text":"**[[me/habits-experiments|Experiments]]**\nOne change at a time, measured, reviewed.","x":-1120,"y":1400,"width":280,"height":90},
+{{/if}}
+{{/if}}
+{{#if modules.planning}}
+		{"id":"sem-dates","type":"text","text":"**[[semester/calendar-and-dates|Dates and deadlines]]**\nTerm weeks, class grid, key dates, exam-session dates.","x":-760,"y":1000,"width":280,"height":90},
+		{"id":"sem-planning","type":"text","text":"**[[semester/planning-system|Planning system]]**\nCalendars, block notation, week skeleton.","x":-760,"y":1100,"width":280,"height":90},
+		{"id":"sem-approach","type":"text","text":"**[[semester/study-approach|Study approach]]**\nHow I study and why; decisions with dates.","x":-760,"y":1200,"width":280,"height":90},
+		{"id":"sem-plans","type":"text","text":"**Week plans**\nsemester/plans/week-NN-plan.md (the newest wins; the calendar wins over the file).","x":-760,"y":1300,"width":280,"height":90},
+{{#if modules.daily-prep}}
+		{"id":"sem-prep","type":"text","text":"**Daily prep**\nsemester/prep/prep-YYYY-MM-DD.md: material per study block (highest -rN wins).","x":-760,"y":1400,"width":280,"height":90},
+{{/if}}
+{{/if}}
+{{#if modules.progress}}
+		{"id":"prog-status","type":"text","text":"**[[progress/current-status|Current status]]**\nStanding per course, done vs to do, next 10 days.","x":-400,"y":1000,"width":280,"height":90},
+		{"id":"prog-log","type":"text","text":"**[[progress/tracker-log|Tracker log]]**\nEvery result and status, dated (append-only).","x":-400,"y":1100,"width":280,"height":90},
+		{"id":"prog-weeks","type":"text","text":"**Week pages**\nprogress/weeks/week-NN.md: due items, results, check-in (status: current).","x":-400,"y":1200,"width":280,"height":90},
+{{/if}}
+{{#if modules.courses}}
+		{"id":"courses-overview","type":"text","text":"**[[courses-overview|All courses]]**\nEvery course at a glance.","x":540,"y":820,"width":280,"height":90},
+{{#each courses}}
+		{"id":"course-{{course.slug}}","type":"text","text":"**[[{{course.folder}}/{{course.slug}}|{{course.short}}]]**\n{{course.name}}","x":-40,"y":1{{@index}}00,"width":280,"height":90,"color":"{{course.colour}}"},
+{{/each}}
+{{/if}}
+{{#if modules.resources}}
+		{"id":"res-links","type":"text","text":"**[[resources/sources-and-links|Sources and links]]**\nWhere course material lives online.","x":320,"y":1000,"width":280,"height":90},
+		{"id":"res-ta","type":"text","text":"**[[resources/ta-websites-log|TA websites]]**\nAssistant and TA pages, with verdicts.","x":320,"y":1100,"width":280,"height":90},
+		{"id":"res-verify","type":"text","text":"**[[resources/course-verification|Course facts checked]]**\nClaims, checks, results.","x":320,"y":1200,"width":280,"height":90},
+{{/if}}
+		{"id":"agent-start","type":"text","text":"**[[_agent/agent-start|Agent start]]**\nRead order for every agent.","x":-1120,"y":1730,"width":280,"height":90},
+		{"id":"agent-rules","type":"text","text":"**[[_agent/rules|Rules]]**\nStanding rules, integrity per course.","x":-780,"y":1730,"width":280,"height":90},
+		{"id":"agent-conventions","type":"text","text":"**[[_agent/CONVENTIONS|Conventions]]**\nWhere things go (routing table).","x":-440,"y":1730,"width":280,"height":90},
+		{"id":"agent-handbook","type":"text","text":"**[[_agent/system-handbook|System handbook]]**\nEvery component and where it runs.","x":-100,"y":1730,"width":280,"height":90},
+		{"id":"agent-tools","type":"text","text":"**[[_agent/tools-and-environment|Tools]]**\nTool tricks and gotchas.","x":240,"y":1730,"width":280,"height":90},
+		{"id":"inbox","type":"text","text":"**[[inbox/inbox|Inbox]]**\nUnsorted drops; an agent sorts them.","x":-480,"y":820,"width":280,"height":90},
+		{"id":"where","type":"text","text":"**[[where-to-find-what|Where to find what]]**\n\"I want ... -> open ...\"","x":200,"y":820,"width":280,"height":90},
+		{"id":"home","type":"text","text":"**[[Home|Home]]**\nThe dashboard.","x":-140,"y":820,"width":280,"height":90},
+		{"id":"title","type":"text","text":"# {{university.short}} {{term.label}}: map of the vault\nGenerated by Uni OS from the enabled modules. Each card links to its note.","x":-600,"y":680,"width":1200,"height":100}
+	],
+	"edges":[
+{{#if modules.student-model}}
+		{"id":"e-me","fromNode":"home","fromSide":"bottom","toNode":"g-me","toSide":"top"},
+{{/if}}
+{{#if modules.planning}}
+		{"id":"e-semester","fromNode":"home","fromSide":"bottom","toNode":"g-semester","toSide":"top"},
+{{/if}}
+{{#if modules.progress}}
+		{"id":"e-progress","fromNode":"home","fromSide":"bottom","toNode":"g-progress","toSide":"top"},
+{{/if}}
+{{#if modules.courses}}
+		{"id":"e-courses","fromNode":"home","fromSide":"bottom","toNode":"g-courses","toSide":"top"},
+{{/if}}
+{{#if modules.resources}}
+		{"id":"e-resources","fromNode":"home","fromSide":"bottom","toNode":"g-resources","toSide":"top"},
+{{/if}}
+		{"id":"e-agent","fromNode":"home","fromSide":"left","toNode":"g-agent","toSide":"top"}
+	]
+}

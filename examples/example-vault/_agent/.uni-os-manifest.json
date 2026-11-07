@@ -1,0 +1,967 @@
+{
+  "_generated": "do not edit; maintained by uni-os (what it installed, to detect your edits)",
+  "schema": 1,
+  "framework_version": "0.1.0",
+  "updated": "2026-11-07",
+  "modules": {
+    "check-in": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "cockpit": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "core": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "courses": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "daily-prep": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "error-logs": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "exercise-help": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "experiments": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "handwritten-notes": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "heartbeat": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "inbox-sync": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "lecture-rundowns": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "notifications": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "obsidian": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "planning": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "progress": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "quiz-coaching": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "resources": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "roles": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "scheduler-local": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "student-model": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    },
+    "study-pages": {
+      "status": "enabled",
+      "since": "2026-11-07"
+    }
+  },
+  "dirs": {
+    "AD/AD assignments": "courses",
+    "AD/AD handwritten": "handwritten-notes",
+    "AD/AD slides & script": "courses",
+    "DM/DM assignments": "courses",
+    "DM/DM handwritten": "handwritten-notes",
+    "DM/DM script": "courses",
+    "LA/LA assignments": "courses",
+    "LA/LA handwritten": "handwritten-notes",
+    "LA/LA plan & notes": "courses",
+    "PROG/PROG assignments": "courses",
+    "PROG/PROG handwritten": "handwritten-notes",
+    "PROG/PROG slides": "courses"
+  },
+  "files": {
+    ".obsidian/plugins/uni-os-cockpit/main.js": {
+      "module": "cockpit",
+      "source": "cockpit/vault/.obsidian/plugins/uni-os-cockpit/main.js",
+      "sha256": "6023784f9835cf130bc263b95f9c3b0678c2caf5984ec062842c50a9a6ee0131",
+      "verbatim": true
+    },
+    ".obsidian/plugins/uni-os-cockpit/manifest.json": {
+      "module": "cockpit",
+      "source": "cockpit/vault/.obsidian/plugins/uni-os-cockpit/manifest.json",
+      "sha256": "13b5f8e316c094bb7f7215db412204d34932fc14f45721814385bb684633dd20",
+      "verbatim": true
+    },
+    ".obsidian/plugins/uni-os-cockpit/styles.css": {
+      "module": "cockpit",
+      "source": "cockpit/vault/.obsidian/plugins/uni-os-cockpit/styles.css",
+      "sha256": "e12a2644ecaac1885ad4f0823d95c1f025a10d5f755b0b8e8b31072ac7318b22",
+      "verbatim": true
+    },
+    ".obsidian/snippets/uni-os.css": {
+      "module": "obsidian",
+      "source": "obsidian/vault/.obsidian/snippets/uni-os.css",
+      "sha256": "d5424c103ece64396178ed6d1e896f81e5b86aa1f40330f5d3cd97c4c0790ec2"
+    },
+    "AD/ad-error-log.md": {
+      "module": "error-logs",
+      "source": "error-logs/vault/{{course.folder}}/{{error_log.file}}",
+      "sha256": "72e0e690ee8400f8e493defd8dbf1250716238a78c93682747266fcb0de5b594"
+    },
+    "AD/ad.md": {
+      "module": "courses",
+      "source": "courses/vault/{{course.folder}}/{{course.slug}}.md",
+      "sha256": "70d54c998bfb03bfacdf23e4c0d9de9c4b0eeabf399008ebbe36cb4b7043108f"
+    },
+    "AD/backlog.md": {
+      "module": "courses",
+      "source": "courses/vault/{{course.folder}}/backlog.md",
+      "sha256": "bd93074f4947e263c2882893c74728a6b808830402eb26d9412adc9a572c4145"
+    },
+    "AD/notes/README.md": {
+      "module": "courses",
+      "source": "courses/vault/{{course.folder}}/notes/README.md",
+      "sha256": "fa20c6aaec51c49dc481e9830062bae6c3f1248f0e50923c98c106a4fa4e0e9c"
+    },
+    "AD/quiz-prep/ad-quiz-prep.md": {
+      "module": "quiz-coaching",
+      "source": "quiz-coaching/vault/{{course.folder}}/quiz-prep/{{course.slug}}-quiz-prep.md",
+      "sha256": "9476fa8ccf7fdad2b295b7d198607975d8635225792f79bfa34d7cc50f3a2f12"
+    },
+    "AD/reference/ad-course-guide.md": {
+      "module": "courses",
+      "source": "courses/vault/{{course.folder}}/reference/{{course.slug}}-course-guide.md",
+      "sha256": "b153a59c6b16ed60ad9785a1570c36acbee49eadd469ab74a38906c9975de6fa"
+    },
+    "AD/reference/ad-topic-plan.md": {
+      "module": "courses",
+      "source": "courses/vault/{{course.folder}}/reference/{{course.slug}}-topic-plan.md",
+      "sha256": "c3ea101000a9dc12ab289d81e699d7bd271415e8998c3c99f038712a9edbca66"
+    },
+    "AGENTS.md": {
+      "module": "core",
+      "source": "core/vault/AGENTS.md",
+      "sha256": "8c543db4f6f4252dffaf47c12b522a3fecc892075989122a9d9ec3a7c232e96f"
+    },
+    "CLAUDE.md": {
+      "module": "core",
+      "source": "core/vault/CLAUDE.md",
+      "sha256": "8eef0a4ed1eec312fd01e80575a086aa58231b519af77d642e706fee992dadb1"
+    },
+    "DM/backlog.md": {
+      "module": "courses",
+      "source": "courses/vault/{{course.folder}}/backlog.md",
+      "sha256": "8a7c762125fd1a9ed24330cd802962c4f2c4bc857db0dcca9cdeb5f765931faf"
+    },
+    "DM/dm-error-log.md": {
+      "module": "error-logs",
+      "source": "error-logs/vault/{{course.folder}}/{{error_log.file}}",
+      "sha256": "d56c25f50292342748a2fd8873f25b5cf40198ed52216439956afd08dddef5a9"
+    },
+    "DM/dm.md": {
+      "module": "courses",
+      "source": "courses/vault/{{course.folder}}/{{course.slug}}.md",
+      "sha256": "6d45fa77fa5130827ae010757fc24bfe1e5f8fe443719c1d6b5527e15ebdba01"
+    },
+    "DM/notes/README.md": {
+      "module": "courses",
+      "source": "courses/vault/{{course.folder}}/notes/README.md",
+      "sha256": "87aab23b1d9627586d82415dabf3ebd284c39391b7a044db40f6b9fba9607a69"
+    },
+    "DM/quiz-prep/dm-quiz-prep.md": {
+      "module": "quiz-coaching",
+      "source": "quiz-coaching/vault/{{course.folder}}/quiz-prep/{{course.slug}}-quiz-prep.md",
+      "sha256": "050184f239334edf4f1071bd6ce1612b19a471e0529099c7c9c5f6f016c56781"
+    },
+    "DM/reference/dm-course-guide.md": {
+      "module": "courses",
+      "source": "courses/vault/{{course.folder}}/reference/{{course.slug}}-course-guide.md",
+      "sha256": "4b28ef1e894309333f8d5af91e433b84e46df70b73736263cabb4dc5b8ac0422"
+    },
+    "DM/reference/dm-topic-plan.md": {
+      "module": "courses",
+      "source": "courses/vault/{{course.folder}}/reference/{{course.slug}}-topic-plan.md",
+      "sha256": "c587afed5bc9720b6eaa11895eb7d580f1d66efd8b517574bfb2862eaf3a0e50"
+    },
+    "Home.md": {
+      "module": "core",
+      "source": "core/vault/Home.md",
+      "sha256": "f9538570a1508d64b512596e177c6eb38a6e425757428f756840e4a16fa71312"
+    },
+    "LA/backlog.md": {
+      "module": "courses",
+      "source": "courses/vault/{{course.folder}}/backlog.md",
+      "sha256": "961225a4eb468e0898efc08bb65be3fa07db4670e39c1325377ffb157986a077"
+    },
+    "LA/la-error-log.md": {
+      "module": "error-logs",
+      "source": "error-logs/vault/{{course.folder}}/{{error_log.file}}",
+      "sha256": "709c674aac86d9ea5763867586f55b06648ebef76346a2ea80d304b79a915835"
+    },
+    "LA/la.md": {
+      "module": "courses",
+      "source": "courses/vault/{{course.folder}}/{{course.slug}}.md",
+      "sha256": "b615b8934cf271c62913f4ddedd63c1e756491de16aed92e61e53e0d8fb2a849"
+    },
+    "LA/notes/README.md": {
+      "module": "courses",
+      "source": "courses/vault/{{course.folder}}/notes/README.md",
+      "sha256": "960390ad32523ec022e8eca03c14b24b38e798dd0492c34a1476a7e6b6084371"
+    },
+    "LA/quiz-prep/la-quiz-prep.md": {
+      "module": "quiz-coaching",
+      "source": "quiz-coaching/vault/{{course.folder}}/quiz-prep/{{course.slug}}-quiz-prep.md",
+      "sha256": "037854cfb588b485f653f6e19758933449dc8d7805c674b8c85d515e7ae70604"
+    },
+    "LA/reference/la-course-guide.md": {
+      "module": "courses",
+      "source": "courses/vault/{{course.folder}}/reference/{{course.slug}}-course-guide.md",
+      "sha256": "35f9f2c4796632c034477c3fd26313b268b882bd91bb0c68bf4fa61839ebfba6"
+    },
+    "LA/reference/la-topic-plan.md": {
+      "module": "courses",
+      "source": "courses/vault/{{course.folder}}/reference/{{course.slug}}-topic-plan.md",
+      "sha256": "7ca43d037cfeb05b66102308384cfef8b1b7566b6d1ef3fac59ae5dbfb6fd049"
+    },
+    "PROG/backlog.md": {
+      "module": "courses",
+      "source": "courses/vault/{{course.folder}}/backlog.md",
+      "sha256": "709cd6f1bab1cc035f4709a70e2f1e1628919249112afd709d13968447e35292"
+    },
+    "PROG/notes/README.md": {
+      "module": "courses",
+      "source": "courses/vault/{{course.folder}}/notes/README.md",
+      "sha256": "308ca9ee21e368e5b3024bc64becb1659a0be8054c165b0bfc9b1ef52003509e"
+    },
+    "PROG/prog-error-log-programming.md": {
+      "module": "error-logs",
+      "source": "error-logs/vault/{{course.folder}}/{{error_log.file}}",
+      "sha256": "eee10ecc1a17339ec90f83ac71e5629f9683d8272bb023ce1862622eee16fc85"
+    },
+    "PROG/prog-error-log-theory.md": {
+      "module": "error-logs",
+      "source": "error-logs/vault/{{course.folder}}/{{error_log.file}}",
+      "sha256": "7ec9596c1e4361c3e4a714d3386677438d703e46708bb27c258dce4efc56cc3d"
+    },
+    "PROG/prog.md": {
+      "module": "courses",
+      "source": "courses/vault/{{course.folder}}/{{course.slug}}.md",
+      "sha256": "3fb47e8eb02b6ecd8b822f4609b8008feec6fbe932b581ead73b65ba32e30780"
+    },
+    "PROG/quiz-prep/prog-quiz-prep.md": {
+      "module": "quiz-coaching",
+      "source": "quiz-coaching/vault/{{course.folder}}/quiz-prep/{{course.slug}}-quiz-prep.md",
+      "sha256": "1a107e1b74f6c876d68a3a7b1cca4f45e84cc596e547c9c0f690f859d68237f8"
+    },
+    "PROG/reference/prog-course-guide.md": {
+      "module": "courses",
+      "source": "courses/vault/{{course.folder}}/reference/{{course.slug}}-course-guide.md",
+      "sha256": "401d1babe49d6b1f3b2f62e1671be13248a0fd5e7634301504cbc1ba330d8c45"
+    },
+    "PROG/reference/prog-topic-plan.md": {
+      "module": "courses",
+      "source": "courses/vault/{{course.folder}}/reference/{{course.slug}}-topic-plan.md",
+      "sha256": "16fc69903a42b670a28b52ef039fb7c8c9115d7bab1cec0557e4dd6d7e2b8a2b"
+    },
+    "README.md": {
+      "module": "core",
+      "source": "core/vault/README.md",
+      "sha256": "cba11ea70e2bdeb8877494159444e439df8578f9f67e085e49bd732107ff586a"
+    },
+    "_agent/CONVENTIONS.md": {
+      "module": "core",
+      "source": "core/vault/_agent/CONVENTIONS.md",
+      "sha256": "21e8378bba1e6642a4318e07e9441e9472a39690c0f49c32906f3d4f9e5d41c6"
+    },
+    "_agent/agent-start.md": {
+      "module": "core",
+      "source": "core/vault/_agent/agent-start.md",
+      "sha256": "dea569878e190752c95042fab0ce3b781d58af99797e86fa74ec9498d1ec21e6"
+    },
+    "_agent/cockpit/README.md": {
+      "module": "cockpit",
+      "source": "cockpit/vault/_agent/cockpit/README.md",
+      "sha256": "475891a139c533b3b77aac24e071be7bd5e0f24148e0cc08076a99ff9d7dc4d9"
+    },
+    "_agent/cockpit/assistant-prompt.md": {
+      "module": "cockpit",
+      "source": "cockpit/vault/_agent/cockpit/assistant-prompt.md",
+      "sha256": "59c24accc67d02b538f11cf62e40728fcf0c8486af83449fa12a490b74a08638"
+    },
+    "_agent/coordinator-state.md": {
+      "module": "roles",
+      "source": "roles/vault/_agent/coordinator-state.md",
+      "sha256": "10418cef2d209c307997fabb6ff0303795a319b0ec321ca538c1551de31fd511"
+    },
+    "_agent/daily-prep/RUNBOOK.md": {
+      "module": "daily-prep",
+      "source": "daily-prep/vault/_agent/daily-prep/RUNBOOK.md",
+      "sha256": "5cfa0139fcd27165b09f1e6c25007b9ff1631240830e3e8cf2cbc4ff600552a7"
+    },
+    "_agent/daily-prep/daily-prep-log.md": {
+      "module": "daily-prep",
+      "source": "daily-prep/vault/_agent/daily-prep/daily-prep-log.md",
+      "sha256": "1a6bec9ded654e18351f2fc0db7c9d3dc02a44cbdf4a1ac4993b57124bed3764"
+    },
+    "_agent/daily-prep/state.json": {
+      "module": "daily-prep",
+      "source": "daily-prep/vault/_agent/daily-prep/state.json",
+      "sha256": "f7c782b4d3f512852e3065f87ac35a22876cc9bf2a0171fe17f876c7bbea1023",
+      "verbatim": true
+    },
+    "_agent/handoffs/README.md": {
+      "module": "roles",
+      "source": "roles/vault/_agent/handoffs/README.md",
+      "sha256": "da52fe931441cd6f6ec376eff899952830d1be3954f22639957719f60579fd44"
+    },
+    "_agent/handoffs/_template.md": {
+      "module": "roles",
+      "source": "roles/vault/_agent/handoffs/_template.md",
+      "sha256": "b0dd87645894bbde9d72c02cf5608f82ad97086cb9d349ddc273c7936abd0605"
+    },
+    "_agent/handover/README.md": {
+      "module": "roles",
+      "source": "roles/vault/_agent/handover/README.md",
+      "sha256": "4f82bcdac161cf935cc8611025658e03baad474a149521e99f870bdd0a093775"
+    },
+    "_agent/handover/_template/BRIEF.md": {
+      "module": "roles",
+      "source": "roles/vault/_agent/handover/_template/BRIEF.md",
+      "sha256": "6ea875e3c3c5866b8b39f796b6554dcaa00ca898bdc1f9d68285301588c018c3"
+    },
+    "_agent/handover/_template/HANDOVER.md": {
+      "module": "roles",
+      "source": "roles/vault/_agent/handover/_template/HANDOVER.md",
+      "sha256": "ed81d335384faa6e0c1e7daff463dbee943c4cee448897f9557a3886d336b979"
+    },
+    "_agent/handover/_template/proposal.md": {
+      "module": "roles",
+      "source": "roles/vault/_agent/handover/_template/proposal.md",
+      "sha256": "6161d7daddc6399b7e14e45192be4f5bfc04bc812d9cf6f963f6996155ddbaa7"
+    },
+    "_agent/handover/_template/shared-rules.md": {
+      "module": "roles",
+      "source": "roles/vault/_agent/handover/_template/shared-rules.md",
+      "sha256": "180d9ef2e8e08ea0948339c76e92b2e89664de25d599d4482343f7f958ba3f91"
+    },
+    "_agent/handwritten-notes.md": {
+      "module": "handwritten-notes",
+      "source": "handwritten-notes/vault/_agent/handwritten-notes.md",
+      "sha256": "aed63ca7844ad1e76b5fac28b0ae16081577c4e9655b336c82b52daefda2914b"
+    },
+    "_agent/heartbeat/README.md": {
+      "module": "heartbeat",
+      "source": "heartbeat/vault/_agent/heartbeat/README.md",
+      "sha256": "514980a9949c04219219284974a42cefb0d734b5f6839ae6db0183e7c4fc81c9"
+    },
+    "_agent/heartbeat/duties.md": {
+      "module": "heartbeat",
+      "source": "heartbeat/vault/_agent/heartbeat/duties.md",
+      "sha256": "7fcc317350dd547b05aab0b27c3d90f07aa0bc8f42881b8ccd9e04961f250be9"
+    },
+    "_agent/heartbeat/flags.json": {
+      "module": "heartbeat",
+      "source": "heartbeat/vault/_agent/heartbeat/flags.json",
+      "sha256": "e8ef83e0c9c17c6c8cc8b695b16a3f565e8e08981af85aa7c2ce6302e5140e9b",
+      "verbatim": true
+    },
+    "_agent/heartbeat/heartbeat-log.md": {
+      "module": "heartbeat",
+      "source": "heartbeat/vault/_agent/heartbeat/heartbeat-log.md",
+      "sha256": "49b7920b6075958057d652f56f36545b48d5e4f3db2507795641cc018ec92909"
+    },
+    "_agent/heartbeat/requests.md": {
+      "module": "heartbeat",
+      "source": "heartbeat/vault/_agent/heartbeat/requests.md",
+      "sha256": "276bfe41ef69ac98de5e6f5db444528fcd77dd8b181d6e60beaefc708b42bcf6"
+    },
+    "_agent/heartbeat/state.json": {
+      "module": "heartbeat",
+      "source": "heartbeat/vault/_agent/heartbeat/state.json",
+      "sha256": "df2daa69aa0e4f17a3342232628981e018bd06e2cfe2a837924f45ef5bea4a8d",
+      "verbatim": true
+    },
+    "_agent/inbox-applied/README.md": {
+      "module": "inbox-sync",
+      "source": "inbox-sync/vault/_agent/inbox-applied/README.md",
+      "sha256": "8074c770fd68fc0932ba3b4245844415294d0659f69b6ed6d120bf8064884829"
+    },
+    "_agent/inbox-sync/README.md": {
+      "module": "inbox-sync",
+      "source": "inbox-sync/vault/_agent/inbox-sync/README.md",
+      "sha256": "f1564d34302370e6fc409773bd4c954dd115f121ae1e2214751f97a18ab4ae18"
+    },
+    "_agent/inbox-sync/cloud-session-instructions.md": {
+      "module": "inbox-sync",
+      "source": "inbox-sync/vault/_agent/inbox-sync/cloud-session-instructions.md",
+      "sha256": "8594dbf98e7a2d9683c485b186dee59e7e692316fb113529738a9df91881d812"
+    },
+    "_agent/inbox-sync/note-template.md": {
+      "module": "inbox-sync",
+      "source": "inbox-sync/vault/_agent/inbox-sync/note-template.md",
+      "sha256": "3d3608fdb20c73cf86627e94be60bc27b7a029a4e7bfa2b460e85a126039f8b5"
+    },
+    "_agent/jobs/README.md": {
+      "module": "scheduler-local",
+      "source": "scheduler-local/vault/_agent/jobs/README.md",
+      "sha256": "7aa9e9b9612595b47c36bd2bf01d3fa7f6b084ed52eeb221354a08752a78e37e"
+    },
+    "_agent/jobs/_header.md": {
+      "module": "scheduler-local",
+      "source": "scheduler-local/vault/_agent/jobs/_header.md",
+      "sha256": "af5324c8bf83bc7c6c639a0616278ba9135fcafb64d96cf1261403d0f8a79a42"
+    },
+    "_agent/jobs/check-in/job.conf": {
+      "module": "check-in",
+      "source": "check-in/jobs/check-in/job.conf",
+      "sha256": "f13b73a7189d94f9c01f12b44c81ae263ea41674ec6a543c0a420ec9f1cf53f8"
+    },
+    "_agent/jobs/check-in/prompt.md": {
+      "module": "check-in",
+      "source": "check-in/jobs/check-in/prompt.md",
+      "sha256": "aff075fb8e60433f28e758daf3c18c6591a4eb85cd9d33b4ccaa542d64fb21a3"
+    },
+    "_agent/jobs/daily-study-prep/job.conf": {
+      "module": "daily-prep",
+      "source": "daily-prep/jobs/daily-study-prep/job.conf",
+      "sha256": "f49c53578b8a7fe4edbd13e39b73efb989c1f561ba9e7c806e13bc7d029c62fd"
+    },
+    "_agent/jobs/daily-study-prep/prompt.md": {
+      "module": "daily-prep",
+      "source": "daily-prep/jobs/daily-study-prep/prompt.md",
+      "sha256": "bde944fa07e0811cf6644892ebe7a35a2660d6955245db47478acd4d50afd79c"
+    },
+    "_agent/jobs/deadline-audit/job.conf": {
+      "module": "planning",
+      "source": "planning/jobs/deadline-audit/job.conf",
+      "sha256": "282b03a7f33d50ce61d512a4f64467251e695f3124a4579fc085ddcd1c2a92f8"
+    },
+    "_agent/jobs/deadline-audit/prompt.md": {
+      "module": "planning",
+      "source": "planning/jobs/deadline-audit/prompt.md",
+      "sha256": "b77999e2613615ef34ee0d09927cf5fcd7d906bfb751460b82263ec064921586"
+    },
+    "_agent/jobs/heartbeat-ask/job.conf": {
+      "module": "heartbeat",
+      "source": "heartbeat/jobs/heartbeat-ask/job.conf",
+      "sha256": "c7533a8bb5d1863a7fc75e173ec7ae84a73de3c34ccac23534d7fdb177240371"
+    },
+    "_agent/jobs/heartbeat-ask/prompt.md": {
+      "module": "heartbeat",
+      "source": "heartbeat/jobs/heartbeat-ask/prompt.md",
+      "sha256": "bfa4c8bbdc8b59dfcaf88fb8ff8217a779c1b7e781f5587564f5ad1a14af35f0"
+    },
+    "_agent/jobs/heartbeat-watch/job.conf": {
+      "module": "heartbeat",
+      "source": "heartbeat/jobs/heartbeat-watch/job.conf",
+      "sha256": "da8bb03e017bab5c247b1764cd69f0519d85d8cb20cdce0a96d88eb0793eb1c5"
+    },
+    "_agent/jobs/heartbeat-weekend/job.conf": {
+      "module": "heartbeat",
+      "source": "heartbeat/jobs/heartbeat-weekend/job.conf",
+      "sha256": "f74fce80cd2131a009f3ce160f5a1004b4693ce85232925238de4b6a8260ef38"
+    },
+    "_agent/jobs/heartbeat-weekend/prompt.md": {
+      "module": "heartbeat",
+      "source": "heartbeat/jobs/heartbeat-weekend/prompt.md",
+      "sha256": "2b7af631180f7414227d4eb377c943e4c27f0ae9c4a9c4cc7ce67577fdcd8c17"
+    },
+    "_agent/jobs/heartbeat/job.conf": {
+      "module": "heartbeat",
+      "source": "heartbeat/jobs/heartbeat/job.conf",
+      "sha256": "4e232a39e8b98432fdc5cf8e132130999c83c2f4391663fc469fe8cc1ff3662b"
+    },
+    "_agent/jobs/heartbeat/prompt.md": {
+      "module": "heartbeat",
+      "source": "heartbeat/jobs/heartbeat/prompt.md",
+      "sha256": "5fe04d6cf947728e2d4e902bef7587db77e1877bdbdb78c50cbdd21b7d5e7966"
+    },
+    "_agent/jobs/inbox-poll/job.conf": {
+      "module": "inbox-sync",
+      "source": "inbox-sync/jobs/inbox-poll/job.conf",
+      "sha256": "158ab3d2914e8c748e85d3e1129d8ef4a246fa3621f2e7e7a61c0ddf60a6eb7a"
+    },
+    "_agent/jobs/inbox-sync/job.conf": {
+      "module": "inbox-sync",
+      "source": "inbox-sync/jobs/inbox-sync/job.conf",
+      "sha256": "aaf7059db432df807e99af2b5d7a2193fbc1c1e9daf371cb33e0dff4e2ccbab7"
+    },
+    "_agent/jobs/inbox-sync/prompt.md": {
+      "module": "inbox-sync",
+      "source": "inbox-sync/jobs/inbox-sync/prompt.md",
+      "sha256": "f1ed0a97e3b71fc80e37d7a7ca79dadfa47c8e20359952729ec2c412aa0ef476"
+    },
+    "_agent/jobs/lecture-skim/job.conf": {
+      "module": "lecture-rundowns",
+      "source": "lecture-rundowns/jobs/lecture-skim/job.conf",
+      "sha256": "490048508aa16177b8ff1cb661212ae00055c9910299ce4c99e0a5dee7642bff"
+    },
+    "_agent/jobs/lecture-skim/prompt.md": {
+      "module": "lecture-rundowns",
+      "source": "lecture-rundowns/jobs/lecture-skim/prompt.md",
+      "sha256": "0cc9ad6b0baaf885a8c8d635dab1e9646cdf2833c34fcb0a002140833cd8e4d4"
+    },
+    "_agent/jobs/outcome-checks/job.conf": {
+      "module": "notifications",
+      "source": "notifications/jobs/outcome-checks/job.conf",
+      "sha256": "0e4bef44b2d328708472acf22b4d2d8bbbdb8a0e708ccf0d3b38f81d70526adc"
+    },
+    "_agent/jobs/quiz-prep/job.conf": {
+      "module": "quiz-coaching",
+      "source": "quiz-coaching/jobs/quiz-prep/job.conf",
+      "sha256": "38fd823be2ed7aa6c93bd37d07873ae69f2a0ee71779a676b080c4d826226bbb"
+    },
+    "_agent/jobs/quiz-prep/prompt.md": {
+      "module": "quiz-coaching",
+      "source": "quiz-coaching/jobs/quiz-prep/prompt.md",
+      "sha256": "93dea7b39ddb77da2cf79b1e80813cf6b66a2c141d653a6a4bcd1e0b32fe3576"
+    },
+    "_agent/jobs/study-prep-morning-check/job.conf": {
+      "module": "daily-prep",
+      "source": "daily-prep/jobs/study-prep-morning-check/job.conf",
+      "sha256": "924c3693220d05c3b2011fb0279ab06dbd63103fea35fea6507a9411e26e809b"
+    },
+    "_agent/jobs/study-prep-morning-check/prompt.md": {
+      "module": "daily-prep",
+      "source": "daily-prep/jobs/study-prep-morning-check/prompt.md",
+      "sha256": "31d47c5010f850caa67efeccd946c23a0b10d136359fc452a91afb7b5e012bc6"
+    },
+    "_agent/jobs/waiting-on-you/job.conf": {
+      "module": "roles",
+      "source": "roles/jobs/waiting-on-you/job.conf",
+      "sha256": "33558b455eaba2432801e7a47cbe5e3316b54ac399bff15d8227710c5bba096b"
+    },
+    "_agent/jobs/waiting-on-you/prompt.md": {
+      "module": "roles",
+      "source": "roles/jobs/waiting-on-you/prompt.md",
+      "sha256": "4b4c5320d0d91bfab05cc5e9a12d7a8d823672e87bd7aff37e7490b385772298"
+    },
+    "_agent/jobs/week-page/job.conf": {
+      "module": "check-in",
+      "source": "check-in/jobs/week-page/job.conf",
+      "sha256": "b1c17902fa84f09a06d6518adc8e12666ef8bb39e48127abe8a30df06034d4f7"
+    },
+    "_agent/jobs/week-page/prompt.md": {
+      "module": "check-in",
+      "source": "check-in/jobs/week-page/prompt.md",
+      "sha256": "af039634e495c809136ac2d2855ee09f3f297ef4e010dc9b324bf90f8a724377"
+    },
+    "_agent/logs/README.md": {
+      "module": "scheduler-local",
+      "source": "scheduler-local/vault/_agent/logs/README.md",
+      "sha256": "eeeb17909fd8486535c9cd3f2a28a79589ee84e3f3c10ea96ed316895224967d"
+    },
+    "_agent/logs/inbox-sync-log.md": {
+      "module": "inbox-sync",
+      "source": "inbox-sync/vault/_agent/logs/inbox-sync-log.md",
+      "sha256": "14c0a8bae4e5b3513764990d4cb9aa72b8a268516354ddde4c7b80f2ae79e5dd"
+    },
+    "_agent/notifications.md": {
+      "module": "notifications",
+      "source": "notifications/vault/_agent/notifications.md",
+      "sha256": "4d978f8049292b93f25cce6289a9fe8820f1c02994eb27ca2c69d27082657d12"
+    },
+    "_agent/obsidian/app-settings.json": {
+      "module": "obsidian",
+      "source": "obsidian/vault/_agent/obsidian/app-settings.json",
+      "sha256": "7257784fae65504e280fadf923958e5035bb06c2a9979fd5a2a5e229d9bf700d"
+    },
+    "_agent/obsidian/bookmarks.json": {
+      "module": "obsidian",
+      "source": "obsidian/vault/_agent/obsidian/bookmarks.json",
+      "sha256": "962825f1483252dffba332deee832a761e1263bfbf11390e350f5561d317598e"
+    },
+    "_agent/obsidian/graph-groups.json": {
+      "module": "obsidian",
+      "source": "obsidian/vault/_agent/obsidian/graph-groups.json",
+      "sha256": "28bcd6473cd0fb1a444bdb6aaa3a33f0d4dbfac810d67d33d29fccb1483582d9"
+    },
+    "_agent/obsidian/obsidian-setup.md": {
+      "module": "obsidian",
+      "source": "obsidian/vault/_agent/obsidian/obsidian-setup.md",
+      "sha256": "43c0a3ab3b83c06f1be17991036bd0ab8939995d00414eee31b62a9b18bca57a"
+    },
+    "_agent/progress-tracking.md": {
+      "module": "progress",
+      "source": "progress/vault/_agent/progress-tracking.md",
+      "sha256": "5624c53a26d6c5a251fd00e71805969dd55d266ecf74a2e88675d6544ead7388"
+    },
+    "_agent/roles/README.md": {
+      "module": "roles",
+      "source": "roles/vault/_agent/roles/README.md",
+      "sha256": "71e84eb5f69f2fcbcd4ed8c4f3e0e79269a7321d2f7f7e49687d322170be6e2f"
+    },
+    "_agent/roles/coordinator.md": {
+      "module": "roles",
+      "source": "roles/roles/coordinator.md",
+      "sha256": "9ec25f2956a85ccda5ba392bd22c42b3ebeef2102ebf8c41062a2666cbe04f39"
+    },
+    "_agent/roles/exercise-help.md": {
+      "module": "exercise-help",
+      "source": "exercise-help/roles/exercise-help.md",
+      "sha256": "e07a3dd78607104d39deabdd1224d6eaa9ed94a51f9d7349e7115f7ba061d6b0"
+    },
+    "_agent/roles/lecture-rundown.md": {
+      "module": "lecture-rundowns",
+      "source": "lecture-rundowns/roles/lecture-rundown.md",
+      "sha256": "9a8da7f4907a6db6b1dce9a5f1b9eddc2af1262b2b7a7ef1fe2835660284bef6"
+    },
+    "_agent/roles/plan-and-progress.md": {
+      "module": "planning",
+      "source": "planning/roles/plan-and-progress.md",
+      "sha256": "b46774a5ccb8bb2271a2ac96c3c3b24e40c2df1dd81c8daff1e190683c7b0bb6"
+    },
+    "_agent/roles/quiz-coach.md": {
+      "module": "quiz-coaching",
+      "source": "quiz-coaching/roles/quiz-coach.md",
+      "sha256": "e60e646347ee5ccdfe3a1fc1655434b1e3ea7c49253c6efa156fec0d01c92c50"
+    },
+    "_agent/rules.md": {
+      "module": "core",
+      "source": "core/vault/_agent/rules.md",
+      "sha256": "4b930d5292048acdccc106392af63c032e9a7e26f245edd627f97baba0a2188a"
+    },
+    "_agent/skills/course-facts/SKILL.md": {
+      "module": "courses",
+      "source": "courses/skills/course-facts/SKILL.md",
+      "sha256": "17f9364b38ac1a58b57d65a564facc5dd09b43c93a7467053feb8f6605034257"
+    },
+    "_agent/skills/course-facts/references/course-onboarding.md": {
+      "module": "courses",
+      "source": "courses/skills/course-facts/references/course-onboarding.md",
+      "sha256": "a89c694a59fc9fca147cddfe12fcf0c8d0b9605cb059980e1d34a36629eb6655"
+    },
+    "_agent/skills/course-facts/references/rhythm-patterns.md": {
+      "module": "courses",
+      "source": "courses/skills/course-facts/references/rhythm-patterns.md",
+      "sha256": "3fa77fa50f01f3f15ebe94a8199ad37eaaebdaaedb1b4dbe8628dcd8b8e50d44"
+    },
+    "_agent/skills/course-facts/references/verify-a-fact.md": {
+      "module": "courses",
+      "source": "courses/skills/course-facts/references/verify-a-fact.md",
+      "sha256": "2d73db7bff8a18e7456635f7640baa388910943a73fb37490e42bbeeadc6aa07"
+    },
+    "_agent/skills/log-error/SKILL.md": {
+      "module": "error-logs",
+      "source": "error-logs/skills/log-error/SKILL.md",
+      "sha256": "5a2859fedd80399ad77b3a76034adc58c50d9d3125ed856bee76efa7795fb834"
+    },
+    "_agent/skills/read-handwritten-notes/SKILL.md": {
+      "module": "handwritten-notes",
+      "source": "handwritten-notes/skills/read-handwritten-notes/SKILL.md",
+      "sha256": "a10cc8a8870e987add8023ccedf451d6ccf5e86ea93163585efee7182385b316"
+    },
+    "_agent/skills/read-handwritten-notes/scripts/render_pages.py": {
+      "module": "handwritten-notes",
+      "source": "handwritten-notes/skills/read-handwritten-notes/scripts/render_pages.py",
+      "sha256": "d409e8e75ba443458d63d6862f90b23e80427746769974f31fb922c5b9f498d8",
+      "verbatim": true
+    },
+    "_agent/skills/study-page/SKILL.md": {
+      "module": "study-pages",
+      "source": "study-pages/skills/study-page/SKILL.md",
+      "sha256": "2b6794a49cea102497fef6d507047db951a5c30215f2e8875826c79878708735"
+    },
+    "_agent/system-handbook.md": {
+      "module": "core",
+      "source": "core/vault/_agent/system-handbook.md",
+      "sha256": "a80a60533a9c4b35c9627dc09374456844bfefc8c2d7f106ac2eb891196ebde9"
+    },
+    "_agent/tools-and-environment.md": {
+      "module": "core",
+      "source": "core/vault/_agent/tools-and-environment.md",
+      "sha256": "77a20cdb50b8307575fc82558f46a631a4d2f59fc21d1cbb68b1b27c648c71c3"
+    },
+    "_agent/tools/check_study_page.py": {
+      "module": "study-pages",
+      "source": "study-pages/vault/_agent/tools/check_study_page.py",
+      "sha256": "dfc6dea359194479e91d8046dedb8c2be421eef67408946e16effbdc25e10a85",
+      "verbatim": true
+    },
+    "_agent/tools/error_log.py": {
+      "module": "error-logs",
+      "source": "error-logs/vault/_agent/tools/error_log.py",
+      "sha256": "799355e1a5e7dda480a38b7f8249d9281914251871ded9ff523a8c92d5a03782",
+      "verbatim": true
+    },
+    "_agent/tools/html2md.py": {
+      "module": "study-pages",
+      "source": "study-pages/vault/_agent/tools/html2md.py",
+      "sha256": "e8cf5e7685fcc0320349c3c12f78663faabe0d00df89c7591904e89d318d0916",
+      "verbatim": true
+    },
+    "_agent/tools/html2pdf.py": {
+      "module": "study-pages",
+      "source": "study-pages/vault/_agent/tools/html2pdf.py",
+      "sha256": "c955c6f8670e8faff5898a14f2dd66e4ad90ca50a2e14c86d0c31042f521a312",
+      "verbatim": true
+    },
+    "_templates/experiment-block-log.md": {
+      "module": "experiments",
+      "source": "experiments/vault/_templates/experiment-block-log.md",
+      "sha256": "f3588d37e95d7dd3f9ea2f4e681edb4d363d212ade5b2d86ab3af71347060688"
+    },
+    "_templates/experiment-coverage.md": {
+      "module": "experiments",
+      "source": "experiments/vault/_templates/experiment-coverage.md",
+      "sha256": "4ccf2ee3c7b4e31a48fb8610f4f2c5368d35db7b934cd88bd3a973a26486e45f"
+    },
+    "_templates/experiment-plan.md": {
+      "module": "experiments",
+      "source": "experiments/vault/_templates/experiment-plan.md",
+      "sha256": "68242799a04dc2d1138caf92347146e06a0cb48cad65d97ed26f989d6063dc80"
+    },
+    "_templates/hint-page.html": {
+      "module": "exercise-help",
+      "source": "exercise-help/vault/_templates/hint-page.html",
+      "sha256": "34f3e1c9c0212217ddeb163928a34e695638db3f38209493125ec160d597307f",
+      "verbatim": true
+    },
+    "_templates/inbox-note.md": {
+      "module": "core",
+      "source": "core/vault/_templates/inbox-note.md",
+      "sha256": "48c3770e05d1287b4788192f6249360eafa93b34865d93237df45646a9e19184"
+    },
+    "_templates/lecture-note.md": {
+      "module": "core",
+      "source": "core/vault/_templates/lecture-note.md",
+      "sha256": "f664f25caa5fe3d00a0c0640ef174f624491cea343b466b0b75cdc332ffa481c"
+    },
+    "_templates/lecture-recap.md": {
+      "module": "lecture-rundowns",
+      "source": "lecture-rundowns/vault/_templates/lecture-recap.md",
+      "sha256": "c07a4f3f5c12f42c26d3dea4c230228fa94cf5b7ca4dee24744c4922d46fa3a3",
+      "verbatim": true
+    },
+    "_templates/lecture-rundown.md": {
+      "module": "lecture-rundowns",
+      "source": "lecture-rundowns/vault/_templates/lecture-rundown.md",
+      "sha256": "5b95ec68c98f60a30a7c0eccb9bdff574c2c9e24d011aec3ef7976cead7456e8",
+      "verbatim": true
+    },
+    "_templates/lecture-skim.md": {
+      "module": "lecture-rundowns",
+      "source": "lecture-rundowns/vault/_templates/lecture-skim.md",
+      "sha256": "18a77961dcaec64bbab0212baa90b7371f19bdb240b32ddf68e5193915d2c6f5",
+      "verbatim": true
+    },
+    "_templates/mistake-map.md": {
+      "module": "exercise-help",
+      "source": "exercise-help/vault/_templates/mistake-map.md",
+      "sha256": "a3dc7ecb3247ba6ebd5ad1ab6a92aac4e7551af0492695577b5b8da368e4634d",
+      "verbatim": true
+    },
+    "_templates/quiz-prep-sheet.md": {
+      "module": "quiz-coaching",
+      "source": "quiz-coaching/vault/_templates/quiz-prep-sheet.md",
+      "sha256": "0ab398efaa6c27e856e6c7e27bb86b9ca02cc82f6436926a447d08484701a1b7",
+      "verbatim": true
+    },
+    "_templates/quiz-review.md": {
+      "module": "quiz-coaching",
+      "source": "quiz-coaching/vault/_templates/quiz-review.md",
+      "sha256": "a377b036fa21535448088da56fd0829ddffcfe11f1941aa3cc906a600775b543",
+      "verbatim": true
+    },
+    "_templates/study-page.html": {
+      "module": "study-pages",
+      "source": "study-pages/vault/_templates/study-page.html",
+      "sha256": "521492927c372adf06e9462efb8ac922bc3f312e3e24c875a3d1ed2081959e59",
+      "verbatim": true
+    },
+    "_templates/study-page.md": {
+      "module": "core",
+      "source": "core/vault/_templates/study-page.md",
+      "sha256": "c0d5c145d0983587a2a2fa378e63db1ddfb69fa1e1302be342456b5bcc6991e9"
+    },
+    "_templates/topic-summary.md": {
+      "module": "lecture-rundowns",
+      "source": "lecture-rundowns/vault/_templates/topic-summary.md",
+      "sha256": "e5e311865002a86f7bd00a83c8e840daf8a13bafca205372724367c8071f2f3c",
+      "verbatim": true
+    },
+    "_templates/week-page.md": {
+      "module": "progress",
+      "source": "progress/vault/_templates/week-page.md",
+      "sha256": "483739f205d74668cb9f0efa0a904cc3f10d2d080ccfd8bf7cbe6e75df42001d"
+    },
+    "_templates/week-plan.md": {
+      "module": "planning",
+      "source": "planning/vault/_templates/week-plan.md",
+      "sha256": "5f4c20652f84f76c24f26280213e8364a9c5d54e35980d7257740259956c8a2b"
+    },
+    "courses-overview.md": {
+      "module": "courses",
+      "source": "courses/vault/courses-overview.md",
+      "sha256": "3fcce0e7e7f8de4b1a34736ccccd0a1f6e6f10659eecb2f0d7548052ebb70f13"
+    },
+    "inbox/inbox.md": {
+      "module": "core",
+      "source": "core/vault/inbox/inbox.md",
+      "sha256": "2f2f7fb58cd6e547a596ab1968ca98d4ccc6a2adb35997e6b4114309564e40ba"
+    },
+    "me/habits-experiments.md": {
+      "module": "experiments",
+      "source": "experiments/vault/me/habits-experiments.md",
+      "sha256": "036047607632944942f8484d0ade90f0bcc3d9c893d2d2e81e87f997ae80414d"
+    },
+    "me/learning-style.md": {
+      "module": "student-model",
+      "source": "student-model/vault/me/learning-style.md",
+      "sha256": "3cc64a75bd893d90933e926b65f450a3b05522afc6d9db875ae5c91b6bc389c4"
+    },
+    "me/profile.md": {
+      "module": "student-model",
+      "source": "student-model/vault/me/profile.md",
+      "sha256": "9ee8fc59a375035fcad5bff1ca439287a60bf20928b31c5905285aaa1f21d70a"
+    },
+    "me/rhythm-and-habits.md": {
+      "module": "student-model",
+      "source": "student-model/vault/me/rhythm-and-habits.md",
+      "sha256": "1e3d332fcc4b1ddde94e39799c0a73946f803f5c6ae56e1460dd51c63f188f90"
+    },
+    "me/weak-spots.md": {
+      "module": "student-model",
+      "source": "student-model/vault/me/weak-spots.md",
+      "sha256": "9613377ae5301bf5d6b914a0d4610b626b488f1816e6abd08c2c853a9ae8b36f"
+    },
+    "progress/current-status.md": {
+      "module": "progress",
+      "source": "progress/vault/progress/current-status.md",
+      "sha256": "c52a99d5667061886911654fea867cec4770e110290365cb45612a553a27b1b4"
+    },
+    "progress/tracker-log.md": {
+      "module": "progress",
+      "source": "progress/vault/progress/tracker-log.md",
+      "sha256": "80addfcac1d5857ad5d506a1939d4657fa5f990c5f3ec3c2fd7b4660baa80821"
+    },
+    "progress/weeks/README.md": {
+      "module": "progress",
+      "source": "progress/vault/progress/weeks/README.md",
+      "sha256": "40a362bb69417c6d806e697649a5bb3304a414c47f935c0d642d404f3c5fe6d8"
+    },
+    "resources/course-verification.md": {
+      "module": "resources",
+      "source": "resources/vault/resources/course-verification.md",
+      "sha256": "9b02e3f07726889fe52f57efa30dea95223a2ade8aeb2e9336f99449cbdd5ec9"
+    },
+    "resources/sources-and-links.md": {
+      "module": "resources",
+      "source": "resources/vault/resources/sources-and-links.md",
+      "sha256": "c4abaad74ae1a5d2a179b7f6893c7246f09c5dfcaa1546259fc4e84d9c4e3dd6"
+    },
+    "resources/ta-websites-log.md": {
+      "module": "resources",
+      "source": "resources/vault/resources/ta-websites-log.md",
+      "sha256": "c66e378f041999a9c18c41bfb710bcdd4a00d42a1d161cc92544f01dcb7cbde7"
+    },
+    "semester/calendar-and-dates.md": {
+      "module": "planning",
+      "source": "planning/vault/semester/calendar-and-dates.md",
+      "sha256": "a080e3abb52a1bc6f6e4b82dd96109359f7eb0070306e2bb7dcc48309bbeb197"
+    },
+    "semester/experiments/README.md": {
+      "module": "experiments",
+      "source": "experiments/vault/semester/experiments/README.md",
+      "sha256": "60450fc509b57561df69db9d5bbce7abb6aea7bec9612a7d18609e8615359d1e"
+    },
+    "semester/planning-system.md": {
+      "module": "planning",
+      "source": "planning/vault/semester/planning-system.md",
+      "sha256": "d75862d3551fdb650fad5bdfa95af03777c9347c5d54020b8e711d684d6af97a"
+    },
+    "semester/plans/README.md": {
+      "module": "planning",
+      "source": "planning/vault/semester/plans/README.md",
+      "sha256": "51c942b348c709e32e03b761fc0fa4f9380aa5b088b30ed91a64b1b481a9f033"
+    },
+    "semester/plans/exam-phase-plan.md": {
+      "module": "planning",
+      "source": "planning/vault/semester/plans/exam-phase-plan.md",
+      "sha256": "4da32c087b87966fa52db726b0e61a2c5962608c40938e652cd56e14f6440486"
+    },
+    "semester/prep/README.md": {
+      "module": "daily-prep",
+      "source": "daily-prep/vault/semester/prep/README.md",
+      "sha256": "9c12b7348a62ca145249b51f4d912fa85df07b398013e9af4275fcb77dfa8eb6"
+    },
+    "semester/study-approach.md": {
+      "module": "planning",
+      "source": "planning/vault/semester/study-approach.md",
+      "sha256": "c47c1dbe9c0ad44c086353bccf24c4e974fa951bc157eec9176a06f0ca9bc4d1"
+    },
+    "views/Courses.base": {
+      "module": "obsidian",
+      "source": "obsidian/vault/views/Courses.base",
+      "sha256": "922c0207c4dc13f2d320fbf03b2dfa50f4a72faeab50e885104b33defebd3e91"
+    },
+    "views/Error logs.base": {
+      "module": "obsidian",
+      "source": "obsidian/vault/views/Error logs.base",
+      "sha256": "ea25a0ae3e6b4cd90a80a9bb2dce9d40c321c66d3a3ad0ece90c6da0932b92f1"
+    },
+    "views/Inbox.base": {
+      "module": "obsidian",
+      "source": "obsidian/vault/views/Inbox.base",
+      "sha256": "bc6cd3528401b0e936cc0be3d5d00757c8e6f3084e17e49248afb3902bba6663"
+    },
+    "views/Latest.base": {
+      "module": "obsidian",
+      "source": "obsidian/vault/views/Latest.base",
+      "sha256": "c6e92d09b889de01c082c7d17930f20a1d8e018a3578aad8a954ab2ee8a1b56d"
+    },
+    "views/Recently changed.base": {
+      "module": "obsidian",
+      "source": "obsidian/vault/views/Recently changed.base",
+      "sha256": "32e59bbd3c32c369113f4ee558963a53de96514291100559d194960d85165595"
+    },
+    "views/Study pages.base": {
+      "module": "obsidian",
+      "source": "obsidian/vault/views/Study pages.base",
+      "sha256": "a528defed59834c7635b542a7726dbfdb5d8151232b638ee5ed5895e527f8f2a"
+    },
+    "views/Weeks.base": {
+      "module": "obsidian",
+      "source": "obsidian/vault/views/Weeks.base",
+      "sha256": "b0bbb33252a8adbc333d6b08ab23867f80d6e1b39be5ac3166dad96912dae576"
+    },
+    "views/vault-map.canvas": {
+      "module": "obsidian",
+      "source": "obsidian/vault/views/vault-map.canvas",
+      "sha256": "7431ffc88011ed342decad98000638d1873d2cf3379f107c16182460373b46a9"
+    },
+    "where-to-find-what.md": {
+      "module": "core",
+      "source": "core/vault/where-to-find-what.md",
+      "sha256": "6269a221b3039183745df1d7bc12f86aef4807467c2b7665830a77e186980d71"
+    }
+  }
+}

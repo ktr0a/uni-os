@@ -1,0 +1,31 @@
+id = "exercise-help"
+name = "Exercise help (hints only)"
+tier = "standard"
+summary = "An exercise-help role that coaches sheets, assignments and programming tasks by an assistance policy per course and per assessment (solo | hints-only | coach | full; default hints-only): smallest hint first, checks of the student's own steps, HTML hint pages and mistake maps, and an error log kept current without being asked."
+requires = ["core", "courses", "error-logs", "study-pages"]
+recommends = ["roles", "progress", "lecture-rundowns"]
+obsidian = "optional"
+os = ["any"]
+runtime = ["laptop", "cloud", "vm"]
+config_keys = ["study.assistance_default", "course.assistance", "course.assessments", "study.exercise_help.cold_minutes", "study.exercise_help.part_cap_minutes", "study.exercise_help.stuck_bug_minutes", "study.exercise_help.official_solutions_after_attempt", "study.error_logs.retests", "agent.heavy_model", "term.week0_monday"]
+verbatim = ["vault/**/*.html", "vault/_templates/*.md"]
+
+[[roles]]
+id = "exercise-help"
+
+[defaults]
+
+[defaults.agent]
+heavy_model = ""
+
+[defaults.study]
+assistance_default = "hints-only"      # solo | hints-only | coach | full; per course: courses[].assistance; per assessment: courses[].assessments[].assistance
+
+[defaults.study.exercise_help]
+cold_minutes = 25                      # cold attempt before the first hint (the original: 10/20/25-30 min by difficulty in one course, 25-30 elsewhere)
+part_cap_minutes = 45                  # cap per task part (original: 30-45), then the missing idea in one line and move on
+stuck_bug_minutes = 25                 # programming: stuck longer than this on one bug = ask / next hint
+official_solutions_after_attempt = true  # true: point to the official solution of an ungraded task only on explicit request after an own attempt; false: never. Graded work: never.
+
+[defaults.study.error_logs]
+retests = false

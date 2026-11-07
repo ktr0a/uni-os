@@ -1,0 +1,75 @@
+id = "vm"
+name = "Always-on host (cloud VM or home server)"
+tier = "addon"
+summary = "An always-on Linux box (Ubuntu on Google Cloud by default, or WSL2 on a spare laptop) that runs the agent 24/7 inside the vault: scheduled jobs, persistent role sessions, a remote-control server for the phone, self-repair and status files."
+requires = ["core"]
+recommends = ["notifications", "roles", "heartbeat", "inbox-sync"]
+obsidian = "irrelevant"
+os = ["any"]                 # the host is Linux; the optional laptop helpers are Windows (experimental)
+runtime = ["vm"]
+config_keys = [
+  "vm.provider", "vm.host_alias", "vm.project", "vm.zone", "vm.machine_type", "vm.disk_gb",
+  "vm.linux_user", "vm.mount_path", "vm.drive_remote", "vm.repo_url",
+  "vm.remote_control_name", "vm.rc_prefix", "vm.rc_capacity", "vm.rc_chrome", "vm.rc_update_hour",
+  "vm.default_model", "vm.default_effort",
+  "vm.budget_month", "vm.budget_currency", "vm.monthly_credit", "vm.snapshot_retention_days",
+  "vm.health_every_min", "vm.history_minute", "vm.history_exclude",
+  "vm.mem_alert_mb", "vm.mem_close_jobs_mb", "vm.swapin_alert_rate", "vm.disk_alert_pct",
+  "vm.alert_repeat_h", "vm.big_context_k",
+  "vm.outcome_prep_grace_min", "vm.inbox_stuck_h", "vm.tap_stuck_h",
+  "notify.inbox_stale_hours", "notify.inbox_stale_hours_taps", "heartbeat.gap_open_hours", "heartbeat.outcome_prefix",
+  "schedule.vm_verdict",
+  "term.timezone", "student.name", "agent.primary", "paths.agent_dir", "paths.inbox",
+  "paths.never_open", "paths.handwriting_app_data",
+  "schedule.daily_prep", "modules.enabled", "notify.provider", "notify.ntfy_server", "notify.ntfy_topic_file",
+]
+# host/, laptop/, home-server/ and tests/ are code shipped by the module (never templated or
+# installed into the vault); only vault/ and jobs/ are rendered.
+verbatim = ["vault/_agent/vm/snapshot.json"]
+
+[[jobs]]
+id = "vm-health"
+[[jobs]]
+id = "vault-history"
+[[jobs]]
+id = "vm-performance-verdict"
+
+[defaults.vm]
+provider = "gcp"                         # gcp | home-server | other
+host_alias = "uni-vm"                    # ssh alias and the host's name in notes and pushes
+project = ""                             # cloud project id (only in INSTALL commands; never needed by the host)
+zone = "us-central1-a"
+machine_type = "e2-custom-small-4096"    # 4 GB RAM, 0.5 vCPU sustained (bursts to 2)
+disk_gb = 30
+linux_user = ""                          # empty = the user who runs install-user.sh
+mount_path = "~/Uni"                     # where the vault appears on the host
+drive_remote = "uni-drive"               # rclone remote whose root is the vault folder
+repo_url = ""                            # public git URL of the framework; empty = deploy from the laptop
+remote_control_name = "Uni (VM)"         # the server's name in the Claude app (Claude Code)
+rc_prefix = "uni-vm"                     # automatic names of sessions the server spawns
+rc_capacity = 10                         # finished sessions keep a slot until archived in the app
+rc_chrome = true                         # Claude in Chrome bridge for app-started and role sessions
+rc_update_hour = 4                       # hour in which a self-updated agent binary is picked up
+default_model = "sonnet"                 # host default for jobs and roles without MODEL
+default_effort = "high"
+budget_month = 13                        # the billing budget alert (after credits)
+budget_currency = "EUR"
+monthly_credit = 0                       # a monthly cloud credit some subscriptions include
+snapshot_retention_days = 21
+health_every_min = 15
+history_minute = 40
+history_exclude = [".obsidian/plugins/**", "**/node_modules/**", "_agent/vm/snapshot.json"]
+mem_alert_mb = 500                       # push when available memory is below this twice in a row
+mem_close_jobs_mb = 700                  # below this, idle job sessions close after 20 minutes
+swapin_alert_rate = 250                  # pages/s swapped in between two checks = thrashing
+disk_alert_pct = 90
+alert_repeat_h = 3                       # one alert (and one "recovered") per problem per N hours
+big_context_k = 300                      # doctor flags role sessions above N thousand tokens
+outcome_prep_grace_min = 60              # tomorrow's prep note is due N min after the first prep slot
+# Stuck inbox notes: one threshold for every sender, notify.inbox_stale_hours / _taps (module
+# inbox-sync). These two are aliases kept for old configs: 0 = use the notify.* value.
+inbox_stuck_h = 0
+tap_stuck_h = 0
+
+[defaults.schedule]
+vm_verdict = { day = "Sun", time = "19:30" }

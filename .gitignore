@@ -1,0 +1,63 @@
+# ---- Python --------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# ---- Node / build output -------------------------------------------------
+node_modules/
+build/
+dist/
+*.tsbuildinfo
+# The cockpit plugin's built files are committed on purpose (users install them
+# without a Node toolchain).
+!modules/cockpit/dist/
+!modules/cockpit/**/dist/
+
+# ---- Logs and temporary files --------------------------------------------
+*.log
+*.tmp
+*.uni-os-tmp
+~$*
+
+# ---- Your own config and local test vaults (never commit personal data) --
+# Keep your real config in your vault (_agent/uni-os.toml), or here under one of these names.
+config/uni-os.toml
+config/*.local.toml
+*.local.toml
+/test-vault*/
+/vault/
+/my-vault*/
+/local/
+/scratch/
+.uni-os-test*/
+
+# ---- Secrets (they never belong in the repo or the vault) ----------------
+.env
+.env.*
+*.pem
+*.key
+ntfy-topic
+
+# ---- OS and sync clutter ---------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+Icon?
+
+# ---- Obsidian per-user state (the example vault keeps the rest of .obsidian/)
+**/.obsidian/workspace*.json
+**/.obsidian/plugins/*/data.json
+**/.trash/
+
+# ---- Editors and agent-local settings --------------------------------------
+.vscode/
+.idea/
+*.swp
+.claude/settings.local.json

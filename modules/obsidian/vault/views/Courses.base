@@ -1,0 +1,28 @@
+filters:
+  and:
+    - type == "course"
+    - not:
+        - file.inFolder("_templates")
+properties:
+  file.name:
+    displayName: Course card
+  note.bonus_banked:
+    displayName: Bonus banked
+  note.bonus_target:
+    displayName: Full bonus at
+  note.next_bonus:
+    displayName: Next bonus fixture
+  note.updated:
+    displayName: Updated
+views:
+  - type: table
+    name: Courses
+    order:
+      - file.name
+      - bonus_banked
+      - bonus_target
+      - next_bonus
+      - updated
+    sort:
+      - property: file.name
+        direction: ASC

@@ -1,0 +1,16 @@
+id = "experiments"
+name = "Study and habit experiments"
+tier = "advanced"
+summary = "An optional, generic method for testing changes to how you study or live: a diagnosis with supply and demand, pre-registered measures and review date, a per-block log with verdict words, running review questions, a keep / change / try-next verdict, freeze rules for evaluating a plan, and a one-change-at-a-time habits log."
+requires = ["core"]
+recommends = ["planning", "progress", "student-model", "check-in"]
+obsidian = "optional"
+os = ["any"]
+runtime = ["laptop", "cloud", "vm"]
+
+# calendar.study_blocks is read only inside {{#if modules.planning}} (the planning module defines it).
+config_keys = ["study.experiment_weeks", "student.name", "calendar.study_blocks", "modules.enabled"]
+verbatim = []
+
+[defaults.study]
+experiment_weeks = 2     # default length of an experiment (the original ran two-week trials and two-week habit experiments)

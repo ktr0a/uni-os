@@ -1,0 +1,688 @@
+#!/usr/bin/env bash
+# uni-vm: the control tool of the always-on host (cloud VM or home server).
+#
+# Works on the host and, through laptop/uni-vm.cmd or laptop/vm.sh, from any laptop terminal.
+# `uni-vm help` lists every command. Read-only commands: status, doctor, jobs [list|log|next|
+# sessions|sync --check], roles [list], perf, snapshot, grep, find, history, logs, hostenv get.
+# Commands that end or restart sessions (restart, roles restart|stop, jobs close) need the
+# student's go: they end open conversations.
+# State: ~/.local/state/uni-os/ (logs, perf.csv, alerts/, jobs/<job>/ logs, modes/, sessions/).
+# Settings: ~/.config/uni-os/host.env (written by install-user.sh).
+set -uo pipefail
+HOST_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+. "$HOST_DIR/lib/common.sh"
+. "$HOST_DIR/lib/jobconf.sh"
+UNITS="$HOME/.config/systemd/user"
+H="$HOME/vault-history"
+VC=(python3 "$HOST_DIR/lib/vaultconf.py")
+
+if [ -t 1 ]; then
+  c_ok() { printf '\033[32m%s\033[0m' "$*"; }; c_bad() { printf '\033[31m%s\033[0m' "$*"; }; c_dim() { printf '\033[2m%s\033[0m' "$*"; }
+else
+  c_ok() { printf '%s' "$*"; }; c_bad() { printf '%s' "$*"; }; c_dim() { printf '%s' "$*"; }
+fi
+
+# ---- jobs: helpers --------------------------------------------------------------------------
+job_names() { local d; for d in "$JOBS_DIR"/*/; do [ -f "$d/job.conf" ] && basename "$d"; done; }
+timer_on() { systemctl --user is-enabled "uni-job-$1.timer" >/dev/null 2>&1; }
+job_mode() { cat "$STATE/modes/$1" 2>/dev/null || echo always; }
+
+# Open job sessions: "name sid keep_h idle_min" per line. Idle = since the newest transcript
+# entry, or since the session started if that is later (a resumed old transcript).
+job_sessions() {
+  local now sn sid keep created m
+  now=$(date +%s)
+  "${TM_JOBS[@]}" list-sessions -F '#{session_name}|#{@sid}|#{@keep_h}|#{session_created}' 2>/dev/null |
+  while IFS='|' read -r sn sid keep created; do
+    [ -n "$sid" ] || continue                 # the "hold" session
+    m=""
+    [ "$sid" != "-" ] && m=$(last_activity "$(transcript_path "$sid")")
+    m=${m:-$created}; [ "$m" -lt "$created" ] && m=$created
+    echo "$sn $sid ${keep:-8} $(( (now - m) / 60 ))"
+  done
+}
+
+rc_running() { systemctl --user is-active -q uni-rc.service && "${TM_RC[@]}" has-session -t rc 2>/dev/null; }
+# The idle label of the server screen differs between versions, so look for failure states.
+rc_failing() { "${TM_RC[@]}" capture-pane -t rc -p 2>/dev/null | grep -qE 'Reconnecting|Disconnected|Failed to connect'; }
+
+# ---- status ---------------------------------------------------------------------------------
+cmd_status() {
+  echo "uni-vm on $HOST_NAME  $(date '+%a %d %b %Y %H:%M %Z')  up $(uptime -p 2>/dev/null | sed 's/^up //')"
+  if vault_ok; then echo "  Vault         $(c_ok OK)  $VAULT"
+  else echo "  Vault         $(c_bad DOWN)  -> uni-vm restart drive"; fi
+  if is_claude && yes_ "$RC_ENABLED"; then
+    local n; n=$(pgrep -u "$(id -u)" -fc 'sdk-url' 2>/dev/null); n=${n:-0}
+    if rc_running && ! rc_failing; then echo "  Remote Ctrl   $(c_ok OK)  '$RC_NAME', $n session(s) open"
+    elif rc_running; then echo "  Remote Ctrl   $(c_bad RECONNECTING)  -> wait a few minutes, then uni-vm restart rc"
+    else echo "  Remote Ctrl   $(c_bad DOWN)  -> uni-vm restart rc"; fi
+  fi
+  if agent_logged_in; then
+    local plan=""; is_claude && have jq && plan=$(timeout 30 "$AGENT_BIN" auth status 2>/dev/null | jq -r '(.subscriptionType // "") + " plan"' 2>/dev/null)
+    echo "  Agent login   $(c_ok OK)  $AGENT_CLI ${plan}"
+  else echo "  Agent login   $(c_bad MISSING)  -> MAINTENANCE.md \"Logins\""; fi
+  echo "  Memory        $(free -m | awk '/Mem:/ {printf "%d/%d MB used, %d MB available", $3, $2, $7}'), swap $(free -m | awk '/Swap:/ {printf "%d/%d MB", $3, $2}')"
+  echo "  Disk          $(df -h / | awk 'NR==2 {print $3 "/" $2 " used"}')"
+  echo "  Load          $(cut -d' ' -f1-3 /proc/loadavg)"
+  local f="$STATE/laptop-seen"
+  if [ -f "$f" ]; then
+    local age=$(( ($(date +%s) - $(stat -c %Y "$f")) / 60 ))
+    if [ "$age" -lt "$LAPTOP_SEEN_MIN" ]; then echo "  Laptop        online (agent app open, seen ${age} min ago)"
+    else echo "  Laptop        offline or app closed (last seen $(date -d @"$(stat -c %Y "$f")" '+%a %H:%M'))"; fi
+  fi
+  local on=0 total=0 j
+  for j in $(job_names); do total=$((total + 1)); timer_on "$j" && on=$((on + 1)); done
+  echo "  Jobs          $on of $total switched on  (uni-vm jobs)"
+  local js; js=$(job_sessions | wc -l)
+  [ "$js" -gt 0 ] && echo "  Job sessions  $js open  (uni-vm jobs sessions)"
+  local rl rr rd
+  rl=$("$HOST_DIR/bin/role-sessions" list 2>/dev/null)
+  rr=$(awk 'NR > 1 && $2 == "running"' <<< "$rl" | wc -l); rd=$(awk 'NR > 1 && $2 == "down"' <<< "$rl" | wc -l)
+  if [ "$rd" -gt 0 ]; then echo "  Role sessions $rr running, $(c_bad "$rd DOWN")  -> uni-vm roles up"
+  elif [ "$rr" -gt 0 ]; then echo "  Role sessions $rr running  (uni-vm roles)"; fi
+  if [ -s "$STATE/jobs.log" ]; then echo "  Last job runs:"; tail -n 4 "$STATE/jobs.log" | sed 's/^/    /' | cut -c1-120; fi
+}
+
+# ---- jobs -----------------------------------------------------------------------------------
+# sync: copy <vault>/_agent/jobs/* to the host copy and write the timers. Changed jobs are
+# updated (the job.conf changes are printed); NEW job folders are taken only with
+# --accept-new (or a "y" on a terminal), because job.conf is code the host will run.
+# DEFAULT_MODE of a newly taken job switches its timer on (unless JOBS_LIVE=no) only for
+# host-only jobs (RUNTIME=vm, mode always) and for mode failover; RUNTIME=any jobs arrive off.
+jobs_sync() {
+  local check="" accept="" a d j rt dst lines t changed=0
+  local -a new=() upd=() gone=() turn_on=()
+  for a in "$@"; do case "$a" in --check) check=1 ;; --accept-new) accept=1 ;; esac; done
+  local src="$VAULT/$AGENT_DIR/jobs"
+  if ! vault_ok; then echo "vault not available: the host copy stays as it is"; return 1; fi
+  mkdir -p "$JOBS_DIR" "$STATE/modes"
+  for d in "$src"/*/; do
+    [ -f "$d/job.conf" ] || continue
+    j=$(basename "$d")
+    [[ "$j" =~ ^[a-z0-9][a-z0-9._-]*$ ]] || { echo "ignored $j: job ids are lower-case, digits, . _ -"; continue; }
+    rt=$(static_value "$d/job.conf" RUNTIME)
+    [ "$rt" = laptop ] && continue
+    dst="$JOBS_DIR/$j"
+    if [ ! -d "$dst" ]; then new+=("$j")
+    elif ! diff -rq "$d" "$dst" >/dev/null 2>&1; then upd+=("$j"); fi
+  done
+  for j in $(job_names); do [ -d "$src/$j" ] || gone+=("$j"); done
+  if [ -n "$check" ]; then
+    [ "${#new[@]}" -gt 0 ] && echo "new in the vault (not on the host yet): ${new[*]}"
+    [ "${#upd[@]}" -gt 0 ] && echo "changed in the vault since the last sync: ${upd[*]}"
+    [ "${#gone[@]}" -gt 0 ] && echo "removed from the vault (still on the host): ${gone[*]}"
+    [ $(( ${#new[@]} + ${#upd[@]} + ${#gone[@]} )) -eq 0 ] && { echo "host jobs match the vault"; return 0; }
+    return 10
+  fi
+  for j in "${upd[@]}"; do
+    echo "updated $j:"; diff "$JOBS_DIR/$j/job.conf" "$src/$j/job.conf" 2>/dev/null | grep -E '^[<>]' | sed 's/^/    /'
+    rm -rf "$JOBS_DIR/$j.tmp" && cp -r "$src/$j" "$JOBS_DIR/$j.tmp" && rm -rf "$JOBS_DIR/$j" && mv "$JOBS_DIR/$j.tmp" "$JOBS_DIR/$j"
+    changed=1
+  done
+  for j in "${new[@]}"; do
+    local take="$accept"
+    if [ -z "$take" ] && [ -t 0 ] && [ -t 1 ]; then
+      echo "new job $j (job.conf below):"; sed 's/^/    /' "$src/$j/job.conf"
+      read -r -p "take it onto this host? [y/N] " a; [ "$a" = y ] && take=1
+    fi
+    if [ -z "$take" ]; then echo "new job $j waits: uni-vm jobs sync --accept-new"; continue; fi
+    cp -r "$src/$j" "$JOBS_DIR/$j"; changed=1
+    # DEFAULT_MODE switches a timer on by itself only where that can't make a job run on two
+    # machines: host-only jobs (RUNTIME=vm) in mode always, and any job in mode failover (it runs
+    # only when the laptop missed the slot). A RUNTIME=any job may already run on the laptop, so
+    # it arrives OFF here: moving it is the student's step (pause the laptop copy, then jobs on).
+    rt=$(static_value "$JOBS_DIR/$j/job.conf" RUNTIME)
+    case "$(static_value "$JOBS_DIR/$j/job.conf" DEFAULT_MODE)" in
+      always)
+        echo always > "$STATE/modes/$j"
+        if [ "$rt" = vm ]; then turn_on+=("$j"); echo "new job $j (host-only, DEFAULT_MODE always)"
+        else echo "new job $j: off here until moved (it may run on the laptop): pause the laptop copy, then uni-vm jobs on $j"; fi ;;
+      failover) echo failover > "$STATE/modes/$j"; turn_on+=("$j"); echo "new job $j (DEFAULT_MODE failover)" ;;
+      *) echo always > "$STATE/modes/$j"; echo "new job $j: off until uni-vm jobs on $j" ;;
+    esac
+  done
+  for j in "${gone[@]}"; do
+    systemctl --user disable --now "uni-job-$j.timer" >/dev/null 2>&1
+    rm -rf "${JOBS_DIR:?}/$j"; echo "removed job $j (gone from the vault; its logs stay in $STATE/jobs/$j)"; changed=1
+  done
+  # Timers for every host job; none for jobs without a schedule.
+  mkdir -p "$UNITS"
+  local keep=" "
+  for j in $(job_names); do
+    if ! lines=$(job_schedule "$JOBS_DIR/$j" 2>&1); then echo "no timer for $j: $lines"; continue; fi
+    [ -z "$lines" ] && continue
+    keep="$keep$j "
+    if have systemd-analyze; then
+      while IFS= read -r l; do systemd-analyze calendar "$l" >/dev/null 2>&1 || echo "WARN $j: systemd rejects OnCalendar=$l"; done <<< "$lines"
+    fi
+    mapfile -t arr <<< "$lines"
+    t=$(timer_unit "$j" "$(job_get "$JOBS_DIR/$j" TITLE)" "${arr[@]}")
+    if [ "$t" != "$(cat "$UNITS/uni-job-$j.timer" 2>/dev/null)" ]; then printf '%s\n' "$t" > "$UNITS/uni-job-$j.timer"; changed=1; fi
+  done
+  for t in "$UNITS"/uni-job-*.timer; do
+    [ -e "$t" ] || continue
+    j=$(basename "$t" .timer); j=${j#uni-job-}
+    case "$keep" in *" $j "*) ;; *) systemctl --user disable --now "uni-job-$j.timer" >/dev/null 2>&1; rm -f "$t"; echo "removed timer $j" ;; esac
+  done
+  systemctl --user daemon-reload 2>/dev/null
+  if yes_ "$JOBS_LIVE"; then
+    for j in "${turn_on[@]}"; do case "$keep" in *" $j "*) systemctl --user enable --now "uni-job-$j.timer" >/dev/null 2>&1 && echo "ON   $j" ;; esac; done
+  else
+    for t in "$UNITS"/uni-job-*.timer; do [ -e "$t" ] && systemctl --user disable --now "$(basename "$t")" >/dev/null 2>&1; done
+    echo "JOBS_LIVE=no (trial host): every job timer is off"
+  fi
+  [ "$changed" = 1 ] && echo "timers for:$keep" || echo "no changes (timers for:$keep)"
+}
+
+cmd_jobs() {
+  local sub="${1:-list}"; shift || true
+  case "$sub" in
+    list)
+      printf '%-28s %-4s %-9s %-34s %s\n' JOB ON MODE SCHEDULE "LAST RUN"
+      local j last
+      for j in $(job_names); do
+        last=$(grep -F " | $j | " "$STATE/jobs.log" 2>/dev/null | tail -n 1 | cut -d'|' -f1,3,4 | tr -s ' ' | cut -c1-40)
+        printf '%-28s %-4s %-9s %-34s %s\n' "$j" "$(timer_on "$j" && echo ON || echo off)" "$(job_mode "$j")" "$(human_schedule "$JOBS_DIR/$j" | cut -c1-34)" "${last:--}"
+      done
+      echo; c_dim "uni-vm jobs on|off <job|all>   jobs run <job> [--dry-run]   jobs log <job>   jobs mode <job> always|failover   jobs sync"; echo ;;
+    sync) jobs_sync "$@" ;;
+    on|off)
+      local target="${1:?job name or all}" list j
+      list="$target"; [ "$target" = all ] && list=$(job_names)
+      for j in $list; do
+        [ -f "$JOBS_DIR/$j/job.conf" ] || { echo "no job $j (uni-vm jobs sync?)"; continue; }
+        if [ "$sub" = on ]; then
+          if [ ! -f "$UNITS/uni-job-$j.timer" ]; then echo "$j has no schedule (no timer): run it with uni-vm jobs run $j"; continue; fi
+          systemctl --user enable --now "uni-job-$j.timer" >/dev/null 2>&1 && echo "ON   $j ($(job_mode "$j"))"
+          # A job runs on exactly one machine: say so for every job that may also run on the laptop.
+          if [ "$(job_get "$JOBS_DIR/$j" RUNTIME)" != vm ] && [ "$(job_mode "$j")" = always ]; then
+            echo "     (mode always: make sure the laptop copy of $j is paused; a job runs on exactly one machine)"
+          fi
+        else
+          systemctl --user disable --now "uni-job-$j.timer" >/dev/null 2>&1; echo "off  $j"
+        fi
+      done ;;
+    run) "$HOST_DIR/bin/run-job" "${1:?job name}" "${2:-}" ;;
+    mode)
+      local j="${1:?job name}" m="${2:-}"
+      if [ -z "$m" ]; then job_mode "$j"; return; fi
+      case "$m" in always|failover) mkdir -p "$STATE/modes"; echo "$m" > "$STATE/modes/$j"; echo "$j: mode $m" ;; *) echo "mode: always|failover"; return 2 ;; esac ;;
+    log)
+      local f; f=$(ls -1t "$STATE/jobs/${1:?job name}"/*.log 2>/dev/null | head -n 1)
+      if [ -n "$f" ]; then echo "== $f"; cat "$f"; else echo "no logs yet"; fi ;;
+    next) systemctl --user list-timers 'uni-job-*' --no-pager ;;
+    sessions)
+      local any=0 sn sid keep idle
+      while read -r sn sid keep idle; do
+        any=1; printf '%-34s idle %4s min (closes after %sh)  %s\n' "$sn" "$idle" "$keep" "$(cat "$STATE/sessions/$sn.link" 2>/dev/null)"
+      done < <(job_sessions)
+      if [ "$any" = 1 ]; then c_dim "look: uni-vm jobs attach <name> (detach: Ctrl-b d)   close: uni-vm jobs close <name|all>"; echo
+      else echo "no job sessions open"; fi ;;
+    attach) "${TM_JOBS[@]}" capture-pane -p -t "${1:?session name}" >/dev/null 2>&1 && exec "${TM_JOBS[@]}" attach -t "$1"; echo "no job session $1" ;;
+    close)
+      local target="${1:?session name or all}" sn
+      while read -r sn _; do
+        [ "$target" = all ] || [ "$target" = "$sn" ] || continue
+        "${TM_JOBS[@]}" kill-session -t "$sn" && echo "closed $sn"
+      done < <(job_sessions) ;;
+    *) echo "unknown: uni-vm jobs $sub"; return 2 ;;
+  esac
+}
+
+cmd_restart() {
+  case "${1:-all}" in
+    drive) systemctl --user restart uni-drive.service ;;     # the unit also restarts Remote Control
+    rc) systemctl --user restart uni-rc.service ;;
+    roles) systemctl --user restart uni-roles.service ;;
+    jobs) systemctl --user restart uni-jobs.service ;;
+    all) systemctl --user restart uni-drive.service; sleep 3; systemctl --user restart uni-rc.service ;;
+    *) echo "uni-vm restart drive|rc|roles|jobs|all"; return 2 ;;
+  esac
+  sleep 5; cmd_status
+}
+
+cmd_logs() {
+  case "${1:-rc}" in
+    rc) tail -n 40 "$STATE/rc.log" 2>/dev/null; echo "--- live screen:"; "${TM_RC[@]}" capture-pane -t rc -p 2>/dev/null | grep -v '^\s*$' | tail -n 20 ;;
+    drive) tail -n 40 "$STATE/rclone.log" 2>/dev/null ;;
+    jobs) tail -n 40 "$STATE/jobs.log" 2>/dev/null ;;
+    notify) tail -n 40 "$STATE/notify.log" 2>/dev/null ;;
+    health) tail -n 40 "$STATE/health.log" 2>/dev/null ;;
+    roles) tail -n 40 "$STATE/roles.log" 2>/dev/null ;;
+    *) echo "uni-vm logs rc|drive|jobs|notify|health|roles" ;;
+  esac
+}
+
+# ---- performance ----------------------------------------------------------------------------
+# One line per health run in perf.csv:
+#   epoch,mem_available_mb,swap_used_mb,load1,cpu_steal_pct,agent_sessions,oom_kill_total,pswpin_total
+# (steal = share of the interval since the previous sample; the counters are totals since boot).
+perf_sample() {
+  local cpu prev st=0
+  cpu=$(awk '/^cpu / {t = 0; for (i = 2; i <= NF; i++) t += $i; print t, $9}' /proc/stat)
+  prev=$(cat "$STATE/perf.cpu" 2>/dev/null); echo "$cpu" > "$STATE/perf.cpu"
+  [ -n "$prev" ] && st=$(echo "$prev $cpu" | awk '{dt = $3 - $1; ds = $4 - $2; printf "%.1f", (dt > 0 && ds >= 0) ? 100 * ds / dt : 0}')
+  echo "$(date +%s),$(awk '/MemAvailable/ {print int($2 / 1024)}' /proc/meminfo),$(free -m | awk '/Swap:/ {print $3}'),$(cut -d' ' -f1 /proc/loadavg),$st,$(agent_procs),$(awk '/^oom_kill / {print $2}' /proc/vmstat),$(awk '/^pswpin / {print $2}' /proc/vmstat)" >> "$STATE/perf.csv"
+  trim "$STATE/perf.csv" 6000                                  # about 60 days at 15 min
+}
+
+# perf_summary <from_epoch> <to_epoch>: one table row (nothing without samples)
+perf_summary() {
+  awk -F, -v a="$1" -v b="$2" '
+    $1 >= a && $1 < b {
+      n++; av[n] = $2; if (n == 1 || $2 < mn) mn = $2; if ($3 > sw) sw = $3; if ($4 > ld) ld = $4
+      st += $5; if ($5 > sm) sm = $5; if ($6 > se) se = $6
+      if (n > 1) { if ($7 > o) k += $7 - o; if ($1 > t && $8 >= p) { r = ($8 - p) / ($1 - t); if (r > rm) rm = r } }
+      o = $7; p = $8; t = $1 }
+    END { if (!n) exit; asort(av); printf "%d / %d | %d | %.2f | %.1f / %.1f | %d | %d | %d\n", mn, av[int((n + 1) / 2)], sw, ld, st / n, sm, se, k, rm }
+  ' "$STATE/perf.csv" 2>/dev/null
+}
+
+cmd_perf() {
+  local now from; now=$(date +%s)
+  if [ "${1:-}" = "--has-days" ]; then               # for the verdict job's PRECHECK
+    local first; first=$(head -n 1 "$STATE/perf.csv" 2>/dev/null | cut -d, -f1)
+    [ -n "$first" ] && [ $(( now - first )) -ge $(( ${2:-3} * 86400 )) ]; return
+  fi
+  case "${1:-24h}" in
+    24h) from=$((now - 86400)) ;; 7d) from=$((now - 604800)) ;;
+    *) from=$(date -d "$1" +%s) || return 2 ;;
+  esac
+  echo "since $(date -d "@$from" '+%a %d %b %H:%M'):"
+  echo "memory available min / typical MB | swap max MB | load max | steal avg / max % | sessions peak | OOM kills | swap-in max pages/s"
+  perf_summary "$from" "$now"
+  echo "now: $(free -m | awk '/Mem:/ {print $7}') MB available, swap $(free -m | awk '/Swap:/ {print $3}') MB," \
+       "$("$HOST_DIR/bin/role-sessions" list 2>/dev/null | awk 'NR > 1 && $2 == "running"' | wc -l) role sessions, $(job_sessions | wc -l) job sessions," \
+       "$(agent_procs) agent processes in all"
+}
+
+# Once a day (and after a new verdict): add yesterday's row and rewrite the host-only vault
+# file _agent/vm/performance.md.
+perf_daily() {
+  local day last f
+  day=$(date +%F); last=$(cat "$STATE/perf.day" 2>/dev/null)
+  [ "$last" = "$day" ] && [ ! "$STATE/perf-verdicts.md" -nt "$STATE/perf.day" ] && return 0
+  vault_ok || return 0
+  if [ -n "$last" ] && [ "$last" != "$day" ]; then
+    local y row; y=$(date -d yesterday +%F)
+    row=$(perf_summary "$(date -d "$y" +%s)" "$(date -d "$day" +%s)")
+    [ -n "$row" ] && echo "| $(date -d "$y" '+%a %d %b') | $row |" >> "$STATE/perf-daily.md"
+    trim "$STATE/perf-daily.md" 90
+  fi
+  f="$VAULT/$AGENT_DIR/vm/performance.md"; mkdir -p "${f%/*}"
+  {
+    agent_frontmatter
+    echo "# Host performance ($HOST_NAME)"
+    echo
+    echo "Written by the always-on host (\`uni-vm health\`: one row per day, plus the latest verdict). Do not edit: the host overwrites it. Raw samples every few minutes are on the host in \`~/.local/state/uni-os/perf.csv\`; \`uni-vm perf [24h|7d]\` summarizes them. About the host: [../vm.md](../vm.md)."
+    echo
+    echo "Machine: ${MACHINE_LABEL:-not set} ($(free -m | awk '/Mem:/ {printf "%.1f GB RAM", $2 / 1024}'), $(nproc) vCPU seen). Phone push only on an OOM kill, swap thrashing (over $SWAPIN_ALERT_RATE pages/s swapped in) or under $MEM_ALERT_MB MB available on two checks in a row."
+    echo
+    echo "## Daily ($(date +%Z))"
+    echo "| Day | Memory available min / typical (MB) | Swap used max (MB) | Load max | CPU steal avg / max (%) | Agent sessions peak | OOM kills | Swap-in max (pages/s) |"
+    echo "|---|---|---|---|---|---|---|---|"
+    cat "$STATE/perf-daily.md" 2>/dev/null
+    echo
+    echo "## Latest verdict"
+    if [ -s "$STATE/perf-verdicts.md" ]; then awk '/^### /{buf = ""} {buf = buf $0 "\n"} END {printf "%s", buf}' "$STATE/perf-verdicts.md"
+    else echo "None yet (job \`vm-performance-verdict\`, weekly, once a few days of samples exist)."; fi
+  } > "$f.tmp" && mv "$f.tmp" "$f" || return 1
+  echo "$day" > "$STATE/perf.day"
+}
+
+# ---- vault status files (one writer: this host) ---------------------------------------------
+# status.md is rewritten only when the overall state or the list of switched-on jobs changes,
+# and once a day, so a flapping check doesn't rewrite a synced file every few minutes.
+write_vault_status() {
+  local dir="$VAULT/$AGENT_DIR/vm" f AL="$STATE/alerts" problems overall jobs_on="" j sig last_sig last_day daily
+  f="$dir/status.md"
+  vault_ok || return 0
+  persist() { [ -n "$(find "$AL/$1" -maxdepth 0 -mmin +20 2>/dev/null)" ]; }
+  problems=$(find "$AL" -maxdepth 1 -type f ! -name '.*' -mmin +20 -printf '%f ' 2>/dev/null | sed 's/ $//')
+  overall="OK"; [ -n "$problems" ] && overall="PROBLEM: $problems"
+  for j in $(job_names); do timer_on "$j" && jobs_on="$jobs_on $j"; done
+  sig="$overall|$jobs_on"
+  last_sig=$(cat "$STATE/vault-status.sig" 2>/dev/null); last_day=$(cat "$STATE/vault-status.day" 2>/dev/null)
+  [ "$sig" = "$last_sig" ] && [ "$last_day" = "$(date +%F)" ] && return 0
+  mkdir -p "$dir"
+  daily="$STATE/vault-status.daily"
+  [ "$last_day" != "$(date +%F)" ] && echo "- $(date '+%a %d %b %H:%M'): $overall; jobs on:${jobs_on:- none}" >> "$daily"
+  trim "$daily" 14
+  {
+    agent_frontmatter
+    echo "# Host status ($HOST_NAME)"
+    echo
+    echo "Written by the always-on host (\`uni-vm health\`; this file changes only when the state changes and once a day). Do not edit: the host overwrites it. For the live state run \`uni-vm status\` or \`uni-vm jobs\`. About the host: [../vm.md](../vm.md)."
+    echo
+    echo "**Overall: $overall** (checked $(date '+%a %d %b %Y %H:%M %Z'))"
+    echo
+    echo "| Part | State |"
+    echo "|---|---|"
+    echo "| Vault \`$VAULT\` | $( persist drive && echo DOWN || echo ok ) |"
+    if is_claude && yes_ "$RC_ENABLED"; then echo "| Remote Control server \"$RC_NAME\" | $( persist remote-control && echo DOWN || echo ok ) |"; fi
+    echo "| Agent login ($AGENT_CLI) | $( persist agent-login && echo LOGGED OUT || echo ok ) |"
+    echo "| Free memory | $(free -m | awk '/Mem:/ {print $7}') MB |"
+    echo "| Disk used | $(df --output=pcent / | tail -1 | tr -d ' ') |"
+    echo "| Jobs switched on |${jobs_on:- none} |"
+    echo
+    echo "## Last job runs (host-internal jobs and dry runs left out)"
+    grep -v -E '\| (vm-health|vault-history) \||\| dry run \|' "$STATE/jobs.log" 2>/dev/null | tail -n 6 | cut -d'|' -f1-4 | sed 's/^/- /'
+    echo
+    echo "## Daily lines (last 14)"
+    cat "$daily"
+  } > "$f.tmp" && mv "$f.tmp" "$f" || return 1
+  echo "$sig" > "$STATE/vault-status.sig"; date +%F > "$STATE/vault-status.day"
+}
+
+# ---- machine-readable snapshot (schema 1) ---------------------------------------------------
+# One JSON object per job. last_run, exit and duration_s describe the last FINISHED run: a log
+# ends with run-job's "# exit" line (or has a jobs.log line); a log with neither is the run
+# still going (look one further back) or one a reboot cut off (exit unknown).
+snapshot_jobs() {
+  local j f s line
+  for j in $(job_names); do
+    local on=false run="" ex="" dur="" next="" skip="" active=no v
+    local -a logs=()
+    timer_on "$j" && on=true
+    [[ "$(systemctl --user is-active "uni-job@$j.service" 2>/dev/null)" =~ ^activ ]] && active=yes
+    mapfile -t logs < <(ls -1 "$STATE/jobs/$j"/*.log 2>/dev/null | grep -v -- '-dry\.log$' | sort -r | head -n 2)
+    for f in "${logs[@]}"; do
+      s=$(basename "$f" .log)
+      line=$(tail -n 1 "$f" 2>/dev/null)
+      if [[ "$line" =~ ^#\ exit\ ([0-9]+)\ after\ ([0-9]+)s$ ]]; then ex=${BASH_REMATCH[1]}; dur=${BASH_REMATCH[2]}
+      else
+        line=$(grep -F " | $j | exit " "$STATE/jobs.log" 2>/dev/null | grep -F "| $s.log" | tail -n 1)
+        if [[ "$line" =~ \|\ exit\ ([0-9]+)\ \|\ ([0-9]+)s\ \| ]]; then ex=${BASH_REMATCH[1]}; dur=${BASH_REMATCH[2]}; fi
+      fi
+      if [ -z "$ex" ] && [ "$active" = yes ]; then active=no; continue; fi
+      run=$(date -Iseconds -d "${s:0:10} ${s:11:2}:${s:13:2}:${s:15:2}" 2>/dev/null)
+      break
+    done
+    v=$(systemctl --user show "uni-job-$j.timer" -p NextElapseUSecRealtime --value 2>/dev/null)
+    [ -n "$v" ] && next=$(date -Iseconds -d "$v" 2>/dev/null)
+    v=$(grep -F " | $j | skipped" "$STATE/jobs.log" 2>/dev/null | tail -n 1 | cut -c1-16)
+    [ -n "$v" ] && skip=$(date -Iseconds -d "$v" 2>/dev/null)
+    jq -n --arg name "$j" --argjson on "$on" --arg mode "$(job_mode "$j")" --arg schedule "$(human_schedule "$JOBS_DIR/$j")" \
+      --arg run "$run" --arg ex "$ex" --arg dur "$dur" --arg next "$next" --arg skip "$skip" '
+      def str: if . == "" then null else . end; def num: if . == "" then null else tonumber end;
+      {name: $name, on: $on, mode: $mode, schedule: $schedule, last_run: ($run | str), exit: ($ex | num),
+       duration_s: ($dur | num), next_run: ($next | str), last_skipped: ($skip | str)}'
+  done
+}
+
+snapshot_job_sessions() {
+  local sn keep idle state
+  while read -r sn _ keep idle; do
+    state=idle; pane_busy uni-jobs "$sn" && state=working
+    jq -n --arg name "$sn" --arg state "$state" --argjson idle "$idle" --argjson keep "$keep" \
+      --arg started "$(date -Iseconds -d "@$("${TM_JOBS[@]}" display -p -t "$sn" '#{session_created}')")" \
+      '{name: $name, state: $state, idle_min: $idle, closes_after_h: $keep, started: $started}'
+  done < <(job_sessions)
+}
+
+# Rules: no links, no topic, no emails, no paths outside the vault: any reader may see it.
+# A stale laptop ping can't tell "laptop off" from "app closed", so online is null then.
+snapshot_json() {
+  local f="$STATE/laptop-seen" online=null app=null seen="" mt ma st su l1 l5 l15
+  if [ -f "$f" ]; then
+    seen=$(date -Iseconds -d "@$(stat -c %Y "$f")")
+    if [ $(( $(date +%s) - $(stat -c %Y "$f") )) -lt $(( LAPTOP_SEEN_MIN * 60 )) ]; then online=true; app=true; else app=false; fi
+  fi
+  read -r mt ma < <(free -m | awk '/Mem:/ {print $2, $7}')
+  read -r st su < <(free -m | awk '/Swap:/ {print $2, $3}')
+  read -r l1 l5 l15 _ < /proc/loadavg
+  jq -n --arg generated "$(date -Iseconds)" --arg host "$HOST_NAME" --argjson uptime "$(cut -d. -f1 /proc/uptime)" \
+    --argjson mount "$(vault_ok && echo true || echo false)" \
+    --argjson rc "$( { is_claude && yes_ "$RC_ENABLED" && rc_running && ! rc_failing; } && echo true || echo false)" \
+    --argjson login "$([ -f "$STATE/alerts/agent-login" ] && echo false || echo true)" \
+    --argjson mt "$mt" --argjson ma "$ma" --argjson st "$st" --argjson su "$su" \
+    --argjson disk "$(df --output=pcent / | tail -1 | tr -dc 0-9)" \
+    --argjson l1 "$l1" --argjson l5 "$l5" --argjson l15 "$l15" \
+    --argjson online "$online" --argjson app "$app" --arg seen "$seen" \
+    --argjson jobs "$(snapshot_jobs | jq -s .)" --argjson sessions "$(snapshot_job_sessions | jq -s .)" \
+    --argjson roles "$("$HOST_DIR/bin/role-sessions" json 2>/dev/null || echo '[]')" \
+    --argjson total "$(agent_procs)" \
+    --argjson alerts "$(printf '%s\n' "${HEALTH_ALERTS[@]:-}" | jq -R 'select(length > 0)' | jq -s .)" '
+    {schema: 1, generated: $generated, writer: "uni-vm health", host_name: $host,
+     host: {uptime_s: $uptime, mount_ok: $mount, remote_control_ok: $rc, agent_login_ok: $login,
+            mem_total_mb: $mt, mem_available_mb: $ma, swap_used_mb: $su, swap_total_mb: $st,
+            disk_used_pct: $disk, load_1m: $l1, load_5m: $l5, load_15m: $l15},
+     laptop: {online: $online, app_open: $app, seen: (if $seen == "" then null else $seen end)},
+     jobs: $jobs, job_sessions: $sessions, roles: $roles, sessions_total: $total, alerts: $alerts}'
+}
+
+# In place, not temp file + rename: a reader may find the file by its Drive id.
+write_snapshot() {
+  local f="$VAULT/$AGENT_DIR/vm/snapshot.json" tmp="$STATE/snapshot.json"
+  vault_ok || return 0
+  mkdir -p "${f%/*}"
+  snapshot_json > "$tmp" && jq -e '.schema == 1' "$tmp" >/dev/null || return 1
+  write_in_place "$tmp" "$f"
+}
+
+# ---- health (job vm-health, every 15 min) ---------------------------------------------------
+# Repair what can be repaired, alert at most every ALERT_REPEAT_H hours per problem, say
+# "recovered" at most as often. alerts/<key> exists while a problem is present (mtime = start);
+# alerts/.sent-<key> and .ok-<key> hold the epoch of the last alert / recovery note.
+cmd_health() {
+  local AL="$STATE/alerts" now gap
+  mkdir -p "$AL"; now=$(date +%s); gap=$(( ALERT_REPEAT_H * 3600 ))
+  HEALTH_ALERTS=()
+  export UNI_PUSH_SOURCE="vm-health"
+  age_of() { local v; v=$(cat "$1" 2>/dev/null); echo $(( now - ${v:-0} )); }
+  problem() {
+    HEALTH_ALERTS+=("$2")
+    [ -f "$AL/$1" ] || touch "$AL/$1"
+    if [ "$(age_of "$AL/.sent-$1")" -ge "$gap" ]; then uni_notify "Host problem ($HOST_NAME): $2" high; echo "$now" > "$AL/.sent-$1"; fi
+    echo "PROBLEM $1: $2"
+  }
+  fine() {
+    [ -f "$AL/$1" ] || return 0
+    rm -f "$AL/$1"
+    if [ "$(age_of "$AL/.ok-$1")" -ge "$gap" ]; then uni_notify "Host recovered ($HOST_NAME): $1" low; echo "$now" > "$AL/.ok-$1"; fi
+  }
+  event() {
+    HEALTH_ALERTS+=("$2")
+    if [ "$(age_of "$AL/.sent-$1")" -ge "$gap" ]; then uni_notify "Host ($HOST_NAME): $2" high; echo "$now" > "$AL/.sent-$1"; fi
+    echo "$(now_hm) EVENT $1: $2" | tee -a "$STATE/health.log"
+  }
+
+  # 1-2. The vault mount and the Drive login behind it.
+  if [ "$STORAGE_MODE" = rclone-mount ]; then
+    if ! vault_ok; then systemctl --user restart uni-drive.service; sleep 20; fi
+    if vault_ok; then fine drive; else problem drive "the vault mount is down (a restart did not help): uni-vm restart drive, MAINTENANCE.md Logins"; fi
+    if timeout 60 rclone about "$DRIVE_REMOTE:" >/dev/null 2>&1; then fine drive-auth
+    else problem drive-auth "rclone cannot reach the cloud drive (token revoked or network)"; fi
+  else
+    if vault_ok; then fine drive; else problem drive "the vault folder is missing its sentinel file ($VAULT_SENTINEL)"; fi
+  fi
+
+  # 3-4. Remote Control: restart if the server is gone, or after a failure state on two checks
+  # in a row. In the quiet hour, restart it when the agent updated itself (the running server
+  # keeps the old binary until it restarts).
+  if is_claude && yes_ "$RC_ENABLED"; then
+    local nc="$STATE/rc-not-connected" pid
+    if ! rc_running; then systemctl --user restart uni-rc.service; sleep 15; rm -f "$nc"
+    elif rc_failing; then
+      if [ -f "$nc" ]; then systemctl --user restart uni-rc.service; sleep 15; rm -f "$nc"; else touch "$nc"; fi
+    else rm -f "$nc"; fi
+    if rc_running; then fine remote-control; else problem remote-control "the Remote Control server is not running"; fi
+    if [ "$(date +%H)" = "$RC_UPDATE_HOUR" ]; then
+      pid=$(pgrep -u "$(id -u)" -f 'remote-control --name' | head -n 1)
+      if [ -n "$pid" ] && [ "$(readlink "/proc/$pid/exe")" != "$(readlink -f "$AGENT_BIN")" ]; then
+        echo "$(now_hm) restarting Remote Control for agent version $("$AGENT_BIN" --version 2>/dev/null | cut -d' ' -f1)" >> "$STATE/rc.log"
+        systemctl --user restart uni-rc.service
+      fi
+    fi
+  fi
+
+  # 5. Agent login.
+  if agent_logged_in; then fine agent-login; else problem agent-login "the agent CLI is logged out on the host; log in again (MAINTENANCE.md, Logins)"; fi
+
+  # 6. Role sessions: idle ones with IDLE_STOP_H stop; dead ones (crash, OOM kill) come back.
+  "$HOST_DIR/bin/role-sessions" idle-stop >/dev/null 2>&1
+  "$HOST_DIR/bin/role-sessions" up >/dev/null 2>&1
+
+  # 7. Performance sample; memory pushes only on real trouble: an OOM kill, swap thrashing, or
+  # low available memory on two checks in a row.
+  perf_sample
+  local t0 a0 o0 p0 t1 a1 o1 p1
+  IFS=, read -r t0 a0 _ _ _ _ o0 p0 < <(tail -n 2 "$STATE/perf.csv" | head -n 1)
+  IFS=, read -r t1 a1 _ _ _ _ o1 p1 < <(tail -n 1 "$STATE/perf.csv")
+  if [ "${t1:-0}" -gt "${t0:-0}" ]; then
+    [ "${o1:-0}" -gt "${o0:-0}" ] && event oom "the kernel killed a process for lack of memory (OOM), $((o1 - o0))x since the last check"
+    [ "${p1:-0}" -ge "${p0:-0}" ] && [ $(( (p1 - p0) / (t1 - t0) )) -gt "$SWAPIN_ALERT_RATE" ] && event swap "swap thrashing: $(( (p1 - p0) / (t1 - t0) )) pages/s swapped in since the last check"
+    [ "${a1:-9999}" -lt "$MEM_ALERT_MB" ] && [ "${a0:-9999}" -lt "$MEM_ALERT_MB" ] && event memory "under $MEM_ALERT_MB MB memory available on two checks in a row (now ${a1} MB)"
+  fi
+  local avail use
+  avail=$(free -m | awk '/Mem:/ {print $7}')
+  use=$(df --output=pcent / | tail -1 | tr -dc 0-9)
+
+  # 8. Disk.
+  if [ "$use" -gt "$DISK_ALERT_PCT" ]; then problem disk "disk ${use}% full"; else fine disk; fi
+
+  # 9. Job sessions stay open for replies; close them after their idle hours, or after 20 idle
+  # minutes when memory runs short. Never one that is mid-turn or has a background task.
+  if have tmux; then
+    "${TM_JOBS[@]}" has-session -t hold 2>/dev/null || systemctl --user restart uni-jobs.service
+    local sn keep idle
+    while read -r sn _ keep idle; do
+      if [ "$idle" -ge $(( keep * 60 )) ] || { [ "$avail" -lt "$MEM_CLOSE_JOBS_MB" ] && [ "$idle" -ge 20 ]; }; then
+        if pane_busy uni-jobs "$sn"; then echo "$(now_hm) job session $sn past its idle limit (idle $idle min) but busy; left open" >> "$STATE/health.log"; continue; fi
+        "${TM_JOBS[@]}" kill-session -t "$sn" && echo "$(now_hm) closed job session $sn (idle $idle min)" >> "$STATE/health.log"
+      fi
+    done < <(job_sessions)
+  fi
+  find "$STATE/sessions" -maxdepth 1 -type f -mtime +3 -delete 2>/dev/null
+
+  # 10. Log and trim.
+  echo "$(now_hm) health check (mem avail ${avail} MB, disk ${use}%)" >> "$STATE/health.log"
+  trim "$STATE/health.log" 2000; trim "$STATE/rc.log" 2000; trim "$STATE/notify.log" 1000; trim "$STATE/roles.log" 1000
+  trim_in_place "$STATE/rclone.log" 5000000 1000000          # rclone keeps the file open
+
+  # 11. Pushes held during a quiet window go out as one.
+  uni_push_flush
+  # 12. Did the jobs' work happen? A separate script, so a bug there can't stop the health check.
+  # When the notifications module's own job `outcome-checks` is switched ON on this host
+  # (`uni-vm jobs on outcome-checks`: its timer, not just its folder), it does this on its own
+  # timer and the built-in check steps aside; taken but off, the built-in check keeps running
+  # (never both, never neither: outcome_checks_owner in lib/common.sh).
+  if [ "$(outcome_checks_owner)" = built-in ]; then
+    timeout 90 "$HOST_DIR/bin/outcome-checks" 2>&1 || echo "WARN: outcome checks failed"
+  fi
+  # 13. Host-only vault files.
+  if yes_ "$VAULT_WRITES"; then
+    write_vault_status || echo "WARN: _agent/vm/status.md not written"
+    perf_daily || echo "WARN: _agent/vm/performance.md not written"
+    write_snapshot || echo "WARN: _agent/vm/snapshot.json not written"
+  fi
+  return 0
+}
+
+# ---- laptop ping (failover mode) ------------------------------------------------------------
+# Called by the laptop's ping task: the laptop is awake with the agent app open, plus the app's
+# last-run time per scheduled task (base64 JSON) for the failover check in run-job.
+cmd_laptop_ping() {
+  date -Iseconds > "$STATE/laptop-seen"
+  if [ -n "${1:-}" ] && have jq; then
+    echo "$1" | base64 -d 2>/dev/null | jq -c . > "$STATE/laptop-tasks.json.tmp" 2>/dev/null \
+      && mv "$STATE/laptop-tasks.json.tmp" "$STATE/laptop-tasks.json"
+  fi
+  rm -f "$STATE/laptop-tasks.json.tmp"; true
+}
+
+# ---- notes history (vault-history job) -------------------------------------------------------
+cmd_grep() {
+  local T="$H/tree" flag=""
+  [ "${1:-}" = "-i" ] && { flag="-i"; shift; }
+  [ -n "${1:-}" ] || { echo 'usage: uni-vm grep [-i] "<regex>" [vault path]'; return 2; }
+  [ -d "$T" ] || { echo "no notes history yet (job vault-history)"; return 1; }
+  echo "# text notes as of $(git -C "$H" log -1 --format=%cd --date=format:'%a %H:%M'); newer edits are only in $VAULT"
+  git -C "$T" grep -n -I -E $flag -e "$1" -- "${2:-.}" | cut -c1-260 | head -n 200
+}
+cmd_find() {
+  [ -n "${1:-}" ] || { echo 'usage: uni-vm find "<part of a file name>"  (text notes only)'; return 2; }
+  git -C "$H/tree" ls-files | grep -i -F -e "$1" | head -n 200
+}
+cmd_history() {
+  [ -d "$H/.git" ] || { echo "no history yet (job vault-history)"; return 1; }
+  case "${1:-}" in
+    "") git -C "$H" log --format='%h  %s' -n 15 ;;
+    show) git -C "$H" show "${2:?rev}:tree/${3:?path}" ;;
+    diff) git -C "$H" diff "${2:?rev}" -- "tree/${3:?path}" ;;
+    since) git -C "$H" log --since="${2:-24 hours ago}" --name-status --format='--- %ad' --date=format:'%a %H:%M' -- tree | sed 's|tree/||' ;;
+    *) git -C "$H" log --format='%h  %ad  %s' --date=format:'%a %d %b %H:%M' -- "tree/$1" ;;
+  esac
+}
+
+# ---- framework update and host settings ------------------------------------------------------
+cmd_update() {
+  if [ -d "$UNI_OS_HOME/.git" ]; then
+    git -C "$UNI_OS_HOME" pull --ff-only || return 1
+    bash "$HOST_DIR/install-user.sh" --non-interactive
+  else
+    echo "$UNI_OS_HOME is not a git clone: update it from the laptop (modules/vm/laptop/deploy.sh)"; return 2
+  fi
+}
+cmd_hostenv() {
+  case "${1:-show}" in
+    show) grep -v '^[[:space:]]*$' "$UNI_HOST_ENV" 2>/dev/null || echo "no $UNI_HOST_ENV yet (run install-user.sh)" ;;
+    get) eval "printf '%s\n' \"\${${2:?KEY}:-}\"" ;;
+    set) "${VC[@]}" set-local "$UNI_HOST_ENV" "${2:?KEY}" "${3?VALUE}" ;;
+    *) echo "uni-vm hostenv [show | get KEY | set KEY VALUE]"; return 2 ;;
+  esac
+}
+
+cmd_help() {
+  cat <<'EOF'
+uni-vm status                       vault, Remote Control, agent login, memory, laptop, jobs, roles
+uni-vm doctor                       one read-only look at everything; !! = look at it
+uni-vm jobs [list]                  jobs on this host: on/off, mode, schedule, last run
+uni-vm jobs on|off <job|all>        switch a job's timer on or off (one machine per job!)
+uni-vm jobs run <job> [--dry-run]   run a job now (a dry run changes nothing)
+uni-vm jobs log <job>               newest log of a job (ends "# exit N after Ss")
+uni-vm jobs mode <job> always|failover   failover = run only when the laptop missed the slot
+uni-vm jobs sync [--check] [--accept-new]   take job changes from the vault, write the timers
+uni-vm jobs next                    when each switched-on job runs next
+uni-vm jobs sessions | attach <name> | close <name|all>   interactive job sessions
+uni-vm roles [list|add|start|up|restart|stop|resume|set|attach] <role>   persistent role sessions
+uni-vm health                       the self-check (job vm-health): repairs, alerts, status files
+uni-vm perf [24h|7d|<date>]         memory, swap, load, steal, sessions, OOM kills
+uni-vm snapshot                     the machine-readable state (health writes it to _agent/vm/)
+uni-vm grep [-i] "<regex>" [path]   search all text notes in ~2 s (hourly copy)
+uni-vm find "<part of a name>"      find a text note by name
+uni-vm history [note | since <when> | show <rev> <note> | diff <rev> <note>]   hourly notes history
+uni-vm logs [rc|drive|jobs|notify|health|roles]
+uni-vm notify "<text>" [prio] [click-url]   a direct phone push (logged)
+uni-vm attach                       look at the Remote Control server screen (detach: Ctrl-b d)
+uni-vm restart [drive|rc|roles|jobs|all]   ends open sessions: only with the student's go
+uni-vm update                       git pull the framework copy and re-run the installer
+uni-vm hostenv [show|get KEY|set KEY VALUE]   this host's settings (~/.config/uni-os/host.env)
+uni-vm laptop-ping [<base64 json>]  called by the laptop's ping task (failover mode)
+Other modules may add commands as executables named uni-vm-<command> on the PATH.
+EOF
+}
+
+case "${1:-status}" in
+  status) cmd_status ;;
+  jobs) shift; cmd_jobs "$@" ;;
+  roles) shift; "$HOST_DIR/bin/role-sessions" "${@:-list}" ;;
+  restart) shift; cmd_restart "$@" ;;
+  logs) shift; cmd_logs "$@" ;;
+  notify) shift; uni_notify "${1:?message}" "${2:-default}" "${3:-}" ;;
+  health) cmd_health ;;
+  doctor) exec "$HOST_DIR/bin/doctor" ;;
+  perf) shift; cmd_perf "$@" ;;
+  snapshot) HEALTH_ALERTS=(); snapshot_json ;;
+  grep) shift; cmd_grep "$@" ;;
+  find) shift; cmd_find "$@" ;;
+  history) shift; cmd_history "$@" ;;
+  attach) exec "${TM_RC[@]}" attach -t rc ;;
+  update) cmd_update ;;
+  hostenv) shift; cmd_hostenv "$@" ;;
+  laptop-ping) shift; cmd_laptop_ping "$@" ;;
+  help|-h|--help) cmd_help ;;
+  *)
+    if have "uni-vm-$1"; then c="uni-vm-$1"; shift; exec "$c" "$@"; fi
+    echo "unknown command: $1"; cmd_help; exit 2 ;;
+esac

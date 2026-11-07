@@ -1,0 +1,21 @@
+# Uni OS host: the tmux server that holds interactive job sessions (SESSION=rc jobs).
+# run-job starts each one as a tmux session HERE, so it outlives the job's oneshot unit (systemd
+# kills a unit's children when the unit ends) and stays open for replies from the phone until
+# `uni-vm health` closes it. The "hold" session keeps the server up.
+[Unit]
+Description=Uni OS: tmux server for interactive job sessions (tmux -L uni-jobs)
+After=uni-drive.service network-online.target
+Wants=uni-drive.service
+
+[Service]
+Type=forking
+Environment=PATH=%h/.local/bin:@@HOST_DIR@@/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/tmux -L uni-jobs new-session -d -s hold -x 200 -y 50 "sleep infinity"
+ExecStop=/usr/bin/tmux -L uni-jobs kill-server
+# Job sessions are the first to go under memory pressure.
+OOMScoreAdjust=600
+Restart=always
+RestartSec=20
+
+[Install]
+WantedBy=default.target

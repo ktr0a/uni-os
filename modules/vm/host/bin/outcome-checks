@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+# outcome-checks: did the jobs' work actually happen? Deterministic, no agent.
+#
+# "Exit 0 says a job ended, not that its result is there." Called by `uni-vm health` every
+# 15 min (with a 90 s timeout, as a separate script so its bugs can't stop the health check),
+# unless the notifications module's own job `outcome-checks` (`uni-os heartbeat outcomes`)
+# is switched ON on this host (its timer is enabled): then that job checks on its own timer and
+# health skips this script. Taken but switched off, this script keeps running (never neither).
+# `uni-vm doctor` always runs it with --dry-run (read-only).
+#
+# One sender: with the vm module on, the host is the ONLY machine that pushes outcome checks
+# (this script or the job above; `uni-os heartbeat outcomes --push` on the laptop leaves the push
+# to the host, and the inbox poll's --push stands down). Ids and push texts are exactly those of
+# `uni-os heartbeat outcomes` (tools/uni_os/heartbeat_rules.py), so whichever implementation runs,
+# the phone, the flags and the dashboards say the same thing, and the gate dedupes per id.
+#
+# Checks (each only when its module is enabled in the vault config):
+#   1. daily-prep: tomorrow's prep note semester/prep/prep-<tomorrow>[-rN].md exists once the
+#      first daily-prep slot + OUTCOME_PREP_GRACE_MIN has passed (17:30 + 60 min by default)
+#      id prep:tomorrow-missing:<date>
+#   2. inbox-sync: no update note (inbox/*-update.md) older than INBOX_STUCK_H hours; a cockpit
+#      Done/Undo tap note (TAP_REGEX) waits for a fixed sync run by design, so it gets TAP_STUCK_H
+#      (both from notify.inbox_stale_hours[_taps], the one threshold every sender uses)
+#      id inbox:stuck:<slug of the file name>; the push never names the file
+#   3. daily-prep: a gap listed in _agent/daily-prep/state.json (.days[<date>].gaps) for today or
+#      tomorrow stays open more than GAP_OPEN_H hours, counted from when this script first saw it
+#      id prep:gap-open:<date>; the push names neither the gap text nor the prep file
+#   4. plugins: every executable in ~/.config/uni-os/outcome-checks.d/ may print more lines
+#      "OUTCOME <key>: <text>" (other modules or the student add their own checks there); a key
+#      with a ":" is used as the id as it is, any other key becomes outcome:<key>
+# Output: one line "OUTCOME <id>: <text>" per problem. Pushes ONLY on a problem, never "all
+# good", through the shared push gate of the notifications module (one budget with the
+# heartbeat, the same problem once per dedupe window, quiet hours and quiet windows), prefix
+# OUTCOME_PREFIX (heartbeat.outcome_prefix). No personal details and no file names in a push.
+# Off switch: touch ~/.local/state/uni-os/outcomes/off
+# Usage: outcome-checks [--dry-run]     --dry-run prints the problems and sends nothing
+# Test hooks: UNI_OUTCOMES_ROOT (vault), UNI_OUTCOMES_STATE, UNI_OUTCOMES_NOW ("YYYY-MM-DD HH:MM"),
+#   UNI_OUTCOMES_MODULES (enabled module list), UNI_PUSH_FAKE_SEND.
+set -uo pipefail
+HOST_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+. "$HOST_DIR/lib/common.sh"
+DRY="${1:-}"; [ "${UNI_DRY_RUN:-0}" = 1 ] && DRY=--dry-run
+UNI="${UNI_OUTCOMES_ROOT:-$VAULT}"
+S="${UNI_OUTCOMES_STATE:-$STATE/outcomes}"
+NOW="${UNI_OUTCOMES_NOW:-$(date '+%Y-%m-%d %H:%M')}"
+MODS="${UNI_OUTCOMES_MODULES:-$MODULES_ENABLED}"
+PREP_DIR="${OUTCOME_PREP_DIR:-semester/prep}"
+PREP_STATE="$UNI/$AGENT_DIR/daily-prep/state.json"
+
+mkdir -p "$S"
+[ -f "$S/off" ] && exit 0
+[ -f "$UNI/$VAULT_SENTINEL" ] || exit 0          # mount trouble is vm-health's own alert
+
+now=$(date -d "$NOW" +%s)
+hhmm=$(( 10#$(date -d "$NOW" +%H%M) ))
+today=$(date -d "$NOW" +%F)
+tomorrow=$(date -d "$today +1 day" +%F)
+day_name() { date -d "$1" '+%a %-d %b'; }
+module_on() { [ -z "$MODS" ] && return 0; [[ ", $MODS, " == *", $1, "* ]]; }
+# Hours as Python's %g prints them (4 -> 4, 4.0 -> 4, 4.5 -> 4.5), and as whole seconds.
+hours_g() { awk -v h="$1" 'BEGIN { printf "%g", h + 0 }'; }
+hours_s() { awk -v h="$1" 'BEGIN { printf "%d", (h + 0) * 3600 }'; }
+# The heartbeat rules' slug(): lower case, runs of other characters -> "-", trimmed, at most 60
+# characters. A longer slug is cut to 53, trailing "-" dropped, plus "-" and the first 6 hex digits
+# of the SHA-1 of the original text, so two long names sharing their start never share an id.
+slug() {
+  local s head
+  s=$(printf '%s' "$1" | LC_ALL=C tr 'A-Z' 'a-z' | LC_ALL=C sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')
+  if [ "${#s}" -gt 60 ]; then
+    head=$(printf '%s' "$s" | cut -c1-53 | sed -E 's/-+$//')
+    s="${head:+$head-}$(printf '%s' "$1" | sha1sum | cut -c1-6)"
+  fi
+  printf '%s' "${s:-x}"
+}
+
+ids=(); texts=()
+add() { ids+=("$1"); texts+=("$2"); }
+
+# 1. Tomorrow's prep note, due at the first prep slot + grace.
+first_slot=$(printf '%s' "$DAILY_PREP_SLOTS" | tr -d ' ' | cut -d, -f1)
+if module_on daily-prep && [[ "$first_slot" =~ ^[0-9]{1,2}:[0-9]{2}$ ]]; then
+  due=$(date -d "$today $first_slot $OUTCOME_PREP_GRACE_MIN minutes" +%H%M 2>/dev/null)
+  if [ -n "$due" ] && [ "$hhmm" -ge $(( 10#$due )) ] && ! compgen -G "$UNI/$PREP_DIR/prep-$tomorrow*.md" >/dev/null; then
+    add "prep:tomorrow-missing:$tomorrow" "no prep note for $(day_name "$tomorrow") yet"
+  fi
+fi
+
+# 2. Update notes stuck in the inbox (parked, or the sync isn't running). Same wording as
+# heartbeat_rules.stuck_push_text(); the file name stays out of the push (it can carry personal details).
+older_than() { find "$UNI/$INBOX_DIR" -maxdepth 1 -type f -name '*-update.md' ! -newermt "$(date -d "@$(( now - $1 ))" '+%F %T')" 2>/dev/null; }
+if module_on inbox-sync; then
+  while IFS= read -r f; do
+    [ -n "$f" ] && add "inbox:stuck:$(slug "$(basename "$f")")" "update note waiting in the inbox for over $(hours_g "$INBOX_STUCK_H") h, not applied by the inbox sync"
+  done < <(older_than "$(hours_s "$INBOX_STUCK_H")" | grep -v -E "$TAP_REGEX")
+  while IFS= read -r f; do
+    [ -n "$f" ] && add "inbox:stuck:$(slug "$(basename "$f")")" "Done-tap note waiting in the inbox for over $(hours_g "$TAP_STUCK_H") h, not applied by the inbox sync"
+  done < <(older_than "$(hours_s "$TAP_STUCK_H")" | grep -E "$TAP_REGEX")
+fi
+
+# 3. A prep gap open for over GAP_OPEN_H hours, per target date, from when it was first seen here.
+if module_on daily-prep && [ -f "$PREP_STATE" ] && have jq; then
+  for d in "$today" "$tomorrow"; do
+    n=$(jq -r --arg d "$d" '(.days[$d].gaps // []) | length' "$PREP_STATE" 2>/dev/null) || continue
+    [ -n "$n" ] || continue
+    first="$S/gap-first-$d"
+    if [ "$n" -gt 0 ]; then
+      [ -n "$DRY" ] || [ -f "$first" ] || echo "$now" > "$first"
+      seen=$(cat "$first" 2>/dev/null || echo "$now")
+      if [ $(( now - seen )) -ge "$(hours_s "$GAP_OPEN_H")" ]; then
+        add "prep:gap-open:$d" "prep gap open for over $(hours_g "$GAP_OPEN_H") h for $(day_name "$d")"
+      fi
+    elif [ -z "$DRY" ]; then
+      rm -f "$first"
+    fi
+  done
+fi
+[ -n "$DRY" ] || find "$S" -maxdepth 1 -type f -name 'gap-first-*' -mtime +3 -delete 2>/dev/null
+
+# 4. Plugins (host-only folder: code from the vault is never run here).
+for p in "$CONF_DIR/outcome-checks.d"/*; do
+  [ -x "$p" ] || continue
+  while IFS= read -r l; do
+    if [[ "$l" =~ ^OUTCOME\ ([A-Za-z0-9._:-]+):\ (.+)$ ]]; then
+      k="${BASH_REMATCH[1]}"; [[ "$k" == *:* ]] || k="outcome:$k"
+      add "$k" "${BASH_REMATCH[2]}"
+    fi
+  done < <(UNI_VAULT="$UNI" UNI_OUTCOMES_NOW="$NOW" timeout 20 "$p" 2>/dev/null)
+done
+
+[ "${#ids[@]}" -gt 0 ] || exit 0
+for i in "${!ids[@]}"; do echo "OUTCOME ${ids[$i]}: ${texts[$i]}"; done
+[ -n "$DRY" ] && exit 0
+
+# Whether to push now is the gate's decision (hours, windows, budget, dedupe).
+args=()
+for i in "${!ids[@]}"; do args+=(--item "${ids[$i]}=${texts[$i]}"); done
+r=$(uni_push_gate --source outcome-checks --prefix "$OUTCOME_PREFIX" "${args[@]}" --now "$NOW" 2>&1)
+echo "$NOW gate: $r" >> "$S/log"
+exit 0

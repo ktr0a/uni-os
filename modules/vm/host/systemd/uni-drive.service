@@ -1,0 +1,34 @@
+# Uni OS host: the vault, an rclone remote mounted with FUSE (template: install-user.sh fills @@...@@).
+# Drive stays the single source of truth; writes upload within ~5 s (--vfs-write-back 5s) and
+# changes made elsewhere show up within about a minute (--poll-interval 15s, --dir-cache-time 1m).
+# A delete on the mount is a REAL delete in the cloud drive (into its trash): keep rclone's
+# default trash behaviour. Works with other rclone backends too (OneDrive, Dropbox, ...).
+[Unit]
+Description=Uni OS vault: rclone remote "@@DRIVE_REMOTE@@:" mounted at @@VAULT_MOUNT@@
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+ExecStartPre=/bin/mkdir -p "@@VAULT_MOUNT@@" %h/.local/state/uni-os %h/.cache/rclone
+ExecStart=/usr/bin/rclone mount "@@DRIVE_REMOTE@@:" "@@VAULT_MOUNT@@" \
+  --vfs-cache-mode full \
+  --vfs-cache-max-size @@RCLONE_CACHE_MAX@@ \
+  --vfs-cache-max-age 2160h \
+  --vfs-write-back 5s \
+  --vfs-refresh \
+  --dir-cache-time 1m \
+  --poll-interval 15s \
+  --attr-timeout 1s \
+  --drive-export-formats md,csv,txt,pdf \
+  --cache-dir %h/.cache/rclone \
+  --log-level NOTICE \
+  --log-file %h/.local/state/uni-os/rclone.log @@RCLONE_EXTRA_FLAGS@@
+# A remount leaves Remote Control in the old (dead) mount: restart it.
+ExecStartPost=-/usr/bin/systemctl --user --no-block try-restart uni-rc.service
+ExecStop=/bin/fusermount3 -uz "@@VAULT_MOUNT@@"
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=default.target

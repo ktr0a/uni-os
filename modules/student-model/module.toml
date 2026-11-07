@@ -1,0 +1,46 @@
+id = "student-model"
+name = "Student model"
+tier = "core"
+summary = "Four short pages in me/ that tell every agent who the student is, how they learn, what their day and week look like, and which mistakes keep recurring, so advice and plans fit the person."
+requires = ["core"]
+recommends = ["error-logs", "planning", "check-in"]
+obsidian = "optional"
+os = ["any"]
+runtime = ["laptop", "cloud", "vm"]
+
+# Keys this module reads. (required) = no default; core asks for them in setup:
+#   (required) student.name, university.name, university.programme, term.label; (optional) student.handle
+# calendar.* and schedule.* are only read inside {{#if modules.planning}} (the planning module defines them).
+config_keys = [
+  "student.name", "student.handle", "university.name", "university.programme", "university.lms",
+  "term.label", "term.exam_session_start", "term.exam_session_end",
+  "storage.provider", "obsidian.enabled", "agent.primary", "study.formats",
+  "courses.short", "courses.name", "courses.folder", "courses.slug", "courses.error_log_files",
+  "calendar.courses", "calendar.study_blocks", "calendar.events", "calendar.busy",
+  "schedule.day_start", "schedule.weekday_stop", "schedule.study_cutoff",
+  "schedule.focus_minutes", "schedule.break_minutes",
+  "modules.enabled",
+]
+
+verbatim = []
+
+# No keys of its own. The defaults below repeat core's, so this module renders on its own
+# (e.g. `uni-os init --modules student-model`, which pulls in core anyway).
+[defaults.university]
+lms = "Moodle"
+
+[defaults.term]
+exam_session_start = ""
+exam_session_end = ""
+
+[defaults.storage]
+provider = "google-drive"
+
+[defaults.obsidian]
+enabled = true
+
+[defaults.agent]
+primary = "claude-code"
+
+[defaults.study]
+formats = ["html", "md"]

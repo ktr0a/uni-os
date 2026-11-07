@@ -1,0 +1,20 @@
+# Uni OS host: the tmux server for persistent role sessions (bin/role-sessions). "hold" keeps the
+# server up; after start (boot, crash) every started role is resumed from its transcript.
+[Unit]
+Description=Uni OS: tmux server for persistent role sessions (tmux -L uni-roles)
+After=uni-drive.service network-online.target
+Wants=uni-drive.service
+
+[Service]
+Type=forking
+Environment=PATH=%h/.local/bin:@@HOST_DIR@@/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/tmux -L uni-roles new-session -d -s hold -x 200 -y 50 "sleep infinity"
+ExecStartPost=-/usr/bin/systemd-run --user --no-block --collect --unit=uni-roles-up @@HOST_DIR@@/bin/role-sessions up
+ExecStop=/usr/bin/tmux -L uni-roles kill-server
+# Role sessions go last under memory pressure (jobs 600, server sessions 500).
+OOMScoreAdjust=400
+Restart=always
+RestartSec=20
+
+[Install]
+WantedBy=default.target

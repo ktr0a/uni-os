@@ -1,0 +1,29 @@
+# Test fixture (not a real module): week pages, a job and a role.
+id = "progress"
+name = "Progress (fixture)"
+tier = "standard"
+summary = "Fixture: week pages, tracker log, a job and a role."
+requires = ["core"]
+recommends = ["study"]
+obsidian = "optional"
+config_keys = ["schedule.week_page", "schedule.check_in"]
+
+[[jobs]]
+id = "week-page"
+
+[[roles]]
+id = "plan-and-progress"
+title = "Plan & progress"
+
+[defaults.schedule]
+week_page = { day = "Sun", time = "10:00" }
+
+[defaults.course]
+sheet_label = "sheet"
+
+[[contracts]]
+name = "tracker log keeps its heading"
+files = ["progress/tracker-log.md"]
+headings = ["## Entries"]
+frontmatter = { type = "log" }
+level = "warning"

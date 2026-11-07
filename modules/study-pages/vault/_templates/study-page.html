@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AD: Big-O notation (template sample)</title>
+<!-- Uni OS study page. html2md.py reads these meta tags for the Markdown twin's properties. -->
+<meta name="uni-os:type" content="study-page">
+<meta name="uni-os:kind" content="teaching-page">
+<meta name="uni-os:course" content="algo">
+<meta name="uni-os:sources" content="template sample: standard textbook definitions of O, Omega and Theta (no course script)">
+<meta name="uni-os:created" content="2026-09-14">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+/* Colour tokens. COURSE ACCENT: set --acc / --accb (light) and the dark pair below to the course colour from the config. */
+:root{--bg:#f7f7f3;--fg:#1c1c1a;--mut:#62625b;--line:#d9d9d0;--card:#fff;--acc:#0b6e4f;--accb:#e3f2ea;--warn:#a85a00;--warnb:#fff1dc;--bad:#b3261e;--badb:#fde7e5;--ok:#1b7f3b;--okb:#e0f3e4;
+--c1:#2563b8;--c2:#c2410c;--c3:#0b6e4f;--c4:#7c3aed;--c5:#a16207;--node:#fff;--hit:#bfe8c6;--path:#ffe69a;--new:#b9d8ff;--mv:#ffd2a8;--swp:#ffb3ab}
+@media (prefers-color-scheme:dark){:root{--bg:#151513;--fg:#ecebe4;--mut:#a5a59b;--line:#3b3b36;--card:#1e1e1b;--acc:#52c79b;--accb:#1d3a2f;--warn:#e7a54b;--warnb:#3a2c14;--bad:#ff8a80;--badb:#3c1d1a;--ok:#6fd58b;--okb:#1c3523;
+--c1:#6ea4f5;--c2:#f59a62;--c3:#52c79b;--c4:#b69bff;--c5:#e0b74f;--node:#26261f;--hit:#25502e;--path:#5a4a12;--new:#1e3d66;--mv:#5c3a18;--swp:#6a2a24}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:60px}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header.top{position:sticky;top:0;z-index:20;background:var(--card);border-bottom:1px solid var(--line)}
+header.top nav{max-width:1000px;margin:0 auto;display:flex;gap:2px;overflow-x:auto;padding:0 8px}
+header.top a{flex:0 0 auto;padding:11px 12px;color:var(--mut);text-decoration:none;font-size:.9rem;border-bottom:3px solid transparent;white-space:nowrap}
+header.top a:hover{color:var(--fg)}header.top a.on{color:var(--acc);border-bottom-color:var(--acc);font-weight:600}
+main{max-width:1000px;margin:0 auto;padding:12px 16px 80px}
+h1{font-size:1.7rem;line-height:1.25;margin:.6em 0 .2em}
+h2{font-size:1.35rem;margin:1.8em 0 .3em;padding-top:.4em;border-top:2px solid var(--line)}
+h2 .no{color:var(--acc);margin-right:.35em}
+h3{font-size:1.07rem;margin:1.3em 0 .3em}
+p{margin:.55em 0}
+.sub,.note{color:var(--mut);font-size:.9rem}
+.src{display:inline-block;font-size:.76rem;font-weight:400;color:var(--mut);border:1px solid var(--line);border-radius:10px;padding:0 8px;margin-left:6px;vertical-align:1px;white-space:nowrap}
+.banner{border:1px dashed var(--warn);background:var(--warnb);border-radius:10px;padding:10px 14px;margin:12px 0;font-size:.92rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:12px 0}
+.card.key{border-left:5px solid var(--acc)}
+.card.trap{border-left:5px solid var(--warn);background:var(--warnb)}
+.card.proc{border-left:5px solid var(--c4)}
+.card h3:first-child{margin-top:0}
+.demo{background:var(--card);border:1px dashed var(--acc);border-radius:10px;padding:12px 14px;margin:14px 0}
+.demo>h3{margin:0 0 .4em;font-size:1rem;color:var(--acc)}
+.demo>h3:before{content:"\25B6  "}
+ul,ol{padding-left:1.25em;margin:.4em 0}li{margin:.2em 0}
+code,.mono{font:.9em ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:rgba(127,127,127,.13);padding:0 4px;border-radius:4px}
+pre{background:rgba(127,127,127,.1);border:1px solid var(--line);border-radius:8px;padding:8px 12px;overflow-x:auto;margin:.5em 0}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+td,th{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:rgba(127,127,127,.1)}
+td.c{text-align:center}td.hl{background:var(--accb);font-weight:600}
+.tw{overflow-x:auto}
+.row{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:6px 0}
+label{font-size:.88rem;color:var(--mut)}
+select,input[type=text],input[type=number]{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg)}
+input[type=text],input[type=number]{width:5.5em}
+input.wide{width:min(22em,100%)}
+input[type=range]{accent-color:var(--acc);vertical-align:middle}
+button{font:inherit;font-size:.92rem;padding:6px 12px;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:6px;cursor:pointer}
+button:hover:not(:disabled){border-color:var(--acc)}
+button:disabled{opacity:.45;cursor:default}
+button.p{background:var(--acc);border-color:var(--acc);color:#fff}
+@media (prefers-color-scheme:dark){button.p{color:#0c1b14}}
+button.sm{padding:3px 9px;font-size:.84rem}
+.msg{min-height:3em;margin:.5em 0;padding:8px 10px;border-radius:8px;background:var(--accb);font-size:.95rem}
+.msg.bad{background:var(--badb)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:760px){.two{grid-template-columns:1fr}}
+svg{display:block;max-width:100%;height:auto;margin:4px auto}
+.vis{overflow-x:auto}
+svg text{fill:var(--fg);font:12px system-ui,sans-serif}
+svg .t-s{font-size:10.5px;fill:var(--mut)}
+svg .t-l{font-size:11px;fill:var(--mut)}
+.axis{stroke:var(--mut);stroke-width:1}.grid{stroke:var(--line);stroke-width:1}
+.ln{fill:none;stroke-width:2.4}
+.l1{stroke:var(--c1)}.l2{stroke:var(--c2)}.l3{stroke:var(--c3)}.l4{stroke:var(--c4)}.l5{stroke:var(--c5)}
+.d2{stroke-dasharray:7 4}.d3{stroke-dasharray:2 4}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:.84rem;color:var(--mut);margin:2px 0 6px}
+.legend i{display:inline-block;width:22px;height:0;border-top:3px solid;vertical-align:middle;margin-right:5px}
+.legend i.l1{border-color:var(--c1)}.legend i.l2{border-color:var(--c2)}.legend i.l3{border-color:var(--c3)}.legend i.l4{border-color:var(--c4)}.legend i.l5{border-color:var(--c5)}
+.legend i.d2{border-top-style:dashed}.legend i.d3{border-top-style:dotted}
+.good{color:var(--ok);font-weight:600}.badtxt{color:var(--bad);font-weight:600}
+/* quiz engine */
+.quiz{margin:16px 0;border:2px solid var(--c4);border-radius:12px;padding:12px 14px;background:var(--card)}
+.quiz>h3{margin:0 0 .2em;color:var(--c4)}
+.qq{border-top:1px solid var(--line);padding:12px 0}
+.qq:first-of-type{border-top:0}
+.qh{font-size:.8rem;color:var(--mut);margin-bottom:2px}
+.qh b{color:var(--c4)}
+.orig{display:inline-block;border:1px solid var(--line);border-radius:8px;padding:0 6px;font-size:.74rem;margin-left:4px}
+.qt{margin:.2em 0 .5em}
+.opts{display:grid;gap:6px}
+.opt{color:var(--fg);font-size:1rem;display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;padding:7px 10px;cursor:pointer;background:var(--card)}
+.opt:hover{border-color:var(--c4)}
+.opt input{margin-top:.35em;accent-color:var(--c4)}
+.opt .ol{font-weight:700;color:var(--mut);min-width:1.1em}
+.opt.sel{border-color:var(--c4);background:rgba(124,58,237,.08)}
+.opt.right{border-color:var(--ok);background:var(--okb)}.opt.wrong{border-color:var(--bad);background:var(--badb)}
+.opt .why{display:block;font-size:.84rem;color:var(--mut);margin-top:3px}
+.opt .ov{flex:1;min-width:0;overflow-x:auto}
+.fb{margin-top:8px;padding:8px 11px;border-radius:8px;font-size:.93rem;background:var(--accb)}
+.fb.ok{background:var(--okb)}.fb.no{background:var(--badb)}
+.selfmark{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.qact{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.clockrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.clock{font:600 1.1rem ui-monospace,Consolas,monospace;padding:2px 10px;border:1px solid var(--line);border-radius:8px}
+.clock.low{color:var(--bad);border-color:var(--bad)}
+.sumbox{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--accb)}
+.sumbox h4{margin:0 0 4px;font-size:1.05rem}
+.bar{height:10px;border-radius:5px;background:rgba(127,127,127,.2);overflow:hidden;min-width:90px}.bar i{display:block;height:100%;background:var(--acc)}
+.prog{display:flex;flex-wrap:wrap;gap:6px 10px;margin:8px 0}
+.chip{border:1px solid var(--line);border-radius:14px;padding:2px 11px;font-size:.84rem;background:var(--card);color:var(--mut)}
+.chip.done{border-color:var(--ok);color:var(--ok);font-weight:600}
+.hide{display:none}
+.katex-display{overflow-x:auto;overflow-y:hidden}
+#uos-check{position:fixed;left:12px;right:12px;bottom:12px;z-index:30;max-width:760px;margin:0 auto;background:var(--badb);border:1px solid var(--bad);border-radius:10px;padding:8px 12px;font-size:.88rem}
+footer{color:var(--mut);font-size:.85rem;margin-top:40px;border-top:1px solid var(--line);padding-top:10px}
+@media print{header.top,button,.clockrow,#uos-check{display:none!important}body{background:#fff;color:#000}.demo,.quiz{break-inside:avoid}}
+</style>
+</head>
+<body>
+<!--
+  HOW TO BUILD A PAGE FROM THIS TEMPLATE (the agent reads this; html2md skips comments)
+  1. Copy this file to <course folder>/notes/<slug>-<topic>-study-page.html (other kinds: see the study-page skill).
+  2. Fill the meta tags above (kind, course id, sources ";"-separated, created) and the <title>.
+  3. Set the course accent colour in :root (light and dark).
+  4. Content comes only from the course's real sources (script, slides, handouts, official plan). Every <h3> carries a
+     source chip <span class="src">script §x.y, p. N</span> with printed page numbers. If a source can't be opened, say so.
+  5. Split the material into sections of about 700-800 words (config study.chunk_words) with 2-4 subsections,
+     one demo or visual and one mid quiz each. The number of sections is not fixed. Lead with intuition and a picture,
+     then the precise definitions. Never skip "obvious" algebra steps.
+  6. Keep the nav in sync: one <a href="#id"> per <section id="id">.
+  7. One mid quiz per section: a mount <div id="quiz-X"></div> and an entry X in QUIZZES (mode 'instant').
+     The final self-test is quiz F (mode 'final', optional timer in minutes). Label every question's origin with
+     ORIG(q,'official: <where>') or ORIG(q,'adapted from <where>'); unlabelled questions show "invented".
+     "Official" and "adapted" mean this term's official sheets, quizzes or practice material of the course.
+  8. Put the topic's real algorithms or formulas in //<CORE> and compute quiz answers and wrong-option explanations
+     with them ("answers checked by code"), instead of typing them by hand.
+  9. In maths, a literal "<" followed by a letter is swallowed as an HTML tag: write \lt (and \\lt inside JS strings).
+ 10. Then run: python _agent/tools/check_study_page.py <page.html>, make the twin with html2md.py, add the row to the
+     course card's "In this folder" table, and show the page to the student.
+-->
+<header class="top"><nav id="nav">
+<a href="#start">Start</a><a href="#growth">1 · O, Ω, Θ</a><a href="#loops">2 · Counting loops</a><a href="#cheat">Cheat sheet</a><a href="#final">Final self-test</a>
+</nav></header>
+<main>
+
+<section id="start">
+<h1>Big-O notation: comparing how fast functions grow</h1>
+<p class="sub">Template sample page. Source: standard textbook definitions (no course script). Read a block, play with the demo, then take the quiz before moving on. The final self-test is at the end.</p>
+
+<div class="banner"><b>This is the template's sample content.</b> It shows every part of the study-page engine on a short topic (Big-O notation), written from the standard definitions. A real page replaces every section, uses the course's own notation and cites the course's sources on every subsection.</div>
+
+<div class="card key">
+<h3>What this page covers (and what it does not)</h3>
+<ul>
+<li><b>Covered:</b> the definitions of $O$, $\Omega$ and $\Theta$, the growth hierarchy, and counting the steps of simple loops exactly before naming their class.</li>
+<li><b>Borrowed from elsewhere:</b> the sum formula $\sum_{i=1}^{n} i = \frac{n(n+1)}{2}$, usually proved in a discrete maths course.</li>
+<li><b>Not in this version:</b> little-$o$ and little-$\omega$, recurrences and the master theorem, amortised analysis.</li>
+<li><b>Notation:</b> $\log$ means $\log_2$. Loops count from 1 and include both bounds. Where something is inferred rather than taken from a source, the page says so.</li>
+</ul>
+</div>
+
+<div class="row" data-md="skip"><b>Your quiz progress:</b><span class="prog" id="progress"></span><button class="sm" id="resetProg">reset scores</button></div>
+<p class="note">How to use the quizzes: the mid quizzes give feedback after every question. The final self-test is answered in one go: you answer everything, submit once, and only then see the solutions and a breakdown per topic. Every question shows where it comes from (invented, adapted or official). Scores are saved in this browser only.</p>
+</section>
+
+<!-- ===================== 1 ===================== -->
+<section id="growth">
+<h2><span class="no">1</span>Growth of functions: O, Ω, Θ</h2>
+
+<h3>1.1 Why constants do not matter <span class="src">template sample</span></h3>
+<p>An algorithm that needs $3n^2$ steps and one that needs $n^2 + 100n$ steps behave alike for large inputs: doubling $n$ roughly quadruples both. An algorithm with $1000n$ steps is slower than both on small inputs, but for large $n$ it is far better. Big-O notation keeps exactly this information, the <b>shape of the growth</b>, and throws away constant factors and the behaviour on small inputs.</p>
+<div class="card key">
+<ul>
+<li>Picture two runners: one starts far ahead but runs at a constant pace, the other starts behind but keeps speeding up. The second one always wins eventually. "Eventually" is what $n_0$ in the definition means.</li>
+<li>Constant factors model faster or slower machines. A better machine changes the constant, never the shape.</li>
+</ul>
+</div>
+
+<h3>1.2 The three definitions <span class="src">template sample</span></h3>
+<p>Let $f, g:\mathbb{N}\to\mathbb{R}_{\ge 0}$.</p>
+<ul>
+<li>$f \in O(g)$ if there are constants $c > 0$ and $n_0$ such that $f(n) \le c\cdot g(n)$ for all $n \ge n_0$. ($f$ grows at most as fast as $g$.)</li>
+<li>$f \in \Omega(g)$ if there are constants $c > 0$ and $n_0$ such that $f(n) \ge c\cdot g(n)$ for all $n \ge n_0$. ($f$ grows at least as fast as $g$.)</li>
+<li>$f \in \Theta(g)$ if $f \in O(g)$ and $f \in \Omega(g)$. (Same growth up to constant factors.)</li>
+</ul>
+<p>Worked example: $3n^2 + 10n \in O(n^2)$. Take $c = 13$ and $n_0 = 1$. For every $n \ge 1$ we have $10n \le 10n^2$, so $3n^2 + 10n \le 3n^2 + 10n^2 = 13n^2$.</p>
+<div class="card trap">
+<b>Order of the quantifiers:</b> first <i>there exist</i> $c$ and $n_0$, then <i>for all</i> $n \ge n_0$. Writing "for all $n$ there is a $c$" says nothing: every function satisfies it with $c = f(n)/g(n)$.
+</div>
+
+<h3>1.3 The growth hierarchy <span class="src">template sample</span></h3>
+<p>From slowest to fastest, each function is in $O$ of the next one but not the other way round:</p>
+<p>$$1 \lt \log n \lt \sqrt{n} \lt n \lt n\log n \lt n^2 \lt n^3 \lt 2^n \lt 3^n$$</p>
+<p>For products of the form $k^n \cdot n^a \cdot (\log n)^b$ there is a three-step test: compare the exponential bases $k$ first; if they are equal, compare the powers $a$ of $n$; if those are equal too, compare the powers $b$ of the log. The first difference decides. The demo and the quiz below use exactly this test to compute their answers.</p>
+<div class="card trap">
+<b>Constants in the exponent do matter.</b> $2^{n+1} = 2\cdot 2^n \in O(2^n)$, but $2^{2n} = 4^n \notin O(2^n)$, because $4^n / 2^n = 2^n$ is unbounded. Bases of logarithms do <i>not</i> matter inside $\Theta$: $\log_{10} n = \log_2 n / \log_2 10$.
+</div>
+
+<div class="demo" id="w-race">
+<h3>Growth race: pick two functions</h3>
+<div class="row">
+<label>$f(n) =$ <select id="gr-f"></select></label>
+<label>$g(n) =$ <select id="gr-g"></select></label>
+<label>$n$ up to <b id="gr-nv">40</b> <input type="range" id="gr-n" min="8" max="64" value="40"></label>
+</div>
+<div id="gr-chart" class="vis"></div>
+<div class="msg" id="gr-msg"></div>
+<p class="note">The vertical axis shows $\log_2$ of the value, so $2^n$ is a straight line and polynomials bend. The verdict is computed with the three-step test from 1.3, and the crossover is found by checking every $n$ in the range.</p>
+</div>
+
+<div id="quiz-A"></div>
+</section>
+
+<!-- ===================== 2 ===================== -->
+<section id="loops">
+<h2><span class="no">2</span>Counting the steps of loops</h2>
+
+<h3>2.1 Count exactly first, classify later <span class="src">template sample</span></h3>
+<p>To find the running time of a loop, first write down the <b>exact</b> number of times the innermost statement runs, as a sum. Only then simplify it and name the class. Jumping straight to "two nested loops, so $n^2$" is the most common way to get these tasks wrong.</p>
+<pre><code>for i = 1..n:
+  for j = i..n:
+    count += 1</code></pre>
+<p>For a fixed $i$ the inner loop runs $n - i + 1$ times, so the total is $\sum_{i=1}^{n}(n-i+1) = n + (n-1) + \dots + 1 = \frac{n(n+1)}{2} \in \Theta(n^2)$.</p>
+
+<h3>2.2 Doubling and halving loops <span class="src">template sample</span></h3>
+<p>A loop whose counter doubles ($i = 1, 2, 4, 8, \dots$ while $i \le n$) runs once for each power of 2 that is at most $n$: that is $\lfloor \log_2 n \rfloor + 1$ times. Halving loops behave the same way.</p>
+<div class="card key">
+<ul>
+<li>Doubling outer loop, linear inner loop up to $i$: the inner loop costs $1 + 2 + 4 + \dots + 2^k = 2^{k+1} - 1 \lt 2n$ steps in total. That is $\Theta(n)$, not $\Theta(n \log n)$.</li>
+<li>Linear outer loop, halving inner loop from $n$: every outer step costs $\lfloor\log_2 n\rfloor + 1$, so the total is $\Theta(n \log n)$.</li>
+</ul>
+</div>
+
+<h3>2.3 Test every closed form on n = 1, 2, 3 <span class="src">template sample</span></h3>
+<p>A closed form that is off by one still has the right $\Theta$ class, but it gives a wrong number in a "how many times" task. Before you trust a formula, plug in $n = 1, 2, 3$ and compare with a hand count of the loop.</p>
+<div class="card trap">
+<b>Classic slip:</b> $\lceil \log_2 n \rceil$ looks like the number of doublings, but for $n = 1$ it gives $0$ while the loop runs once. The correct count is $\lfloor \log_2 n \rfloor + 1$.
+</div>
+
+<div class="demo" id="w-loop">
+<h3>Loop counter: run the loop, then test a formula</h3>
+<div class="row">
+<label>Loop <select id="lc-sel"></select></label>
+<label>$n$ = <b id="lc-nv">8</b> <input type="range" id="lc-n" min="1" max="64" value="8"></label>
+</div>
+<pre><code id="lc-code"></code></pre>
+<div class="msg" id="lc-msg"></div>
+<div class="row"><label>Your closed form in $n$ <input type="text" class="wide" id="lc-in" placeholder="e.g. n*(n+1)/2 or floor(log2(n))+1" autocomplete="off"></label><button class="sm" id="lc-go">Check on n = 1..8</button></div>
+<div id="lc-out" class="tw"></div>
+<p class="note">Formulas may use + − * / ^, brackets, and floor, ceil, sqrt, log2 (log means log2), ln. The real counts come from actually running the loop.</p>
+</div>
+
+<div id="quiz-B"></div>
+</section>
+
+<!-- ===================== cheat sheet ===================== -->
+<section id="cheat">
+<h2>Cheat sheet</h2>
+<div class="card key"><div class="tw"><table>
+<tr><th>Notation</th><th>Definition</th><th>Reads as</th></tr>
+<tr><td>$f \in O(g)$</td><td>$\exists c > 0, n_0\ \forall n \ge n_0:\ f(n) \le c\,g(n)$</td><td>at most as fast</td></tr>
+<tr><td>$f \in \Omega(g)$</td><td>$\exists c > 0, n_0\ \forall n \ge n_0:\ f(n) \ge c\,g(n)$</td><td>at least as fast</td></tr>
+<tr><td>$f \in \Theta(g)$</td><td>$f \in O(g)$ and $f \in \Omega(g)$</td><td>same growth</td></tr>
+</table></div>
+<p>Hierarchy: $1 \lt \log n \lt \sqrt n \lt n \lt n\log n \lt n^2 \lt n^3 \lt 2^n \lt 3^n$. Test for $k^n n^a (\log n)^b$: base $k$, then power $a$, then log power $b$.</p>
+<div class="tw"><table>
+<tr><th>Loop shape</th><th>Exact count</th><th>Class</th></tr>
+<tr><td>$i = 1..n$, $j = i..n$</td><td>$\frac{n(n+1)}{2}$</td><td>$\Theta(n^2)$</td></tr>
+<tr><td>$i$ doubles while $i \le n$</td><td>$\lfloor \log_2 n\rfloor + 1$</td><td>$\Theta(\log n)$</td></tr>
+<tr><td>$i$ doubles, inner $j = 1..i$</td><td>$2^{\lfloor \log_2 n\rfloor+1} - 1$</td><td>$\Theta(n)$</td></tr>
+<tr><td>$i = 1..n$, inner $j$ halves from $n$</td><td>$n(\lfloor \log_2 n\rfloor + 1)$</td><td>$\Theta(n \log n)$</td></tr>
+</table></div></div>
+
+<div class="card trap">
+<h3>Mistakes this topic invites</h3>
+<ul>
+<li>Reading $f \in O(g)$ as "$f$ is about $g$". It is only an upper bound: $n \in O(n^2)$ is true.</li>
+<li>Dropping a constant in the exponent: $2^{2n} \notin O(2^n)$.</li>
+<li>Calling a doubling outer loop with a linear inner loop $\Theta(n\log n)$. It is $\Theta(n)$.</li>
+<li>Trusting a closed form without testing it on $n = 1, 2, 3$.</li>
+<li>Swapping the quantifiers in the definition.</li>
+</ul>
+</div>
+
+<div class="card proc"><b>Procedure to practise</b>
+<ol>
+<li>Write the exact count as a sum, one sum per loop, innermost first.</li>
+<li>Evaluate the sum for $n = 1, 2, 3$ and compare with a hand trace of the code.</li>
+<li>Simplify to a closed form, keep the leading term, then name the $\Theta$ class.</li>
+<li>For "is $f \in O(g)$?": compare exponential base, then power of $n$, then log factors. For a proof, name $c$ and $n_0$ explicitly.</li>
+</ol></div>
+</section>
+
+<!-- ===================== final ===================== -->
+<section id="final">
+<h2>Final self-test</h2>
+<p>Answer everything, then submit once. Solutions and explanations appear only after submitting. Question styles: true/false, single choice, select-all, typed number, a typed formula checked against the real counts, and one proof you write on paper and mark yourself against a rubric. A reasonable practice target: about 15 minutes without notes (the clock is optional), then read the explanation of everything you missed.</p>
+<div id="quiz-F"></div>
+<footer>Source for all content: template sample, written from the standard textbook definitions of $O$, $\Omega$ and $\Theta$; no course script was used. A real page names its sources here (file, version, printed page numbers) and on every subsection. The counts in the demos come from running the loops. Built 14 Sep 2026.</footer>
+</section>
+</main>
+<div id="uos-check" class="hide" role="status"></div>
+
+<script>
+//<CORE>
+/* The topic's real mathematics. Demos draw with it and quiz answers are computed with it. */
+/* Growth signatures: f(n) = k^n * n^a * (log2 n)^b, constant factors ignored. */
+function G(key,tex,k,a,b){return {key:key,tex:tex,k:k,a:a,b:b};}
+const FN={
+  one:G('one','1',1,0,0), log:G('log','\\log n',1,0,1), sqrt:G('sqrt','\\sqrt{n}',1,0.5,0), n:G('n','n',1,1,0),
+  nlogn:G('nlogn','n\\log n',1,1,1), n15:G('n15','n^{1.5}',1,1.5,0), n2:G('n2','n^2',1,2,0), n3:G('n3','n^3',1,3,0),
+  exp2:G('exp2','2^n',2,0,0), exp3:G('exp3','3^n',3,0,0), exp4:G('exp4','4^n',4,0,0)
+};
+const RACE_KEYS=['one','log','sqrt','n','nlogn','n15','n2','n3','exp2','exp3'];
+function cmpGrowth(f,g){if(f.k!==g.k)return f.k<g.k?-1:1;if(f.a!==g.a)return f.a<g.a?-1:1;if(f.b!==g.b)return f.b<g.b?-1:1;return 0;}
+function inO(f,g){return cmpGrowth(f,g)<=0;}
+function inOmega(f,g){return cmpGrowth(f,g)>=0;}
+function inTheta(f,g){return cmpGrowth(f,g)===0;}
+function whyGrowth(f,g){
+  const F='$'+f.tex+'$',Gt='$'+g.tex+'$';
+  if(f.k!==g.k)return 'The exponential bases differ ('+f.k+' vs '+g.k+'), so the larger base wins: '+(f.k>g.k?F+' grows faster than '+Gt:Gt+' grows faster than '+F)+'.';
+  if(f.a!==g.a)return 'Same exponential part; the powers of $n$ differ ('+f.a+' vs '+g.a+'), so '+(f.a>g.a?F+' grows faster.':Gt+' grows faster.');
+  if(f.b!==g.b)return 'Same power of $n$; the log factors differ ('+f.b+' vs '+g.b+'), so '+(f.b>g.b?F+' grows faster.':Gt+' grows faster.');
+  return F+' and '+Gt+' have the same growth (only constant factors could differ).';
+}
+function lg2val(f,n){ // log2 of f(n), exact enough for drawing and crossover search
+  let v=n*Math.log2(f.k)+f.a*Math.log2(n);
+  if(f.b){const l=Math.log2(n);v+=l>0?f.b*Math.log2(l):-Infinity;}
+  return v;
+}
+function crossover(f,g,max){ // smallest n0 with f(n) <= g(n) for all n0 <= n <= max (c = 1), or null
+  let n0=null;for(let n=1;n<=max;n++){if(lg2val(f,n)<=lg2val(g,n)+1e-12){if(n0===null)n0=n;}else n0=null;}return n0;
+}
+/* Loops: run() really executes the loop and counts; closed() is the closed form; theta names the class. */
+const LOOPS=[
+ {id:'single',name:'single loop',code:'for i = 1..n:\n  count += 1',run:n=>{let c=0;for(let i=1;i<=n;i++)c++;return c;},closed:n=>n,tex:'n',theta:'n'},
+ {id:'triangle',name:'triangle (j from i)',code:'for i = 1..n:\n  for j = i..n:\n    count += 1',run:n=>{let c=0;for(let i=1;i<=n;i++)for(let j=i;j<=n;j++)c++;return c;},closed:n=>n*(n+1)/2,tex:'\\frac{n(n+1)}{2}',theta:'n2'},
+ {id:'upto',name:'triangle (j up to i)',code:'for i = 1..n:\n  for j = 1..i:\n    count += 1',run:n=>{let c=0;for(let i=1;i<=n;i++)for(let j=1;j<=i;j++)c++;return c;},closed:n=>n*(n+1)/2,tex:'\\frac{n(n+1)}{2}',theta:'n2'},
+ {id:'pairs',name:'pairs (j from i+1)',code:'for i = 1..n:\n  for j = i+1..n:\n    count += 1',run:n=>{let c=0;for(let i=1;i<=n;i++)for(let j=i+1;j<=n;j++)c++;return c;},closed:n=>n*(n-1)/2,tex:'\\frac{n(n-1)}{2}',theta:'n2'},
+ {id:'doubling',name:'doubling loop',code:'i = 1\nwhile i <= n:\n  count += 1\n  i = 2*i',run:n=>{let c=0;for(let i=1;i<=n;i*=2)c++;return c;},closed:n=>Math.floor(Math.log2(n))+1,tex:'\\lfloor\\log_2 n\\rfloor+1',theta:'log'},
+ {id:'dblinner',name:'doubling outer, linear inner',code:'i = 1\nwhile i <= n:\n  for j = 1..i:\n    count += 1\n  i = 2*i',run:n=>{let c=0;for(let i=1;i<=n;i*=2)for(let j=1;j<=i;j++)c++;return c;},closed:n=>Math.pow(2,Math.floor(Math.log2(n))+1)-1,tex:'2^{\\lfloor\\log_2 n\\rfloor+1}-1',theta:'n'},
+ {id:'halving',name:'linear outer, halving inner',code:'for i = 1..n:\n  j = n\n  while j >= 1:\n    count += 1\n    j = floor(j/2)',run:n=>{let c=0;for(let i=1;i<=n;i++)for(let j=n;j>=1;j=Math.floor(j/2))c++;return c;},closed:n=>n*(Math.floor(Math.log2(n))+1),tex:'n(\\lfloor\\log_2 n\\rfloor+1)',theta:'nlogn'}
+];
+function loopById(id){return LOOPS.find(l=>l.id===id);}
+/* A small, safe formula reader for answers in n: + - * / ^, brackets, implicit products (2n, n(n+1)), functions. */
+function parseExpr(src){
+  const s=String(src).replace(/\u2212/g,'-').replace(/[\u00b7\u00d7]/g,'*').replace(/\*\*/g,'^');
+  const toks=[];const re=/\s*(\d+\.?\d*|\.\d+|[A-Za-z_][A-Za-z_0-9]*|[-+*\/^(),])/y;let m,pos=0;
+  while(pos<s.length){re.lastIndex=pos;m=re.exec(s);if(!m){if(/^\s*$/.test(s.slice(pos)))break;throw new Error('unexpected "'+s.slice(pos).trim().charAt(0)+'"');}toks.push(m[1]);pos=re.lastIndex;}
+  let i=0;const peek=()=>toks[i],eat=t=>{if(toks[i]!==t)throw new Error('expected "'+t+'"');i++;};
+  const FUN={floor:Math.floor,ceil:Math.ceil,sqrt:Math.sqrt,abs:Math.abs,log2:Math.log2,log:Math.log2,lg:Math.log2,ln:Math.log};
+  function expr(){let a=term();while(peek()==='+'||peek()==='-'){const op=toks[i++],b=term(),x=a;a=op==='+'?n=>x(n)+b(n):n=>x(n)-b(n);}return a;}
+  function startsPrimary(t){return t!==undefined&&(/^[\d.]/.test(t)||/^[A-Za-z_]/.test(t)||t==='(');}
+  function term(){let a=unary();for(;;){const t=peek();if(t==='*'||t==='/'){i++;const b=unary(),x=a;a=t==='*'?n=>x(n)*b(n):n=>x(n)/b(n);}else if(startsPrimary(t)){const b=power(),x=a;a=n=>x(n)*b(n);}else return a;}}
+  function unary(){if(peek()==='-'){i++;const a=unary();return n=>-a(n);}if(peek()==='+'){i++;return unary();}return power();}
+  function power(){const a=primary();if(peek()==='^'){i++;const b=unary();return n=>Math.pow(a(n),b(n));}return a;}
+  function primary(){const t=peek();if(t===undefined)throw new Error('formula ends too early');
+    if(/^[\d.]/.test(t)){i++;const v=parseFloat(t);return ()=>v;}
+    if(t==='('){i++;const a=expr();eat(')');return a;}
+    if(/^[A-Za-z_]/.test(t)){i++;if(t==='n')return n=>n;if(t==='pi')return ()=>Math.PI;
+      const f=FUN[t.toLowerCase()];if(!f)throw new Error('unknown name "'+t+'"');eat('(');const a=expr();eat(')');return n=>f(a(n));}
+    throw new Error('unexpected "'+t+'"');}
+  const out=expr();if(i<toks.length)throw new Error('unexpected "'+toks[i]+'"');return out;
+}
+//</CORE>
+
+//<UI>
+const $=(s,r)=>(r||document).querySelector(s);
+const $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const META=n=>{const m=document.querySelector('meta[name="uni-os:'+n+'"]');return m?m.content:'';};
+const PAGE_KEY='uos_'+(META('course')||'x')+'_'+(location.pathname.split('/').pop()||'page').replace(/\.html?$/,'');
+let checkTimer=null;
+function mathify(root){try{if(window.renderMathInElement)window.renderMathInElement(root||document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false});}catch(e){}clearTimeout(checkTimer);checkTimer=setTimeout(runChecks,60);}
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v);}catch(e){}return null;}
+function svgTag(w,h,inner,scale){const s=scale||1;return '<svg viewBox="0 0 '+w+' '+h+'" width="'+Math.round(w*s)+'" xmlns="http://www.w3.org/2000/svg">'+inner+'</svg>';}
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function shuffle(arr,rnd){const a=arr.slice();const r=rnd||Math.random;for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function fmtNum(x){if(!isFinite(x))return String(x);return (Math.round(x*1000)/1000).toString();}
+/* In-page quality check: formulas that KaTeX could not render, or KaTeX missing. */
+function runChecks(){const box=$('#uos-check');if(!box)return;const msgs=[];const hasMath=/\$/.test(document.body.textContent);
+  if(hasMath&&!window.katex)msgs.push('KaTeX did not load (offline or blocked), so formulas show as raw LaTeX.');
+  const errs=$$('.katex-error');
+  if(errs.length)msgs.push('<b>'+errs.length+' formula'+(errs.length===1?'':'s')+' failed to render.</b> First: <code>'+esc(errs[0].textContent.slice(0,80))+'</code> '+esc(errs[0].title||''));
+  box.innerHTML=msgs.join('<br>');box.classList.toggle('hide',!msgs.length);}
+function lineChart(series,o){
+  const W=o.w||640,H=o.h||300,L=46,R=14,T=12,B=40;const x0=o.x0||0,y0=o.y0||0;
+  const sx=x=>L+(x-x0)/(o.xmax-x0)*(W-L-R),sy=y=>H-B-(Math.max(y0,Math.min(y,o.ymax))-y0)/(o.ymax-y0)*(H-T-B);let s='';
+  const xt=o.xticks||5,yt=o.yticks||5;
+  for(let i=0;i<=yt;i++){const y=y0+(o.ymax-y0)*i/yt;s+='<line class="grid" x1="'+L+'" x2="'+(W-R)+'" y1="'+sy(y)+'" y2="'+sy(y)+'"/><text x="'+(L-6)+'" y="'+(sy(y)+4)+'" text-anchor="end" class="t-s">'+Math.round(y*10)/10+'</text>';}
+  for(let i=0;i<=xt;i++){const x=x0+(o.xmax-x0)*i/xt;s+='<line class="grid" x1="'+sx(x)+'" x2="'+sx(x)+'" y1="'+T+'" y2="'+(H-B)+'"/><text x="'+sx(x)+'" y="'+(H-B+16)+'" text-anchor="middle" class="t-s">'+Math.round(x)+'</text>';}
+  s+='<line class="axis" x1="'+L+'" x2="'+L+'" y1="'+T+'" y2="'+(H-B)+'"/><line class="axis" x1="'+L+'" x2="'+(W-R)+'" y1="'+(H-B)+'" y2="'+(H-B)+'"/>';
+  s+='<text x="'+((L+W-R)/2)+'" y="'+(H-6)+'" text-anchor="middle" class="t-l">'+(o.xl||'')+'</text><text transform="translate(12,'+((T+H-B)/2)+') rotate(-90)" text-anchor="middle" class="t-l">'+(o.yl||'')+'</text>';
+  series.forEach(se=>{const d=se.pts.filter(p=>isFinite(p[1])).map((p,i)=>(i?'L':'M')+sx(p[0]).toFixed(1)+' '+sy(p[1]).toFixed(1)).join('');s+='<path class="ln '+se.cls+'" d="'+d+'"/>';});
+  const leg='<div class="legend">'+series.map(se=>'<span><i class="'+se.cls+'"></i>'+se.name+'</span>').join('')+'</div>';
+  return leg+svgTag(W,H,s,1);
+}
+/* Demo 1: growth race */
+function initRace(){
+  const F=$('#gr-f'),Gs=$('#gr-g'),N=$('#gr-n');
+  const LABEL={one:'1',log:'log n',sqrt:'√n',n:'n',nlogn:'n log n',n15:'n^1.5',n2:'n²',n3:'n³',exp2:'2ⁿ',exp3:'3ⁿ'};
+  const opt=k=>'<option value="'+k+'">'+(LABEL[k]||k)+'</option>';
+  F.innerHTML=RACE_KEYS.map(opt).join('');Gs.innerHTML=RACE_KEYS.map(opt).join('');F.value='n3';Gs.value='exp2';
+  function upd(){
+    const f=FN[F.value],g=FN[Gs.value],max=+N.value;$('#gr-nv').textContent=max;
+    const pts=fn=>{const p=[];for(let n=2;n<=max;n++)p.push([n,lg2val(fn,n)]);return p;};
+    const pf=pts(f),pg=pts(g);const ymax=Math.max(4,Math.ceil(Math.max(...pf.map(p=>p[1]),...pg.map(p=>p[1]))));
+    $('#gr-chart').innerHTML=lineChart([{name:'f',cls:'l1',pts:pf},{name:'g',cls:'l2 d2',pts:pg}],{x0:2,xmax:max,y0:0,ymax:ymax,xl:'n',yl:'log₂ of the value',w:560,h:240});
+    const c=cmpGrowth(f,g),x=crossover(f,g,max);
+    const yn=b=>b?'<span class="good">yes</span>':'<span class="badtxt">no</span>';
+    let cross;if(x===null)cross='In this range there is no $n_0$ from which $f(n) \\le g(n)$ holds (with $c = 1$).';
+    else if(x===1)cross='Here $f(n) \\le g(n)$ for every $n \\le '+max+'$ (with $c = 1$).';
+    else cross='From $n_0 = '+x+'$ on, $f(n) \\le g(n)$ for every $n \\le '+max+'$ (with $c = 1$): before that, $f$ is ahead.';
+    $('#gr-msg').innerHTML='$f \\in O(g)$: '+yn(c<=0)+' · $f \\in \\Omega(g)$: '+yn(c>=0)+' · $f \\in \\Theta(g)$: '+yn(c===0)+'<br>'+whyGrowth(f,g)+'<br>'+cross;
+    mathify($('#w-race'));
+  }
+  [F,Gs,N].forEach(e=>e.addEventListener('input',upd));upd();
+}
+/* Demo 2: loop counter with a formula check */
+function initLoop(){
+  const S=$('#lc-sel'),N=$('#lc-n');S.innerHTML=LOOPS.map(l=>'<option value="'+l.id+'">'+l.name+'</option>').join('');S.value='triangle';
+  function upd(){
+    const l=loopById(S.value),n=+N.value;$('#lc-nv').textContent=n;$('#lc-code').textContent=l.code;
+    const real=l.run(n),cf=l.closed(n);
+    $('#lc-msg').innerHTML='Running the loop for $n = '+n+'$: <b>'+real+'</b> increments. Closed form $'+l.tex+'$ gives <b>'+fmtNum(cf)+'</b> '+(Math.abs(cf-real)<1e-9?'<span class="good">(matches)</span>':'<span class="badtxt">(does not match)</span>')+'. Class: $\\Theta('+FN[l.theta].tex+')$.';
+    mathify($('#lc-msg'));
+  }
+  function check(){
+    const l=loopById(S.value),src=$('#lc-in').value;let f;
+    try{f=parseExpr(src);}catch(e){$('#lc-out').innerHTML='<p class="badtxt">Could not read the formula: '+esc(e.message)+'.</p>';return;}
+    let rows='',bad=0;for(let n=1;n<=8;n++){const want=l.run(n);let got;try{got=f(n);}catch(e){got=NaN;}const ok=isFinite(got)&&Math.abs(got-want)<1e-9;if(!ok)bad++;
+      rows+='<tr><td class="c">'+n+'</td><td class="c">'+want+'</td><td class="c">'+fmtNum(got)+'</td><td class="c">'+(ok?'<span class="good">✓</span>':'<span class="badtxt">✗</span>')+'</td></tr>';}
+    $('#lc-out').innerHTML='<table><tr><th>n</th><th>real count</th><th>your formula</th><th></th></tr>'+rows+'</table><p>'+(bad?'<span class="badtxt">'+bad+' of 8 values differ.</span> Look at the smallest $n$ that fails.':'<span class="good">All 8 values match.</span> Now name the $\\Theta$ class.')+'</p>';
+    mathify($('#lc-out'));
+  }
+  [S,N].forEach(e=>e.addEventListener('input',upd));$('#lc-go').onclick=check;$('#lc-in').addEventListener('keydown',e=>{if(e.key==='Enter')check();});upd();
+}
+function renderProgress(){
+  $('#progress').innerHTML=Object.keys(QUIZZES).map(id=>{const b=store(PAGE_KEY+'_best_'+id);return '<span class="chip'+(b?' done':'')+'">'+QUIZZES[id].chip+': '+(b?b:'not tried')+'</span>';}).join('');
+}
+function initNav(){
+  const links=$$('#nav a'),secs=links.map(a=>$(a.getAttribute('href')));
+  function on(){let cur=0;secs.forEach((s,i)=>{if(s&&s.getBoundingClientRect().top<120)cur=i;});links.forEach((a,i)=>a.classList.toggle('on',i===cur));}
+  window.addEventListener('scroll',on,{passive:true});on();
+  $('#resetProg').onclick=()=>{Object.keys(QUIZZES).forEach(id=>store(PAGE_KEY+'_best_'+id,null));renderProgress();};
+}
+function initPrint(){const open=()=>$$('details').forEach(d=>d.open=true);window.addEventListener('beforeprint',open);if(/[?&]print=1/.test(location.search))open();}
+//</UI>
+
+//<QDATA>
+/* Question builders. pts defaults: 1, select-all 2. origin defaults to "invented". */
+const O=(h,ok,why)=>({h:h,ok:!!ok,why:why||''});
+const TF=(topic,q,ans,expl,pts)=>({t:'tf',topic:topic,pts:pts||1,q:q,ans:ans,opts:[O('True',ans),O('False',!ans)],expl:expl,fixed:true});
+const SC=(topic,q,opts,expl,pts,vis)=>({t:'single',topic:topic,pts:pts||1,q:q,opts:opts,expl:expl,vis:vis});
+const MC=(topic,q,opts,expl,pts,vis)=>({t:'multi',topic:topic,pts:pts||2,q:q,opts:opts,expl:expl,vis:vis});
+const NUM=(topic,q,ans,expl,pts,vis,unit)=>({t:'num',topic:topic,pts:pts||1,q:q,ans:ans,expl:expl,vis:vis,unit:unit});
+const EXPR=(topic,q,fn,expl,pts,ns)=>({t:'expr',topic:topic,pts:pts||2,q:q,fn:fn,expl:expl,ns:ns});
+const SELF=(topic,q,rubric,expl,pts)=>({t:'self',topic:topic,pts:pts||2,q:q,rubric:rubric,expl:expl});
+const ORIG=(q,origin)=>Object.assign(q,{origin:origin});
+/* Options whose correctness and explanation are computed, not typed. */
+function gOpt(fk,gk,rel){const f=FN[fk],g=FN[gk];const ok=rel==='O'?inO(f,g):rel==='Omega'?inOmega(f,g):inTheta(f,g);
+  const sym=rel==='O'?'O':rel==='Omega'?'\\Omega':'\\Theta';return O('$'+f.tex+' \\in '+sym+'('+g.tex+')$',ok,whyGrowth(f,g));}
+function memberOpt(fk,gk,rel){const f=FN[fk],g=FN[gk];const ok=rel==='O'?inO(f,g):inOmega(f,g);return O('$'+f.tex+'$',ok,whyGrowth(f,g));}
+function formOpt(tex,fn,ref,max){for(let n=1;n<=(max||64);n++){const a=fn(n),b=ref(n);if(!isFinite(a)||Math.abs(a-b)>1e-9)return O('$'+tex+'$',false,'Fails at $n = '+n+'$: it gives '+fmtNum(a)+', the loop runs '+b+' times.');}
+  return O('$'+tex+'$',true,'Matches the real count for every $n$ from 1 to '+(max||64)+'.');}
+function thetaOpts(loop){return ['log','n','nlogn','n2'].map(k=>O('$\\Theta('+FN[k].tex+')$',k===loop.theta,k===loop.theta?'Exact count $'+loop.tex+'$.':''));}
+const DBL=loopById('doubling'),TRI=loopById('triangle'),UPTO=loopById('upto'),PAIRS=loopById('pairs'),HALF=loopById('halving'),DBLI=loopById('dblinner');
+
+const QA=[
+ TF('Definitions','$3n^2 + 10n \\in O(n^2)$.',true,'True: take $c = 13$ and $n_0 = 1$. For $n \\ge 1$, $10n \\le 10n^2$, so $3n^2 + 10n \\le 13n^2$.'),
+ SC('Hierarchy','Which statement is true?',[gOpt('nlogn','n2','O'),gOpt('n2','nlogn','O'),gOpt('exp2','n3','O'),gOpt('sqrt','log','O')],
+  'Use the three-step test: exponential base, then power of $n$, then log power.'),
+ MC('Hierarchy','Which functions are in $O(n)$?',['log','sqrt','n','nlogn','n2'].map(k=>memberOpt(k,'n','O')),
+  'Everything up to and including $n$ in the hierarchy is in $O(n)$; $n\\log n$ is already faster.',2),
+ TF('Hierarchy','$2^{n+1} \\in O(2^n)$.',true,'True: $2^{n+1} = 2 \\cdot 2^n$, a constant factor ($c = 2$).'),
+ TF('Hierarchy','$2^{2n} \\in O(2^n)$.',inO(FN.exp4,FN.exp2),'False: $2^{2n} = 4^n$, and '+whyGrowth(FN.exp4,FN.exp2).charAt(0).toLowerCase()+whyGrowth(FN.exp4,FN.exp2).slice(1)),
+ SC('Definitions','What does $f \\in O(g)$ mean?',[
+  O('There are $c > 0$ and $n_0$ such that $f(n) \\le c\\,g(n)$ for all $n \\ge n_0$.',1,'The constants come first, then "for all $n \\ge n_0$".'),
+  O('For all $n$ there is a $c > 0$ with $f(n) \\le c\\,g(n)$.',0,'Quantifiers swapped: then $c$ may depend on $n$, and every positive $g$ works.'),
+  O('$f(n) \\le g(n)$ for all $n$.',0,'Too strong: constant factors and small $n$ are allowed to break this.'),
+  O('$f(n)/g(n)$ tends to 1.',0,'That is "asymptotically equal", much stronger than $O$.')],
+  'Definition 1.2: exists $c$, exists $n_0$, for all $n \\ge n_0$.')
+];
+const QB=[
+ NUM('Counting','How many times does <code>count += 1</code> run in the loop <code>for i = 1..n: for j = i..n</code> for $n = 7$?',TRI.run(7),
+  'For $i = 1, \\dots, 7$ the inner loop runs $7, 6, \\dots, 1$ times: $\\frac{7 \\cdot 8}{2} = '+TRI.run(7)+'$.'),
+ NUM('Counting','How many times does the doubling loop (<code>i = 1; while i &lt;= n: i = 2*i</code>) run its body for $n = 100$?',DBL.run(100),
+  '$i$ takes the values $1, 2, 4, \\dots, 64$: that is $\\lfloor\\log_2 100\\rfloor + 1 = '+DBL.run(100)+'$ values.'),
+ EXPR('Counting','Give a closed form in $n$ for the number of increments of <code>for i = 1..n: for j = 1..i: count += 1</code>.',UPTO.run,
+  'The inner loop runs $i$ times, so the total is $\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$. Your formula was compared with the real counts for $n = 1..10$.'),
+ SC('Classes','What is the class of <code>for i = 1..n: j = n; while j &gt;= 1: j = floor(j/2)</code>?',thetaOpts(HALF),
+  'Each of the $n$ outer steps costs $\\lfloor\\log_2 n\\rfloor + 1$ inner steps: $n(\\lfloor\\log_2 n\\rfloor+1) \\in \\Theta(n\\log n)$.'),
+ TF('Classes','A loop body that runs $\\frac{n(n-1)}{2}$ times is in $\\Theta(n^2)$.',true,'$\\frac{n(n-1)}{2} = \\frac{n^2}{2} - \\frac{n}{2}$; the leading term is $\\frac{n^2}{2}$.'),
+ MC('Closed forms','Which formulas give the exact number of body runs of the doubling loop for every $n \\ge 1$?',[
+  formOpt('\\lfloor\\log_2 n\\rfloor + 1',n=>Math.floor(Math.log2(n))+1,DBL.run),
+  formOpt('\\lceil\\log_2 n\\rceil',n=>Math.ceil(Math.log2(n)),DBL.run),
+  formOpt('\\lceil\\log_2 (n+1)\\rceil',n=>Math.ceil(Math.log2(n+1)),DBL.run),
+  formOpt('\\log_2 n',n=>Math.log2(n),DBL.run)],
+  'Test every closed form on $n = 1, 2, 3$ before trusting it (section 2.3).',2)
+];
+const QF=[
+ SC('Hierarchy','Which statement is true?',[gOpt('n15','nlogn','O'),gOpt('nlogn','n15','O'),gOpt('exp3','exp2','O'),gOpt('n3','n2','O')],'Three-step test.'),
+ MC('Hierarchy','Which functions are in $\\Omega(n\\log n)$?',['n','nlogn','n15','n2','exp2'].map(k=>memberOpt(k,'nlogn','Omega')),'$\\Omega$ is the lower bound: everything at least as fast as $n\\log n$.',2),
+ NUM('Counting','How many times does <code>count += 1</code> run in <code>for i = 1..n: for j = i+1..n</code> for $n = 10$?',PAIRS.run(10),'$\\frac{n(n-1)}{2}$ with $n = 10$: '+PAIRS.run(10)+'.'),
+ EXPR('Counting','Give a closed form in $n$ for the number of body runs of the doubling loop.',DBL.run,'The counter takes one value per power of 2 up to $n$: $\\lfloor\\log_2 n\\rfloor + 1$ (or $\\lceil \\log_2(n+1)\\rceil$).',2,[1,2,3,4,5,6,7,8,15,16,17,100]),
+ TF('Hierarchy','$\\log_{10} n \\in \\Theta(\\log_2 n)$.',true,'$\\log_{10} n = \\log_2 n / \\log_2 10$: a constant factor.'),
+ TF('Hierarchy','$n^{1.5} \\in O(n \\log n)$.',inO(FN.n15,FN.nlogn),whyGrowth(FN.n15,FN.nlogn)),
+ SC('Classes','What is the class of <code>i = 1; while i &lt;= n: (for j = 1..i: count += 1); i = 2*i</code>?',thetaOpts(DBLI),
+  'Not $n\\log n$: the inner loop costs $1 + 2 + 4 + \\dots$, which is $'+DBLI.tex+'$ in total ('+DBLI.run(1024)+' for $n = 1024$), less than $2n$.'),
+ SELF('Proofs','Prove from the definition that $5n + 3 \\in O(n)$.',[
+  'Names the constants explicitly, e.g. $c = 8$ and $n_0 = 1$ (other valid choices are fine).',
+  'Shows the inequality $5n + 3 \\le c\\,n$ for <i>every</i> $n \\ge n_0$, e.g. via $3 \\le 3n$ for $n \\ge 1$.',
+  'Concludes with the definition: there exist $c$ and $n_0$ such that ... for all $n \\ge n_0$.'],
+  'Full marks need all three points; half marks if the constants are right but the "for all $n \\ge n_0$" step is missing.',2),
+ MC('Definitions','Which statements follow from $f \\in \\Theta(g)$?',[
+  O('$f \\in O(g)$',1,'By definition.'),O('$g \\in \\Theta(f)$',1,'$\\Theta$ is symmetric.'),
+  O('$f(n) \\le g(n)$ for all $n$',0,'Constants and small $n$ may break this.'),O('$f \\in \\Omega(g)$',1,'By definition.')],'$\\Theta$ = $O$ and $\\Omega$ together.',2),
+ NUM('Hierarchy','What is the smallest $n_0$ such that $n^3 \\le 2^n$ for every $n \\ge n_0$ (checked up to 200)?',crossover(FN.n3,FN.exp2,200),
+  'At $n = 9$: $729 > 512$. At $n = 10$: $1000 \\le 1024$, and from there $2^n$ stays ahead. So $n_0 = '+crossover(FN.n3,FN.exp2,200)+'$.')
+];
+
+const QUIZZES={
+ A:{title:'Quiz A: O, Ω, Θ',chip:'1 · O, Ω, Θ',mode:'instant',qs:QA,intro:'Six questions on the definitions and the hierarchy. Feedback after each question.'},
+ B:{title:'Quiz B: counting loops',chip:'2 · Loops',mode:'instant',qs:QB,intro:'Six questions. Count exactly first; the formula question is checked against the real counts.'},
+ F:{title:'Final self-test',chip:'Final self-test',mode:'final',timer:15,qs:QF,intro:'Answer everything, submit once. No feedback until you submit. Select-all questions give partial credit (correct selections count positively, wrong ones negatively, never below 0). The proof is written on paper and marked by you against the rubric after submitting.'}
+};
+//</QDATA>
+
+//<ENGINE>
+const TYPE_LABEL={tf:'true / false',single:'single choice',multi:'select all that apply',num:'type a number',expr:'type a formula in n',self:'on paper, self-marked'};
+function fmtPts(x){return (Math.round(x*100)/100).toString();}
+function parseNum(s){s=String(s).trim().replace(',','.').replace(/\u2212/g,'-');if(s==='')return NaN;const m=s.match(/^(-?\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/);if(m)return Number(m[1])/Number(m[2]);return /^-?\d*\.?\d+$/.test(s)?Number(s):NaN;}
+function checkExpr(q,txt){let f;try{f=parseExpr(txt);}catch(e){return {ok:false,msg:'Could not read your formula: '+esc(e.message)+'.'};}
+  const ns=q.ns||[1,2,3,4,5,6,7,8,9,10];
+  for(const n of ns){const want=q.fn(n);let got;try{got=f(n);}catch(e){got=NaN;}
+    if(!isFinite(got)||Math.abs(got-want)>1e-9*Math.max(1,Math.abs(want)))return {ok:false,msg:'Your formula gives '+fmtNum(got)+' for $n = '+n+'$; the real value is '+fmtNum(want)+'.'};}
+  return {ok:true,msg:'Your formula matches the real values for $n = '+ns.join(', ')+'$.'};}
+function gradeQ(q,a){
+  if(q.t==='tf'||q.t==='single'){const ok=a.sel.length===1&&q.opts[a.sel[0]].ok;return {score:ok?q.pts:0,full:ok};}
+  if(q.t==='multi'){const nOk=q.opts.filter(o=>o.ok).length;let hit=0,miss=0;a.sel.forEach(i=>{if(q.opts[i].ok)hit++;else miss++;});
+    return {score:q.pts*Math.max(0,hit-miss)/nOk,full:hit===nOk&&miss===0};}
+  if(q.t==='num'){const v=parseNum(a.txt);const ok=!isNaN(v)&&Math.abs(v-q.ans)<=(q.tol||1e-9);return {score:ok?q.pts:0,full:ok};}
+  if(q.t==='expr'){const r=checkExpr(q,a.txt);return {score:r.ok?q.pts:0,full:r.ok,msg:r.msg};}
+  if(a.mark===null||a.mark===undefined)return {score:0,full:false,pending:true};
+  return {score:q.pts*a.mark,full:a.mark===1};
+}
+function mkQuiz(id){
+  const def=QUIZZES[id],mount=$('#quiz-'+id),fin=def.mode==='final';if(!mount)return;
+  let order=[],res={},marks={},submitted=false,clock=null;
+  function perm(q){const idx=q.opts?q.opts.map((_,i)=>i):[];return q.fixed?idx:shuffle(idx);}
+  function start(only){
+    const qi=only||def.qs.map((_,i)=>i);order=qi.map(i=>({qi:i,perm:perm(def.qs[i])}));res={};marks={};submitted=false;stopClock(true);render();
+    if(only)mount.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  function qHTML(pos){
+    const it=order[pos],q=def.qs[it.qi];
+    let h='<div class="qq" data-pos="'+pos+'"><div class="qh"><b>Q'+(pos+1)+'</b> · '+q.topic+' · '+fmtPts(q.pts)+' pt'+(q.pts===1?'':'s')+' · '+TYPE_LABEL[q.t]+'<span class="orig">'+esc(q.origin||'invented')+'</span></div><div class="qt">'+q.q+'</div>';
+    if(q.vis)h+='<div class="vis">'+q.vis()+'</div>';
+    if(q.t==='num')h+='<div class="row"><input type="text" inputmode="decimal" class="numin" autocomplete="off" aria-label="answer"> '+(q.unit||'')+'</div>';
+    else if(q.t==='expr')h+='<div class="row"><input type="text" class="numin wide" autocomplete="off" aria-label="formula" placeholder="e.g. n*(n+1)/2"></div>';
+    else if(q.t==='self')h+='<p class="note">Write your answer on paper first. The rubric appears after you check (mid quiz) or submit (final self-test).</p>';
+    else{h+='<div class="opts">';it.perm.forEach((oi,d)=>{const o=q.opts[oi];
+      h+='<label class="opt" data-o="'+oi+'"><input type="'+(q.t==='multi'?'checkbox':'radio')+'" name="q'+id+pos+'" value="'+oi+'"><span class="ol">'+String.fromCharCode(65+d)+'</span><span class="ov">'+o.h+'<span class="why hide"></span></span></label>';});h+='</div>';}
+    h+='<div class="qact">'+(fin?'':'<button class="chk p sm">'+(q.t==='self'?'Show rubric':'Check answer')+'</button>')+'</div><div class="fbwrap"></div></div>';
+    return h;
+  }
+  function read(pos){
+    const blk=mount.querySelector('.qq[data-pos="'+pos+'"]');const q=def.qs[order[pos].qi];
+    const sel=$$('.opt input:checked',blk).map(i=>+i.value);const inp=$('.numin',blk);const txt=inp?inp.value:'';
+    return {sel:sel,txt:txt,mark:marks[pos],blk:blk,q:q};
+  }
+  function unanswered(p){const r=read(p);if(r.q.t==='self')return false;return (r.q.t==='num'||r.q.t==='expr')?!r.txt.trim():!r.sel.length;}
+  function reveal(pos,force){
+    const r=read(pos),q=r.q;
+    if(!force&&!fin&&unanswered(pos))return false;
+    const g=gradeQ(q,r);res[pos]=g;
+    if(q.opts){$$('.opt',r.blk).forEach(l=>{const oi=+l.dataset.o,o=q.opts[oi];const chosen=r.sel.indexOf(oi)>=0;
+      l.classList.remove('sel');if(o.ok)l.classList.add('right');else if(chosen)l.classList.add('wrong');
+      const w=$('.why',l);const prefix=o.ok?(chosen?'✓ ':'✓ (correct) '):(chosen?'✗ ':'');
+      if(o.why){w.innerHTML=prefix+o.why;w.classList.remove('hide');}else if(prefix){w.innerHTML=prefix;w.classList.remove('hide');}
+      $('input',l).disabled=true;});}
+    const inp=$('.numin',r.blk);if(inp)inp.disabled=true;
+    let fb;
+    if(q.t==='self'){
+      fb='<div class="fb"><b>Rubric</b><ul>'+q.rubric.map(x=>'<li>'+x+'</li>').join('')+'</ul>'+(q.expl?'<p>'+q.expl+'</p>':'')+
+        '<div class="selfmark">Mark yourself: '+[0,0.5,1].map(m=>'<label><input type="radio" name="sm'+id+pos+'" value="'+m+'"> '+fmtPts(m*q.pts)+' pt'+(m*q.pts===1?'':'s')+'</label>').join('')+'</div></div>';
+    }else{
+      const verdict=g.full?'<b>Correct.</b> ':(g.score>0?'<b>Partly correct</b> ('+fmtPts(g.score)+' of '+fmtPts(q.pts)+' pts). ':'<b>Not correct.</b> ');
+      const ans=q.t==='num'?'The answer is <b>'+fmtNum(q.ans)+'</b>. ':(q.t==='expr'?g.msg+' ':'');
+      fb='<div class="fb '+(g.full?'ok':'no')+'">'+verdict+ans+q.expl+'</div>';
+    }
+    r.blk.querySelector('.fbwrap').innerHTML=fb;
+    if(q.t==='self')$$('.selfmark input',r.blk).forEach(x=>x.onchange=()=>{marks[pos]=+x.value;res[pos]=gradeQ(q,{mark:+x.value});if(fin||Object.keys(res).length===order.length)summary();});
+    const btn=$('.chk',r.blk);if(btn)btn.remove();
+    mathify(r.blk);return true;
+  }
+  function summary(){
+    const tot=order.reduce((s,it)=>s+def.qs[it.qi].pts,0);let got=0,pending=0;const topics={};
+    order.forEach((it,pos)=>{const q=def.qs[it.qi];const g=res[pos]||{score:0};if(g.pending)pending++;got+=g.score;const t=topics[q.topic]||(topics[q.topic]={g:0,t:0});t.g+=g.score;t.t+=q.pts;});
+    const pct=Math.round(100*got/tot);const key=PAGE_KEY+'_best_'+id;const old=store(key);let best=old;
+    if(order.length===def.qs.length&&!pending){const oldv=old?parseFloat(old.split('/')[0])/parseFloat(old.split('/')[1]):-1;if(got/tot>oldv){best=fmtPts(got)+'/'+fmtPts(tot);store(key,best);}renderProgress();}
+    const wrong=order.map((it,pos)=>({it:it,pos:pos})).filter(x=>!(res[x.pos]&&res[x.pos].full)).map(x=>x.it.qi);
+    let h='<div class="sumbox"><h4>Result: '+fmtPts(got)+' / '+fmtPts(tot)+' points ('+pct+' %)</h4>';
+    if(pending)h+='<div class="note">'+pending+' self-marked question'+(pending===1?' is':'s are')+' not marked yet (counted as 0).</div>';
+    if(best)h+='<div class="note">Best so far in this browser: '+best+'</div>';
+    h+='<div class="tw"><table><tr><th>Topic</th><th>Points</th><th style="width:30%"></th></tr>'+Object.keys(topics).map(k=>{const t=topics[k];return '<tr><td>'+k+'</td><td>'+fmtPts(t.g)+' / '+fmtPts(t.t)+'</td><td><div class="bar"><i style="width:'+Math.round(100*t.g/t.t)+'%"></i></div></td></tr>';}).join('')+'</table></div>';
+    h+='<div class="qact">'+(wrong.length?'<button class="p sm" id="retry-'+id+'">Retry the '+wrong.length+' question'+(wrong.length===1?'':'s')+' not fully correct</button>':'')+'<button class="sm" id="again-'+id+'">'+(fin?'Start over (options reshuffled)':'Take it again (options reshuffled)')+'</button></div></div>';
+    const box=$('.sum',mount);box.innerHTML=h;
+    const rb=$('#retry-'+id,mount);if(rb)rb.onclick=()=>start(wrong);
+    $('#again-'+id,mount).onclick=()=>start();
+  }
+  function submitAll(timeUp){
+    if(submitted)return;submitted=true;stopClock(false);order.forEach((_,p)=>reveal(p,true));const sb=$('.subm',mount);if(sb)sb.disabled=true;
+    const un=$('.unans',mount);if(un)un.textContent=timeUp?'Time is up: submitted automatically.':'';summary();$('.sum',mount).scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+  function showClock(){const c=$('.clock',mount);if(!c||!clock)return;const m=Math.floor(clock.left/60),s=clock.left%60;c.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');c.classList.toggle('low',clock.left<=Math.min(300,def.timer*12));}
+  function stopClock(reset){if(clock&&clock.tick)clearInterval(clock.tick);if(reset||!clock)clock=def.timer?{left:def.timer*60,running:false,tick:null,endAt:0}:null;else{clock.running=false;clock.tick=null;}}
+  function toggleClock(){if(!clock||submitted)return;const b=$('.tgo',mount);
+    if(clock.running){clock.left=Math.max(0,Math.round((clock.endAt-Date.now())/1000));stopClock(false);b.textContent='Resume the clock';return;}
+    clock.running=true;clock.endAt=Date.now()+clock.left*1000;b.textContent='Pause the clock';
+    clock.tick=setInterval(()=>{clock.left=Math.max(0,Math.round((clock.endAt-Date.now())/1000));showClock();if(clock.left===0)submitAll(true);},500);}
+  function render(){
+    mount.className='quiz';
+    const clk=fin&&def.timer?'<div class="clockrow"><span class="clock">--:--</span><button class="sm tgo">Start the clock ('+def.timer+' min)</button><span class="note">optional; submits automatically at 0</span></div>':'';
+    mount.innerHTML='<h3>'+def.title+'</h3><p class="note">'+def.intro+'</p>'+clk+order.map((_,p)=>qHTML(p)).join('')+(fin?'<div class="qact"><button class="p subm">Submit</button><span class="note unans"></span></div>':'')+'<div class="sum"></div>';
+    $$('.chk',mount).forEach(b=>b.onclick=()=>{const pos=+b.closest('.qq').dataset.pos;if(!reveal(pos)){b.textContent='Choose an answer first';setTimeout(()=>{b.textContent='Check answer';},1400);return;}checkDone();});
+    const sb=$('.subm',mount);if(sb)sb.onclick=()=>{const un=order.filter((_,p)=>unanswered(p)).length;
+      if(un&&!confirm(un+' question'+(un===1?' is':'s are')+' unanswered. Submit anyway?'))return;submitAll(false);};
+    const tg=$('.tgo',mount);if(tg)tg.onclick=toggleClock;showClock();
+    mathify(mount);
+  }
+  function onchg(e){const l=e.target.closest('.opt');if(l){const blk=l.closest('.qq');$$('.opt',blk).forEach(x=>x.classList.toggle('sel',$('input',x).checked&&!x.classList.contains('right')&&!x.classList.contains('wrong')));}
+    if(fin&&!submitted){const un=order.filter((_,p)=>unanswered(p)).length;const n=$('.unans',mount);if(n)n.textContent=un?un+' unanswered':'all answered';}}
+  function checkDone(){if(Object.keys(res).length===order.length)summary();}
+  mount.addEventListener('change',onchg);mount.addEventListener('input',onchg);
+  start();
+}
+function initQuizzes(){Object.keys(QUIZZES).forEach(mkQuiz);}
+//</ENGINE>
+
+function boot(){
+  initRace();initLoop();
+  initQuizzes();renderProgress();initNav();initPrint();mathify(document.body);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+</script>
+</body>
+</html>

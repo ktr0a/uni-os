@@ -1,0 +1,38 @@
+id = "handwritten-notes"
+name = "Handwritten notes"
+tier = "standard"
+summary = "A tablet note app exports PDFs into a handwritten folder inside each course folder; agents read and link them (as page images when there is no text layer) but never write there, never touch the app's own data and never open private folders."
+requires = ["core", "courses"]
+recommends = ["vault-watch"]
+obsidian = "optional"
+os = ["any"]
+runtime = ["laptop", "cloud", "vm"]
+verbatim = ["skills/**/*.py"]
+
+config_keys = [
+  "course.folder", "course.short", "course.assistance",
+  "course.assessments", "course.handwritten_folder",   # course.handwritten_dir is derived from it
+  "study.handwriting_app", "paths.handwriting_app_data", "paths.handwriting_app_exports", "paths.never_open",
+]
+
+[[skills]]
+id = "read-handwritten-notes"
+
+# The empty handwritten folder of every course, created by `uni-os init` and `uni-os render`
+# (never deleted, no placeholder file: the folder belongs to the note app). The derived
+# course.handwritten_dir is handwritten_folder, or "<course folder> handwritten" when that is "".
+[[folders]]
+path = "{{course.folder}}/{{course.handwritten_dir}}"
+
+[defaults.course]
+handwritten_folder = ""        # folder inside the course folder; "" = "<course folder> handwritten" (e.g. "AD/AD handwritten/")
+assessments = []
+
+[defaults.study]
+handwriting_app = ""           # name of your note app, e.g. "GoodNotes", "Notability", "Samsung Notes", "reMarkable"
+
+[defaults.paths]
+handwriting_app_data = ""      # the app's own sync/data folder if it lives inside the vault (never touched), e.g. "Notes App/Data"
+handwriting_app_exports = ""   # the app's own export folder for notebooks not mapped to a course (and fallback exports), e.g. "Notes App/PDF"; read-only
+# Private folders agents never open go into the base key paths.never_open (glob patterns),
+# e.g. never_open = ["**/private/**", "Notes App/PDF/private/**"].

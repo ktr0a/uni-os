@@ -1,0 +1,39 @@
+filters:
+  and:
+    - type == "error-log"
+    - not:
+        - file.inFolder("_templates")
+properties:
+  file.name:
+    displayName: Error log
+  note.course:
+    displayName: Course
+  note.updated:
+    displayName: Updated
+  file.mtime:
+    displayName: Last changed
+views:
+  - type: table
+    name: Error logs
+    order:
+      - file.name
+      - course
+      - updated
+      - file.mtime
+    sort:
+      - property: file.mtime
+        direction: DESC
+{{#each courses}}
+  - type: table
+    name: "{{course.short}}"
+    filters:
+      and:
+        - file.inFolder("{{course.folder}}")
+    order:
+      - file.name
+      - updated
+      - file.mtime
+    sort:
+      - property: file.mtime
+        direction: DESC
+{{/each}}

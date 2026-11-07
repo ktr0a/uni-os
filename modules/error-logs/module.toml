@@ -1,0 +1,30 @@
+id = "error-logs"
+name = "Error logs"
+tier = "core"
+summary = "One append-only mistake ledger per course (and per stream), with a fixed five-column row schema, source tags, a living list of patterns that feeds me/weak-spots.md, the \"log this error\" command, and an optional retest bank."
+requires = ["core", "courses", "student-model"]
+recommends = ["exercise-help", "quiz-coaching", "obsidian"]
+obsidian = "optional"
+os = ["any"]
+runtime = ["laptop", "cloud", "vm"]
+config_keys = ["course.error_log_streams", "study.error_logs.retests", "study.error_logs.retest_items", "study.error_logs.retest_minutes", "study.assistance_default", "term.label"]
+verbatim = ["vault/**/*.py"]
+
+[[skills]]
+id = "log-error"
+
+[defaults]
+
+[defaults.term]
+label = "this term"            # shown in each log's title; normally set by the interview (e.g. "Autumn 2026")
+
+[defaults.study]
+assistance_default = "hints-only"
+
+[defaults.study.error_logs]
+retests = false                # optional cold-redo retest bank; off by default (the original student dropped it)
+retest_items = 3               # items per course per weekly retest slot
+retest_minutes = 20            # length of the weekly retest slot
+
+[defaults.course]
+error_log_streams = ["main"]   # e.g. ["theory", "programming"]: one log file per stream, one owner each

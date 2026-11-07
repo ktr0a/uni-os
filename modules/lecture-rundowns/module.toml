@@ -1,0 +1,48 @@
+id = "lecture-rundowns"
+name = "Lecture rundowns"
+tier = "standard"
+summary = "A lecture-rundown role (one shared brief, one session per course) that explains lectures from the course's real sources with cited pages: skims before a lecture, rundowns after it, recaps for a sheet or quiz, summaries, cheat sheets, definitions decks and full teaching pages; plus an optional pre-lecture skim job (off by default)."
+requires = ["core", "courses", "study-pages"]
+recommends = ["error-logs", "roles", "daily-prep"]
+obsidian = "optional"
+os = ["any"]
+runtime = ["laptop", "cloud", "vm"]
+config_keys = [
+  "study.formats", "study.chunk_words", "study.intuition_first",
+  "study.rundowns.skim_lead_hours", "study.rundowns.recall_keys", "study.rundowns.skim_courses",
+  "schedule.lecture_skim", "schedule.lecture_skim_days",
+  "agent.heavy_model", "student.name", "paths.agent_dir",
+  "term.week0_monday", "term.timezone", "term.last_lecture_day",
+  "courses.lecture_slots",
+]
+verbatim = ["vault/_templates/*.md"]
+
+[[roles]]
+id = "lecture-rundown"
+
+[[jobs]]
+id = "lecture-skim"
+
+[defaults]
+
+[defaults.agent]
+heavy_model = ""               # model for teaching roles; empty = the host default (the original ran them on the strongest model)
+
+[defaults.term]
+last_lecture_day = ""          # optional; when set, the lecture-skim job only runs in the teaching weeks
+
+[defaults.study]
+formats = ["html", "md"]
+chunk_words = 750
+intuition_first = true
+
+[defaults.study.rundowns]
+skim_lead_hours = 1            # a skim is ready at least this many hours before the lecture starts (the original: by 13:00 for 14:15)
+recall_keys = false            # optional post-lecture recall-key pages (the original student dropped recall tests)
+skim_courses = []              # course ids the lecture-skim job writes skims for, e.g. ["dm"] (the original: only the hardest course)
+
+[defaults.schedule]
+# lecture-skim job (off when installed). The original ran at 10:30 on the two lecture days of its course (lecture 14:15).
+# Pick a time that ends skim_lead_hours before the earliest skimmed lecture; an evening slot skims the next morning's lecture.
+lecture_skim = ["10:30"]
+lecture_skim_days = ["Mon", "Wed"]

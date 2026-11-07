@@ -1,0 +1,46 @@
+filters:
+  and:
+    - or:
+{{#each courses}}
+        - file.inFolder("{{course.folder}}")
+{{/each}}
+    - or:
+        - file.path.contains("/notes/")
+        - file.path.contains("/quiz-prep/")
+    - or:
+        - type == "study-page"
+        - file.ext == "html"
+        - file.ext == "pdf"
+properties:
+  file.name:
+    displayName: Page
+  file.ext:
+    displayName: Format
+  file.folder:
+    displayName: Folder
+  file.mtime:
+    displayName: Changed
+views:
+  - type: table
+    name: All courses
+    groupBy:
+      property: file.folder
+      direction: ASC
+    order:
+      - file.name
+      - file.ext
+      - file.mtime
+{{#each courses}}
+  - type: table
+    name: "{{course.short}}"
+    filters:
+      and:
+        - file.inFolder("{{course.folder}}")
+    groupBy:
+      property: file.folder
+      direction: ASC
+    order:
+      - file.name
+      - file.ext
+      - file.mtime
+{{/each}}

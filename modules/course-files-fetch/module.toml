@@ -1,0 +1,59 @@
+id = "course-files-fetch"
+name = "Course files fetch"
+tier = "advanced"
+summary = "Fetch official course files from the LMS and course sites through your own logged-in browser (read-only, the password step stays with you), and file them with an experimental, Windows-only pick-up task that trusts no request: origin host from the download's Zone.Identifier, document types, size and age limits, configured folders only, never overwrites, hash-verified."
+requires = ["core", "courses"]
+recommends = ["roles", "notifications", "vault-watch"]
+obsidian = "irrelevant"
+os = ["windows"]                 # the pick-up task; the role and request_pickup.py run anywhere
+runtime = ["laptop", "vm"]
+
+# Keys this module reads. "course.<key>" means: a key of every [[courses]] entry.
+# university.lms_url, course.lms_url, course.website and course.official_subfolders are owned by
+# the courses module; this module derives the pick-up's allowed hosts and folders from them.
+config_keys = [
+  "student.name", "university.lms", "university.lms_url", "term.timezone", "agent.default_model",
+  "course.id", "course.short", "course.name", "course.folder", "course.official_subfolders",
+  "course.lms_url", "course.website", "course.fetch_sources",
+  "course_fetch.task_name", "course_fetch.install_dir", "course_fetch.downloads_dir", "course_fetch.interval_minutes",
+  "course_fetch.extra_hosts", "course_fetch.check_referrer", "course_fetch.allowed_types",
+  "course_fetch.max_mb", "course_fetch.max_age_hours", "course_fetch.wait_minutes",
+  "course_fetch.date_guards", "course_fetch.request_timeout_min", "course_fetch.verify_timeout_min",
+  "course_fetch.preferred_language", "course_fetch.browser_hint",
+  "modules.enabled",
+]
+
+verbatim = []
+
+[[roles]]
+id = "course-files-fetch"
+
+# ---------------------------------------------------------------------------
+# Defaults (deep-merged UNDER the user's config; the user's values win).
+# The original's limits are the defaults; hosts and folders come from the course config.
+# The installer bakes these into a settings file OUTSIDE the vault: re-run it after a change.
+# ---------------------------------------------------------------------------
+
+[defaults.course_fetch]
+task_name = "Uni OS course pick-up"
+# Outside the vault, so a vault writer cannot change the policy. Documents, not %LOCALAPPDATA%:
+# app-packaged (MSIX) agents can see a redirected AppData.
+install_dir = "%USERPROFILE%\\Documents\\uni-os\\course-pickup"
+downloads_dir = ""               # "" = the user's Downloads known folder
+interval_minutes = 1             # how often the task looks into pending/ (exits at once when it is empty)
+extra_hosts = []                 # hosts besides the LMS and course URLs, e.g. ["files.example.edu", "*.cdn.example.net"]
+check_referrer = false           # true: also accept a download whose ReferrerUrl host is allowed (weaker)
+allowed_types = ["pdf", "zip", "txt", "md", "java", "html", "htm", "tex", "csv", "py", "ipynb", "c", "cpp", "h", "hpp", "pptx", "docx", "xlsx"]
+max_mb = 50                      # larger files need the student's OK (request with --approved-large)
+max_age_hours = 12               # an older file in Downloads may be an old version
+wait_minutes = 30                # a request waits this long for its download (or for a half-synced request)
+# Integrity: a gated file stays out of the vault before its date, checked by the requester and the pick-up.
+# e.g. [{ course = "la", pattern = "(?i)solution[_ -]?0*6(\\D|$)", not_before = "2026-10-29", reason = "graded quiz on sheet 6: solution only after the quiz" }]
+date_guards = []
+request_timeout_min = 15         # request_pickup.py: how long to wait for the laptop's answer
+verify_timeout_min = 5           # request_pickup.py: how long to wait for the filed copy to sync to this machine
+preferred_language = "English"   # one language per file: take this version if it exists
+browser_hint = ""                # which connected browser to drive, e.g. a device id, if more than one is connected
+
+[defaults.course]
+fetch_sources = []               # extra official pages of this course beyond lms_url and website, e.g. a slides server

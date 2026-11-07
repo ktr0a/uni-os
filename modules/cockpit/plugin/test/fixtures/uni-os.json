@@ -1,0 +1,94 @@
+{
+  "_generated": "do not edit; edit uni-os.toml",
+  "uni_os": { "version": "0.1.0", "preset": "full" },
+  "student": { "name": "Alex Example", "handle": "alex", "language": "English", "dictates": false },
+  "university": { "name": "Example Institute of Technology", "short": "EIT", "programme": "BSc Computer Science", "lms": "Moodle" },
+  "term": {
+    "label": "Autumn 2026",
+    "timezone": "Europe/Zurich",
+    "week0_monday": "2026-09-14",
+    "last_lecture_day": "2026-12-18",
+    "lecture_free_from": "2026-12-19",
+    "exam_session_start": "2027-01-25",
+    "exam_session_end": "2027-02-19",
+    "holidays": []
+  },
+  "paths": { "vault": "", "agent_dir": "_agent", "inbox": "inbox" },
+  "obsidian": { "enabled": true },
+  "agent": { "primary": "claude-code", "reply_rules": [] },
+  "schedule": {
+    "daily_prep": ["17:30", "19:30"],
+    "prep_check": "07:30",
+    "inbox_sync": ["07:15", "13:15", "18:15"],
+    "study_cutoff": "19:00"
+  },
+  "calendar": { "provider": "google", "courses": "Courses", "study_blocks": "Study blocks", "events": "Events", "busy": "Busy", "notation": "default" },
+  "courses": [
+    {
+      "id": "algo",
+      "name": "Algorithms and Data Structures",
+      "short": "AD",
+      "folder": "AD",
+      "slug": "ad",
+      "colour": "#1e66f5",
+      "aliases": ["Algorithms", "CodeLab"],
+      "assistance": "hints-only",
+      "error_log_streams": ["theory", "programming"],
+      "assessments": [
+        { "name": "Weekly quiz", "kind": "quiz", "counts_for": "bonus" },
+        { "name": "Theory sheets", "kind": "sheet", "counts_for": "bonus" },
+        { "name": "Programming sheets", "kind": "sheet", "counts_for": "bonus", "assistance": "coach" }
+      ],
+      "bonus": { "scheme": "threshold", "max_bonus": 0.25, "threshold": 0.8, "description": "", "rule": "" }
+    },
+    {
+      "id": "dm",
+      "name": "Discrete Mathematics",
+      "short": "DM",
+      "folder": "DM",
+      "slug": "dm",
+      "colour": "#40a02b",
+      "assistance": "hints-only",
+      "assessments": [{ "name": "Oral bonus", "kind": "oral", "counts_for": "bonus", "assistance": "solo", "points_max": 6, "dates": ["2026-10-15", "2026-11-26"] }],
+      "bonus": { "scheme": "points", "max_bonus": 0.25, "total": 12, "unit": "oral points" }
+    },
+    {
+      "id": "la",
+      "name": "Linear Algebra",
+      "short": "LA",
+      "folder": "LA",
+      "slug": "la",
+      "colour": "#8839ef",
+      "colour_light": "#b48ef5",
+      "assistance": "hints-only",
+      "assessments": [
+        {
+          "name": "Bonus quiz",
+          "kind": "quiz",
+          "counts_for": "bonus",
+          "points_max": 1,
+          "dates": ["2026-09-24 16:15", "2026-10-08 16:15", "2026-10-22 16:15", "2026-11-05 16:15", "2026-11-19 16:15", "2026-12-03 16:15", "2026-12-17 16:15"]
+        },
+        { "name": "Hand-ins", "kind": "sheet", "counts_for": "none" }
+      ],
+      "bonus": { "scheme": "points", "max_bonus": 0.25, "total": 7, "full_at": 5, "unit": "quiz points" }
+    },
+    {
+      "id": "prog",
+      "name": "Introduction to Programming",
+      "short": "PROG",
+      "folder": "PROG",
+      "slug": "prog",
+      "colour": "#d20f39",
+      "detect": "\\bE\\d+\\b",
+      "assistance": "coach",
+      "assessments": [
+        { "name": "Exercise bonus tasks", "kind": "sheet", "counts_for": "bonus" },
+        { "name": "Timed bonus task", "kind": "project", "counts_for": "bonus" }
+      ],
+      "bonus": { "scheme": "threshold", "max_bonus": 0.25, "threshold": 0.8 }
+    }
+  ],
+  "cockpit": { "enabled": true, "layout": "focus", "prep_switch_hour": 18, "prep_warn_after": "19:30" },
+  "modules": { "enabled": ["core", "courses", "progress", "planning", "check-in", "daily-prep", "inbox-sync", "cockpit"] }
+}
