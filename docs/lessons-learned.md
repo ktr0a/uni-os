@@ -1,8 +1,8 @@
 # Lessons learned
 
-These are the concrete gotchas from two months of running the original system: the author's first-year computer science semester, organised by several AI agent sessions over an Obsidian vault on Google Drive, first on a laptop, then with cloud sessions, then with an always-on VM (see [how-it-evolved.md](how-it-evolved.md)). They are anonymised and grouped by topic. Each one says what happened and what to do about it, and links to where Uni OS already handles it.
+These are the concrete gotchas from two months of running my own system: my first-year computer science semester, organised by several AI agent sessions over an Obsidian vault on Google Drive, first on a laptop, then with cloud sessions, then with an always-on VM (see [how-it-evolved.md](how-it-evolved.md)). They are grouped by topic. Each one says what happened and what to do about it, and links to where Uni OS already handles it.
 
-Some items are specific to Claude products, because that is what the original ran on. Uni OS has only been tested with Claude Code. Other agents have their own versions of most of these limits.
+Some items are specific to Claude products, because that is what my system ran on. Uni OS has only been tested with Claude Code. Other agents have their own versions of most of these limits.
 
 ## Connectors and create-only tools
 
@@ -17,13 +17,13 @@ Some items are specific to Claude products, because that is what the original ra
 
 ## Scheduling: sleep, time zones and daylight saving
 
-- **Desktop-app scheduled tasks run only while the app is open.** They start a few minutes late (about 12 minutes was seen), get a fixed offset added to their times, and catch up missed slots at random times after wake-up (an evening slot ran half an hour late, a morning check more than two hours late). Every prompt therefore computes its **nominal slot**, checks whether that slot is already done, and carries a catch-up rule ([scheduler-local](../modules/scheduler-local/README.md#slots-catch-up-and-idempotency)).
+- **Desktop-app scheduled tasks run only while the app is open.** They start a few minutes late (I saw about 12 minutes), get a fixed offset added to their times, and catch up missed slots at random times after wake-up (an evening slot ran half an hour late, a morning check more than two hours late). Every prompt therefore computes its **nominal slot**, checks whether that slot is already done, and carries a catch-up rule ([scheduler-local](../modules/scheduler-local/README.md#slots-catch-up-and-idempotency)).
 - **One cron expression can't mix minute values.** Slots at `07:50` and `13:05` need two tasks.
 - **A scheduled task bound to a session that no longer exists silently never runs.** A weekly check-in was bound to a session that ended the same day, and nobody noticed for weeks. Audit what actually triggers each duty ([design-principles.md](design-principles.md#11-every-promised-duty-needs-a-trigger)).
 - **Never run one job on two machines.** In failover mode the host writes a ran-marker so the laptop's catch-up skips that slot. In mode `always` no markers exist, so the laptop copy must be paused. When switching between schedulers, do both steps back to back, right after a slot, never around one ([vm](../modules/vm/README.md#failover-mode-optional)).
-- **Failover built on an app's internal files is brittle.** Reading the desktop app's task file while the app was writing it sometimes failed. The original ended with one host per job, in mode `always`.
+- **Failover built on an app's internal files is brittle.** Reading the desktop app's task file while the app was writing it sometimes failed. In the end I gave each job one host, in mode `always`.
 - **Systemd timer precision matters for slot logic.** `AccuracySec=1s` plus `RandomizedDelaySec=20` keeps the start minute equal to the nominal slot. Host timers are not `Persistent`, so a slot missed while the host was down is not caught up, which is one more reason prompts must be idempotent.
-- **Transient timers vanish on reboot.** A one-off reminder timer on the host was lost. Note it wherever you rely on one.
+- **Transient timers vanish on reboot.** I lost a one-off reminder timer on the host. Note it wherever you rely on one.
 - **Keep every schedule in one place.** A hand edit in a generated job file was silently reverted by the next sync from another copy. In Uni OS the schedule is a `[schedule]` key; edit the config, run `uni-os render`, and reinstall the job.
 - **Name the time zone.** Notes and logs use local time in `term.timezone`. A cloud session stamped notes an hour ahead after the daylight-saving switch, and the switch week's stamps came out an hour off. Convert first, and put the switch dates on the calendar page.
 - **Python on Windows ships no time-zone database.** "Today" then follows the computer's clock zone. `python -m pip install tzdata` makes `term.timezone` exact ([tools/README.md](../tools/README.md#windows-notes)).
@@ -32,14 +32,14 @@ Some items are specific to Claude products, because that is what the original ra
 
 ## Messaging and notifications
 
-- **Never send "all good".** Routine success messages were explicitly unwanted. The push gate refuses them, and silence is the normal outcome ([notifications](../modules/notifications/README.md)).
+- **Never send "all good".** I explicitly did not want routine success messages. The push gate refuses them, and silence is the normal outcome ([notifications](../modules/notifications/README.md)).
 - **Push fatigue comes from several senders, not one.** Health alerts, job failures and outcome checks each had their own spacing until one gate gave them one budget: by default 3 a day, 2 hours apart, no pushes from 21:00 to 07:30, dedupe per problem for 24 hours. Health alerts stay outside the budget but are rate-limited per problem.
-- **One problem, one sender.** The gate dedupes per machine, so the same stuck note checked on two machines reached the phone twice. Now exactly one machine sends outcome pushes, with the same ids and texts everywhere ([notifications](../modules/notifications/README.md#one-sender-per-problem)).
+- **One problem, one sender.** The gate dedupes per machine, so the same stuck note checked on two machines reached my phone twice. Now exactly one machine sends outcome pushes, with the same ids and texts everywhere ([notifications](../modules/notifications/README.md#one-sender-per-problem)).
 - **Defer judgment pushes, queue host alerts.** A queued "no prep note for tomorrow" would arrive at 07:30 even though the note was written at 22:00. Judgment pushes held in quiet hours are dropped and raised again if still true; host alerts held in a quiet window go out as one combined push afterwards.
 - **No pushes at the start of a timed quiz.** Quiet windows around graded fixtures hold every push, and the heartbeat's question checks the gate both now and 15 minutes later.
 - **The agent app's own push is held back while you count as active**, and on a headless box the terminal always looks active. Use your own channel (ntfy). It is one-way: answers go through the agent app.
 - **Every new Remote Control session notifies the phone**, and that can't be switched off. Jobs that ask nothing run headless; only jobs that must talk to the student open a session. A heartbeat question therefore costs two notifications (the push with its link and the app's own), so budget at most one question a day.
-- **The ntfy topic is a password.** Anyone who knows it can read and send your pushes. The original leaked it in a README and a generated report. Keep it in one file outside the vault (`notify.ntfy_topic_file`); `uni-os doctor` scans for it.
+- **The ntfy topic is a password.** Anyone who knows it can read and send your pushes. I leaked mine in a README and a generated report. Keep it in one file outside the vault (`notify.ntfy_topic_file`); `uni-os doctor` scans for it.
 - **No personal details in pushes.** File names and gap texts can carry them, so outcome pushes name the problem, not the file.
 - **Android battery optimisation delays pushes.** Exempt the ntfy app.
 
@@ -68,7 +68,7 @@ Some items are specific to Claude products, because that is what the original ra
 ## Obsidian
 
 - **Bases columns need the `note.` prefix** for front-matter properties; plain keys only rename `file.*` columns ([obsidian](../modules/obsidian/README.md)).
-- **Custom callout colours need explicit CSS.** The version in use ignored `--callout-color` for custom types.
+- **Custom callout colours need explicit CSS.** The version I used ignored `--callout-color` for custom types.
 - **Graph colour queries must be anchored regular expressions** (`path:me` also matched any path containing "me"), and they must follow folder moves. After a restructure the old queries silently coloured nothing for days. Generate them.
 - **Move and rename notes inside Obsidian** (its file explorer, or its command line running `app.fileManager.renameFile`). Moves on the drive or through a storage API don't update links.
 - **Obsidian's index lags deletions** by minutes. A deleted inbox note still counted as waiting, so plugins count the inbox from disk.
@@ -83,7 +83,7 @@ Some items are specific to Claude products, because that is what the original ra
 - **Memory is the binding constraint, not CPU.** Measured footprints were about 360 MB per working role session (260-415 MB), 225-280 MB per headless job run, and about 120 MB for the Remote Control server. Six role sessions plus jobs on 4 GB got the verdict "tight". Seven more sessions would not fit: 6 GB is marginal, 8 GB comfortable ([vm](../modules/vm/README.md#cost-and-sizing)).
 - **Per-session tool servers are expensive.** A browser tool server or a synced plugin adds 130-260 MB per session. Disable them on the host and use per-call command-line tools.
 - **Use compressed RAM swap plus a small swap file** to absorb bursts. Give each class of session its own OOM priority so that interactive job sessions die first, role sessions last, and the vault mount never.
-- **Cost.** The original's 4 GB Google Cloud VM was about $21 a month at list price. A 2 GB machine is below Claude Code's stated 4 GB minimum. A stopped VM costs only its disk. Google posts charges about a day late. Set a budget alert.
+- **Cost.** My 4 GB Google Cloud VM was about $21 a month at list price. A 2 GB machine is below Claude Code's stated 4 GB minimum. A stopped VM costs only its disk. Google posts charges about a day late. Set a budget alert.
 - **A home server trades money for chores.** On an 8 GB laptop running WSL2, Windows plus the agent app and Chrome took about 2 GB, so six sessions were again "tight". Expect power, Wi-Fi and Windows Update reboots to matter.
 - **Idle time must come from transcript timestamps, never file modification times.** The agent touches an open transcript about hourly, so mtime-based idle closes never fired.
 - **One-time dialogs silently block sessions.** Detect the missing permission-mode footer for 2 minutes and push once.
@@ -108,34 +108,34 @@ Some items are specific to Claude products, because that is what the original ra
 - **Agents refuse to edit their own permission settings**, and registering an OS scheduled task from an agent was blocked as "unauthorized persistence". Hand the student a script or a one-liner to run.
 - **Sessions misreport their own effort level.** Read it from the session record.
 - **Visual output varies by runtime.** Mermaid sometimes showed as plain text, so diagrams should read well even unrendered. Some file-sending tools refused SVG on the host, while HTML worked.
-- **Quote the student.** State-page rows with the student's exact words and a date settled later misreadings, for example of a usage cap or a misheard name.
+- **Quote the student.** State-page rows that quoted my exact words, with a date, settled later misreadings, for example of a usage cap or a misheard name.
 
 ## Integrity
 
-- **Hints-only everywhere was simpler than a patchwork.** The original started with full answers for some ungraded tasks and switched every course to hints-only after a few weeks. A tired "just tell me" should not end in a worked solution, so the level changes in the config, never in the moment ([academic-integrity.md](academic-integrity.md)).
+- **Hints-only everywhere was simpler than a patchwork.** I started with full answers for some ungraded tasks and switched every course to hints-only after a few weeks. A tired "just tell me" should not end in a worked solution, so the level changes in the config, never in the moment ([academic-integrity.md](academic-integrity.md)).
 - **Graded code is special.** In one course AI-written code counted as plagiarism, so the agent pointed at lines and traces instead of fixing them, and declined full code even when asked.
 - **Integrity rules bind everything**: diagrams, hint pages, prep notes, built tools and file fetchers. A fetcher refused a solution file that was only allowed after a date, with the date guard enforced in code on both sides.
 - **Handwriting too.** Once handwritten PDFs were visible to agents, the rule "never transcribe, summarise or store the student's handwritten work on graded solo problems" was written down ([handwritten-notes](../modules/handwritten-notes/README.md)).
 - **Reused tasks happen.** Many tasks of one course were reused from earlier years' public sheets. Say so openly, without pointing to the old solution.
-- **The course skill must never pre-approve anything.** The original's skill contained a line pre-approving a university consent screen; the framework's skill has no such line.
-- **Hold the line when the student pushes.** The coordinator kept "the password step stays with the student" when asked to let agents sign in, and proposed another route.
+- **The course skill must never pre-approve anything.** The skill in my own system contained a line pre-approving a university consent screen; the framework's skill has no such line.
+- **Hold the line when the student pushes.** The coordinator kept "the password step stays with the student" when I asked it to let agents sign in, and proposed another route.
 
 ## Study engine: what helped learning
 
-- **One fixed place for tomorrow's material.** Before the daily prep note, each study block started with ten minutes of hunting for the sheet, the task, the script page and the integrity status. The note also surfaced problems a day early ([daily-prep](../modules/daily-prep/README.md)).
+- **One fixed place for tomorrow's material.** Before the daily prep note, each of my study blocks started with ten minutes of hunting for the sheet, the task, the script page and the integrity status. The note also surfaced problems a day early ([daily-prep](../modules/daily-prep/README.md)).
 - **One model page beats a style guide.** A single study page that worked became the template for every course: sections of about 700-800 words (`study.chunk_words`), one demo and one quiz each, a cheat sheet, and a final self-test at the end ([study-pages](../modules/study-pages/README.md)).
 - **Answers checked by code.** Wrong-option explanations computed from the real algorithm were more reliable and more useful than typed ones. Matrix answers were checked by multiplying them out.
-- **Pictures first.** The student followed visual explanations much better than script-style text (`study.intuition_first`).
-- **Show the page immediately.** Pages sent straight to the phone got used; pages only mentioned by path often did not.
+- **Pictures first.** I followed visual explanations much better than script-style text (`study.intuition_first`).
+- **Show the page immediately.** Pages sent straight to my phone got used; pages only mentioned by path often did not.
 - **The error log was the most reused file**, read by quiz prep, cheat sheets, weak spots and the daily prep. Log a mistake the moment it happens, concretely and with the tutor's words; "later" never happened ([error-logs](../modules/error-logs/README.md)).
-- **Testing every closed form on n = 1, 2, 3** was the most frequent "correct idea" in the logs.
-- **The stuck-task protocol came from one exercise that took two and a half hours:** a content verdict first, a time cap per part, then the missing idea in one line ([exercise-help](../modules/exercise-help/README.md)).
+- **Testing every closed form on n = 1, 2, 3** was the most frequent "correct idea" in my logs.
+- **The stuck-task protocol came from one exercise that took me two and a half hours:** a content verdict first, a time cap per part, then the missing idea in one line ([exercise-help](../modules/exercise-help/README.md)).
 - **Hints in too many small pieces frustrate.** "Say the missing idea in one line sooner" became part of the protocol.
-- **Cold retests didn't work for that student.** Weekly redos of old errors were dropped after about a week and replaced by a 15-minute open-notes recap at the start of each study block. Retests are therefore off by default (`study.error_logs.retests = false`).
-- **Pre-lecture skims helped most for the hardest course**, and only when they were ready before the lecture. That is why a skim has a readiness lead time (`study.rundowns.skim_lead_hours`), and the skim job's run times (`schedule.lecture_skim`) are chosen to meet it ([lecture-rundowns](../modules/lecture-rundowns/README.md)).
+- **Cold retests didn't work for me.** I dropped weekly redos of old errors after about a week and replaced them with a 15-minute open-notes recap at the start of each study block. Retests are therefore off by default (`study.error_logs.retests = false`).
+- **Pre-lecture skims helped me most for the hardest course**, and only when they were ready before the lecture. That is why a skim has a readiness lead time (`study.rundowns.skim_lead_hours`), and the skim job's run times (`schedule.lecture_skim`) are chosen to meet it ([lecture-rundowns](../modules/lecture-rundowns/README.md)).
 - **The quiz loop is prep, quiz, review, error log, next prep.** The review is where the learning happens. "How this quiz asks" tables from earlier reviews of the same course beat generic advice, and a checklist that dropped the words "in the worst case" caused a wrong answer: copy the exact words ([quiz-coaching](../modules/quiz-coaching/README.md)).
-- **Mocks only on request.** Automatic weekly mocks were declined; one targeted mock the day before a written quiz worked better.
-- **Validate plans against the student's rhythm.** A deep proof block placed in the student's documented low failed. Count hours per subject: the best-liked course was getting the most time while two others fell behind, which produced the rebalance rule (freed time goes to the lowest-rated course) ([planning](../modules/planning/README.md), [student-model](../modules/student-model/README.md)).
+- **Mocks only on request.** I declined automatic weekly mocks; one targeted mock the day before a written quiz worked better.
+- **Validate plans against the student's rhythm.** A deep proof block placed in my documented low failed. Count hours per subject: my best-liked course was getting the most time while two others fell behind, which produced the rebalance rule (freed time goes to the lowest-rated course) ([planning](../modules/planning/README.md), [student-model](../modules/student-model/README.md)).
 - **Too many changes ruin the data.** Changing the method every week made it impossible to tell what helped. Hence one change at a time for two weeks ([experiments](../modules/experiments/README.md)).
 
 ## Process
@@ -145,8 +145,8 @@ Some items are specific to Claude products, because that is what the original ra
 - **Simulated runs produce simulation artifacts.** A Sunday-evening run simulated on a Thursday's vault showed 14 red findings, most of them artifacts. Do one dry run at a real slot as well.
 - **Probe a capability before relying on it.** Before the heartbeat's first dry run, the builder checked read-only that a headless run on the host could load the calendar tools and see the sessions it would message.
 - **The model will "fix" a rule's verdict if you let it.** In a dry run the agent downgraded a red "overdue" itself after seeing a conflicting log line. Rule findings keep their level; staleness goes into the text, and the cure is a message to the file's owner ([heartbeat](../modules/heartbeat/README.md)).
-- **Name things distinctly.** The original ended up with three different "heartbeats" (the watcher, a laptop ping, a dashboard's status-file age) and needed a disambiguation table. In Uni OS "heartbeat" means only the watcher.
+- **Name things distinctly.** My system ended up with three different "heartbeats" (the watcher, a laptop ping, a dashboard's status-file age) and needed a disambiguation table. In Uni OS "heartbeat" means only the watcher.
 - **Generated maps beat maintained ones.** After two restructures the vault map, canvas, CSS comment and graph settings all carried stale paths. Uni OS generates them and refreshes their regions on `uni-os render` ([design-principles.md](design-principles.md#24-generate-what-can-drift)).
-- **Make every feature easy to drop.** Features the student abandoned after a week (retests, recall tests) were switched off, and their old files stayed readable.
+- **Make every feature easy to drop.** Features I abandoned after a week (retests, recall tests) were switched off, and their old files stayed readable.
 - **Test on the real machine with real input, and verify copies by size or hash.** A stale cached copy and a trackpad bug were found only that way.
 - **UTF-8 without a byte-order mark** for every file a script or plugin parses. Windows PowerShell 5.1 writes ANSI by default, and a settings backup saved with a BOM broke a JSON loader.

@@ -21,7 +21,7 @@
 #  - Every key has a default. Keys you leave out take the default shown in
 #    config/schema.md (or from the modules you enable). Only [student] name,
 #    [university] name and [term] label/timezone/week0_monday are required.
-#  - Nothing here is anchored on the author's own days and times: every schedule is
+#  - Nothing here is anchored on the original system's days and times: every schedule is
 #    your choice. The values below are only an example.
 #  - This file shows EVERY key, also those of optional modules. Lines under
 #    "# -- <id> module --" belong to that module (its defaults, the original system's

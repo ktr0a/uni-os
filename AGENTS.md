@@ -113,7 +113,7 @@ Render into a scratch folder outside any real vault. The repo-root names `test-v
 
 **Content rules.**
 
-- **No personal data.** No real people's names (students, TAs, lecturers). No grades, results, error-log rows, schedules, habits, health or travel of real people. No ids: drive, calendar, cloud project, LMS, session or artifact ids. No ntfy topics, no emails, no real Windows user paths (write `C:/Users/<you>`). Examples use **Alex Example** at the **Example Institute of Technology (EIT)**, with courses `algo` (AD), `dm` (DM), `la` (LA) and `prog` (PROG). The only real person named is the author, Qiang Luo (ktr0a), as author.
+- **No personal data.** No real people's names (students, TAs, lecturers). No grades, results, error-log rows, schedules, habits, health or travel of real people. No ids: drive, calendar, cloud project, LMS, session or artifact ids. No ntfy topics, no emails, no real Windows user paths (write `C:/Users/<you>`). Examples use **Alex Example** at the **Example Institute of Technology (EIT)**, with courses `algo` (AD), `dm` (DM), `la` (LA) and `prog` (PROG). The only real person named is Qiang Luo (ktr0a), the project's author, and only as author.
 - **Integrity defaults.** `hints-only` by default; `solo` = no help at all. Encode both in roles, rules and job prompts.
 - **Exam scope.** Exam-related content stays within exam-session dates, exam-phase scheduling, summary and cheat sheets, the final self-test of study pages and coaching for graded quizzes during the term.
 - **Agent-neutral wording.** Write "your agent", with explicit "In Claude Code: ..." notes and a fallback for other agents. Say that it was only tested with Claude Code.

@@ -138,7 +138,7 @@ To show the system to someone, the safest option is not your vault at all: rende
 ## Rules for contributors to this repository
 
 This repository is public. Everything in it must be free of personal data:
-- **No real people** except the author, Qiang Luo (ktr0a), and only as author and credit. Examples use the fictional student **Alex Example** at **Example Institute of Technology** (EIT) with the courses AD, DM, LA and PROG (`examples/alex.toml`).
+- **No real people** except Qiang Luo (ktr0a), the project's author, and only as author and credit. Examples use the fictional student **Alex Example** at **Example Institute of Technology** (EIT) with the courses AD, DM, LA and PROG (`examples/alex.toml`).
 - **No personal records:** no grades, results or bonus points, no error-log rows, no schedules, habits, health or travel details, no personal reply quirks, no personal calendar names.
 - **No identifiers:** no storage, calendar, cloud-project, LMS or session ids, no artifact or private-page URLs, no ntfy topics, no mail addresses, no Windows user paths (write `C:/Users/<you>`).
 - **Schedules are config keys.** The original's times may appear only as example defaults.

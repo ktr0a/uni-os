@@ -17,7 +17,7 @@ The backbone of Uni OS: one folder per course with a fixed layout, a **course ca
 | Cost | none |
 
 ## Why it exists
-In the original system (built for the author's first term of a computer science BSc, four courses) the same questions came up every day: which sheet is discussed in tomorrow's session, when is it due, does this quiz count, what is the bonus rule, may the agent help with this task, which page of the script is this. Answers were scattered across the LMS, a course website, the course catalogue, PDFs and chat history, and agents got them wrong in predictable ways:
+In the original system (built for a first term of a computer science BSc, four courses) the same questions came up every day: which sheet is discussed in tomorrow's session, when is it due, does this quiz count, what is the bonus rule, may the agent help with this task, which page of the script is this. Answers were scattered across the LMS, a course website, the course catalogue, PDFs and chat history, and agents got them wrong in predictable ways:
 
 - They assumed an exercise session covers the same week's lectures. It usually lags by about a week, and the lag differs per course. This was the single most common wrong answer.
 - They mixed up week numberings (the LMS counted weeks from 1, the term from 0; one course's "week" straddled two term weeks; sheet numbers ran one ahead of term weeks).

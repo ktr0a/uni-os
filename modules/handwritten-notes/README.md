@@ -104,7 +104,7 @@ Nothing Claude-specific is required. In Claude Code the Read tool views PDF page
 - **The app's permissions stay with the student.** Agents never connected the real app to the drive or tapped its consent screens; a separate development copy of the app wrote only to a sandbox folder, so no test could touch real notebooks.
 - **Fallbacks need a known place.** When a picked course folder was trashed or no longer accessible, the app wrote PDFs to its own export folder and said so in its settings; agents that only looked in the course folder reported notes as "missing".
 - **Folder names must be readable without paths.** The app matched picked folders to courses by whole-word name ("LA handwritten" -> LA); generic names would have been ambiguous in the picker.
-- The author's own app for this, Quiet Notes (Android, handwriting with per-course PDF export to the drive), is not part of Uni OS; it may be published separately later. Any app that exports PDFs into a folder works.
+- My own app for this, Quiet Notes, is not part of Uni OS; I may publish it separately later. Any app that exports PDFs into a folder works.
 
 ## Removing it
 Disable the module (`uni-os disable handwritten-notes`). The rules file and the skill stop being referenced; the handwritten folders and their PDFs stay where they are (they belong to your app). Delete the folders yourself only after pointing the app elsewhere.

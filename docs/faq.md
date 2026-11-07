@@ -50,7 +50,7 @@ Short answers with links to the full story. `uni-os` is short for `python tools/
 
 ### What is Uni OS, in two sentences?
 
-A framework that turns a folder of Markdown notes into a study system run by AI agent sessions: course folders, study pages, hints-only exercise help, error logs, week pages, planning, daily prep notes, check-ins, a proactive watcher and phone pushes. You clone it, open your agent and say "set me up". The agent interviews you, you pick modules, and a deterministic script builds your vault from templates. The original was built for the author's own first year of BSc Computer Science at ETH Zurich (HS26); this version is generalised for any student ([how-it-evolved.md](how-it-evolved.md)).
+A framework that turns a folder of Markdown notes into a study system run by AI agent sessions: course folders, study pages, hints-only exercise help, error logs, week pages, planning, daily prep notes, check-ins, a proactive watcher and phone pushes. You clone it, open your agent and say "set me up". The agent interviews you, you pick modules, and a deterministic script builds your vault from templates. I built the original for my own first year of BSc Computer Science at ETH Zurich (HS26); this version is generalised for any student ([how-it-evolved.md](how-it-evolved.md)).
 
 ### How do I set it up?
 
@@ -236,7 +236,7 @@ Cloud drives keep the last writer's version, so one edit can vanish, or a confli
 
 ### Where is the handwriting app the original used?
 
-It is the author's own app and not part of Uni OS; it might be published separately later. The `handwritten-notes` module works with any app that exports PDFs into a folder per course ([handwritten-notes](../modules/handwritten-notes/README.md)).
+It's my own app, Quiet Notes, and not part of Uni OS; I may publish it separately later. The `handwritten-notes` module works with any app that exports PDFs into a folder per course ([handwritten-notes](../modules/handwritten-notes/README.md)).
 
 ### How can I contribute?
 

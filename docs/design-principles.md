@@ -1,6 +1,6 @@
 # Design principles
 
-These are the cross-cutting rules behind Uni OS. Each one came out of something that went wrong, or nearly went wrong, in the original system (the author's first-year computer science semester, run by several AI agent sessions over an Obsidian vault on Google Drive; see [how-it-evolved.md](how-it-evolved.md)). Every entry has three parts: the rule, why it exists, and where the framework implements it.
+These are the cross-cutting rules behind Uni OS. Each one came out of something that went wrong, or nearly went wrong, in the original system (my own first-year computer science semester, run by several AI agent sessions over an Obsidian vault on Google Drive; see [how-it-evolved.md](how-it-evolved.md)). Every entry has three parts: the rule, why it exists, and where the framework implements it.
 
 Principles 1 to 21 were distilled from the original system's own files. Principles 22 to 27 are just as visible in the code and were added when the framework was built.
 

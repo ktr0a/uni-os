@@ -6,7 +6,7 @@ Every question the setup agent may ask, grouped into the batches of [PLAYBOOK.md
 
 - **Batches 1 to 5** come before the module menu, **batches 6 to 9** after it, and only for the modules the student chose. Each batch is one message with numbered questions.
 - **Propose a default for every question**, in brackets: `5. On which Monday does week 0 start? [Mon 14 Sep 2026, from the academic calendar you linked]`. The student may answer "default", "skip", "don't know" or "defaults for the rest". "Don't know" takes the default and goes on the list of things to check later.
-- **Defaults that are times or days are the original system's values, shown only as an example** (it was built for the author's first-year BSc Computer Science semester at ETH Zurich). Never present them as the right answer; ask what suits the student.
+- **Defaults that are times or days are the original system's values, shown only as an example** (it was built for a first-year BSc Computer Science semester at ETH Zurich). Never present them as the right answer; ask what suits the student.
 - **Fill what you can from sources** (course pages, a pasted timetable, earlier answers) and show it as a proposal. Mark inferred values "(inferred, please check)".
 - **Never ask for secrets.** Passwords, API keys, private calendar (iCal) addresses and the ntfy topic are typed by the student into the app or file that needs them, later (PLAYBOOK step 7). The config holds at most the *path* of a secret file.
 - **Keep names of real people out of anything shared.** `courses[].lecturers` is optional; it is fine in the student's own vault, never in examples or bug reports.
